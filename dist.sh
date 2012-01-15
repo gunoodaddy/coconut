@@ -32,6 +32,7 @@ fi
 cp -rf coconut "${DISTDIR}"
 
 cd "${DISTDIR}"
+rm -rf .git
 automake
 autoconf
 configure
