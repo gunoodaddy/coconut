@@ -1,0 +1,2089 @@
+#pragma once
+
+#include <stdio.h>
+#include <errno.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/un.h>
+#include <sys/ioctl.h>
+#include <sys/queue.h>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <event2/listener.h>
+#include <event2/bufferevent.h>
+#include <event2/buffer.h>
+#include <event2/dns.h>
+#include <event2/http.h>
+#include <event2/http_struct.h>
+#include <event2/keyvalq_struct.h>
+#include <map>
+#include <set>
+#include <vector>
+
+#define UDP_BUF_SIZE	8096
+
+#define INTERNAL_TIMER_BIT	0x40000000
+
+#define MAKE_TIMEVAL_SEC(SEC) MAKE_TIMEVAL_MSEC(SEC*1000)
+#define MAKE_TIMEVAL_MSEC(MSEC) {MSEC/1000, (MSEC % 1000) * 1000}
+
+#define SOCKET_ERR_RW_RETRIABLE(e)              \
+    ((e) == EINTR || (e) == EAGAIN)
+
+namespace cookie {
+
+class Reactor;
+class ServerController;
+class ClientController;
+
+enum SocketType{
+	TCP,
+	UDP,
+};
+
+static void HexDump(const unsigned char *data, const int len, FILE * fp) {           
+	const unsigned char *p;
+	int i, k;
+
+	if (len == 0)
+		return;
+
+	p = data;
+
+	fprintf(fp, "%05x     ", 0);
+	k = 0;
+	for (i = 0; i < len; i++) {
+		if (i && !(i % 16)) {
+			fprintf(fp, "   ");
+			while (k--) {
+				if ((int) *p <= 0x20) {
+					fprintf(fp, " ");
+					p++;
+					continue;
+				}
+				fprintf(fp, "%c", *(p++));
+			}
+			fprintf(fp, "\n%05x     ", i);
+			k = 0;
+		}
+		fprintf(fp, "%02x%s", (*(p + k) & 0xff), (i%2?" ":"") );
+		k++;
+	}
+	i = 16 - k;
+	while (i--)
+		fprintf(fp, "   ");
+	fprintf(fp, "   ");
+	while (k--) {
+		if ((int) *p <  0x20) {
+			fprintf(fp, ".");
+			p++;
+			continue;
+		}
+		fprintf(fp, "%c", *p++);
+	}
+	fprintf(fp, "\n");
+}
+
+static int get_n_bytes_readable_on_socket(evutil_socket_t fd)
+{
+#define BUFFER_MAX_READ   4096
+#if defined(FIONREAD) && defined(WIN32)
+	unsigned long lng = BUFFER_MAX_READ;
+	if (ioctlsocket(fd, FIONREAD, &lng) < 0)
+		return -1;
+	return (int)lng;
+#elif defined(FIONREAD)
+	int n = BUFFER_MAX_READ;
+	if (ioctl(fd, FIONREAD, &n) < 0)
+		return -1;
+	return n;
+#else
+	return BUFFER_MAX_READ;
+#endif
+}
+
+unsigned long long getFileSize(const char *path) {
+	struct stat filestatus;
+	int ret = stat(path, &filestatus );
+	if(ret != 0)
+		return 0;
+	return filestatus.st_size;
+}
+
+
+
+
+//------------------------------------------------------------------
+class Exception : public std::exception {
+public:
+	Exception(): message_() {}
+
+	Exception(const std::string& message) : message_(message) {}
+
+	virtual ~Exception() throw() {}
+
+	virtual const char* what() const throw() 
+	{
+		if (message_.empty()) {
+			return "Default Exception.";
+		} else { 
+			return message_.c_str();
+		}
+	}	
+
+protected:
+	std::string message_;
+};
+
+
+//------------------------------------------------------------------
+class Timer {
+public:
+	Timer(struct event_base *base) : base_(base), handler_(NULL) { }
+
+	~Timer() {
+		std::map<int, struct timer_context_t *>::iterator it = mapTimers_.begin();
+
+		for(; it != mapTimers_.end(); it++) {
+			struct timer_context_t *context = it->second;
+			event_free(context->timer);
+			free(context);
+		}
+	}
+
+	class TimerEventHandler {
+	public:
+		virtual ~TimerEventHandler() { }
+		virtual void onTimer_Timer(int id) { }
+	};
+
+private:
+	struct timer_context_t {
+		int id;
+		Timer *self;
+		bool repeat;
+		struct event *timer;
+		struct timeval tv;
+	};
+
+	static void timer_cb(evutil_socket_t fd, short what, void *arg) {
+		struct timer_context_t *context = (struct timer_context_t *)arg;
+
+		context->self->fire_onTimer_Timer(context);
+	}
+
+public:
+	void setEventHandler(TimerEventHandler *handler) {
+		handler_ = handler;
+	}
+
+	void setTimer(int id, unsigned int msec, bool repeat = true) {
+		struct timer_context_t *context = NULL;
+		std::map<int, struct timer_context_t *>::iterator it = mapTimers_.find(id);
+		if(it != mapTimers_.end()) {
+			context = it->second;
+			evtimer_del(context->timer);
+		} else {
+			printf("NEW TIMER : base = %p id = %d sec = %d.%d\n", base_, id, msec/1000, msec % 1000);
+			context = (struct timer_context_t *)malloc(sizeof(struct timer_context_t)); 
+			context->timer = evtimer_new(base_, timer_cb, context);
+
+			mapTimers_.insert(std::map<int, struct timer_context_t *>::value_type(id, context));
+		}
+		assert(context);
+
+		struct timeval tv = MAKE_TIMEVAL_MSEC(msec);
+		context->tv = tv;
+		context->id = id;
+		context->self = this;
+		context->repeat = repeat;
+
+		evtimer_add(context->timer, &context->tv);
+	}
+
+	void killTimer(int id) {
+		std::map<int, struct timer_context_t *>::iterator it = mapTimers_.find(id);
+
+		if(it != mapTimers_.end()) {
+			printf("KILL TIMER : base = %p id = %d\n", base_, id);
+			event_free(it->second->timer);
+			free(it->second);
+			mapTimers_.erase(it);
+		}
+	}
+
+private:
+	void fire_onTimer_Timer(timer_context_t *context) {
+		if(handler_)
+			handler_->onTimer_Timer(context->id); 
+
+		if(context->repeat) {
+			event_add(context->timer, &context->tv);
+		} else {
+			killTimer(context->id);
+		}
+	}
+
+private:
+	struct event_base *base_;
+	TimerEventHandler *handler_;
+	std::map<int, struct timer_context_t *> mapTimers_;
+};
+
+
+//------------------------------------------------------------------
+class DNSResolver {
+public:
+	DNSResolver(struct event_base *base) : base_(base), dnsbase_(NULL) { }
+	~DNSResolver() {
+		cleanUp();
+	}
+
+	class EventHandler {
+		public:
+			virtual ~EventHandler() { }
+			virtual void onDnsResolveResult(int errcode, const char *host, struct evutil_addrinfo *addr, void *ptr) = 0;
+	};
+
+private:
+	struct dns_context_t {
+		char *host_alloc;
+		DNSResolver *self;
+		EventHandler *handler;
+		void *ptr;
+	};
+
+	static void callback(int errcode, struct evutil_addrinfo *addr, void *ptr) {
+		struct dns_context_t *context = (struct dns_context_t*)ptr;
+
+		context->self->fire_onDnsResolveResult(errcode, context->host_alloc, addr, context);
+
+		free(context->host_alloc);
+		free(context);
+	}
+
+public:
+	void cleanUp()	{	
+		// cancel all request & clean memory.
+		if(dnsbase_) {
+			evdns_base_free(dnsbase_, 0);
+			dnsbase_ = NULL;
+		}
+
+		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.begin();
+		for(; it != mapcontext_.end(); it++) {
+			free(it->second->host_alloc);
+			free(it->second);
+		}
+
+		mapcontext_.clear();
+	}
+
+	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr) {
+		if(NULL == dnsbase_) {
+			dnsbase_ = evdns_base_new(base_, 1);
+		}
+
+		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.find(host);
+		if(it != mapcontext_.end())
+			return false;
+
+		struct evutil_addrinfo hints;
+		struct evdns_getaddrinfo_request *req;
+
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_flags = EVUTIL_AI_CANONNAME;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
+		struct dns_context_t *context;
+		if (!(context = (struct dns_context_t *)malloc(sizeof(struct dns_context_t)))) {
+			//throw Exception("could't malloc dns_context_t");
+			return false;
+		}
+		if (!(context->host_alloc = strdup(host))) {
+			free(context);
+			//throw Exception("could't strdup host");
+			return false;
+		}
+		context->host_alloc = strdup("localhost");
+		context->self = this;
+		context->handler = handler;
+		context->ptr = ptr;
+
+		req = evdns_getaddrinfo(
+				dnsbase_, host, NULL /* no service name given */,
+				&hints, callback, context);
+
+		if (req == NULL) {
+			// request for this host returned immediately
+			// called callback function already.. check it out!
+			return true;
+		}
+
+		mapcontext_.insert(std::map<std::string, struct dns_context_t *>::value_type(host, context));
+		return true;
+	}
+
+private:
+	void fire_onDnsResolveResult(int errcode, const char *host, struct evutil_addrinfo *addr, dns_context_t *context) {
+		context->handler->onDnsResolveResult(errcode, host, addr, context->ptr);
+
+		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.find(host);
+		if(it != mapcontext_.end()) {
+			mapcontext_.erase(it);
+		}
+	}
+private:
+	struct event_base *base_;	
+	struct evdns_base *dnsbase_;
+
+	std::map<std::string, struct dns_context_t *> mapcontext_;
+};
+
+
+//------------------------------------------------------------------
+class Socket : public DNSResolver::EventHandler {
+public:
+	Socket(struct event_base *base, SocketType type) : base_(base)
+		, type_(type)
+		, state_(Disconnected)
+		, handler_(NULL) {
+	}
+
+	virtual ~Socket() {
+	}
+
+	class EventHandler {
+	public:
+		virtual ~EventHandler() { }
+
+		virtual void onSocket_Connected() { }
+		virtual void onSocket_Error(int error) { }
+		virtual void onSocket_ReadEvent(int fd) { }
+		virtual void onSocket_Read(const void *data, int size) { }
+		virtual void onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) { }
+		virtual void onSocket_Close() { }
+	};
+
+public:
+	virtual int socketFD() { 
+		return -1;
+	}
+
+	void * eventBase() {
+		return base_;
+	}
+
+	SocketType type() {
+		return type_;
+	}
+
+	void setEventHandler(EventHandler *handler) {
+		handler_ = handler;
+	}
+
+	virtual int write(const void *data, int size) = 0;
+
+	virtual void close() {
+		assert(0 && "Socket::close can not be called directly");
+	}
+
+protected:
+	enum ConnectorState {
+		Connecting,
+		Connected,
+		Disconnected
+	};
+
+	struct event_base *base_;	
+	SocketType type_;
+	ConnectorState state_;
+	EventHandler *handler_;
+};
+
+
+//------------------------------------------------------------------
+class UdpSocket : public Socket {
+public:
+	UdpSocket(struct event_base *base, int port) : Socket(base, UDP)
+		, ev_(NULL)
+		, port_(port)
+		, dnsReolver_(NULL) {
+
+		printf("UdpSocket()\n");
+	}
+
+	virtual ~UdpSocket() {
+
+		close();
+
+		if(dnsReolver_)
+			delete dnsReolver_;
+
+		printf("~UdpSocket()\n");
+	}
+
+private:
+	struct write_context_t {
+		void *data_alloc;
+		int size;
+		int port;
+	};
+
+private:
+	static void event_cb(evutil_socket_t fd, short what, void *arg) {
+		UdpSocket *THIS = (UdpSocket *)arg;
+
+		if(what & EV_READ) {
+			char buf[UDP_BUF_SIZE] = {0, };
+			struct sockaddr_in client_addr;
+			socklen_t sizeaddr = sizeof(client_addr);
+
+			int len = ::recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&client_addr, &sizeaddr);   
+
+			THIS->fire_onSocket_ReadFrom(buf, len, &client_addr);
+		}
+	}
+	
+public:
+	int socketFD() {
+		if(ev_)
+			return event_get_fd(ev_);
+		return -1;
+	}
+
+	void connect() {
+		if(ev_)
+			throw Exception("Error socket already created");
+
+		if(::connect(event_get_fd(ev_), (struct sockaddr *)&sin_, sizeof(sin_)) < 0)
+			throw Exception("Error connecting datagram socket");
+
+		state_ = Socket::Connected;
+	}
+
+	void bind() {
+		memset(&sin_, 0, sizeof(sin_));
+		sin_.sin_family = AF_INET;
+		sin_.sin_addr.s_addr = INADDR_ANY;
+		sin_.sin_port = htons(port_);
+
+		int sock;
+		int yes = 1;
+		if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
+			throw Exception("Error creating datagram socket");
+
+		if (::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
+			throw Exception("Error setting datagram socket option");
+
+		if(0 != port_) {
+			printf("UDP BIND START : port = %d\n", port_);
+			if (::bind(sock, (struct sockaddr*)&sin_, sizeof(struct sockaddr)) < 0) 
+				throw Exception("Error binding datagram socket");
+		}
+
+		ev_ = event_new(base_, sock, EV_READ|EV_PERSIST, event_cb, this);
+		event_add(ev_, NULL);	// TODO UDP READ TIMEOUT??
+	}
+
+	void close() {
+		if(ev_) {
+			evutil_closesocket(event_get_fd(ev_));
+			event_free(ev_);
+			ev_ = NULL;
+		}
+	}
+
+	virtual void onDnsResolveResult(int errcode, const char *host, struct evutil_addrinfo *addr, void *ptr) {
+		struct write_context_t *context = (struct write_context_t *)ptr;	
+
+		if (errcode) {
+			printf("%s -> %s\n", host, evutil_gai_strerror(errcode));
+		} else {
+			struct evutil_addrinfo *ai;
+			int resCnt = 0;
+			for (ai = addr; ai; ai = ai->ai_next)
+				resCnt++;
+
+			int index = rand() % resCnt;
+			int i = 0;
+			for (ai = addr; ai; ai = ai->ai_next, i++) {
+				if(index != i)
+					continue;
+
+				if (ai->ai_family == AF_INET) {
+					struct sockaddr_in *sin = (struct sockaddr_in *)ai->ai_addr;
+					sin->sin_port = htons(context->port);
+					writeTo(context->data_alloc, context->size, sin);
+					//char buf[128];
+					//const char *s = NULL;
+					//s = evutil_inet_ntop(AF_INET, &sin->sin_addr, buf, 128);
+				} else if (ai->ai_family == AF_INET6) {
+					// NOT SUPPORTED YET..
+					// TODO
+					//struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ai->ai_addr;
+					//s = evutil_inet_ntop(AF_INET6, &sin6->sin6_addr, buf, 128);
+				}
+				break;
+			}
+			evutil_freeaddrinfo(addr);
+		}
+
+		free(context->data_alloc);
+		free(context);
+	}
+
+	int writeTo(const void *data, int size, const struct sockaddr_in *sin) {
+		assert(ev_ && "socket is not initailized");
+		printf("WRITETO : %s:%d => [%d]\n", inet_ntoa(sin->sin_addr), ntohs(sin->sin_port), size);
+		int len = sendto(event_get_fd(ev_), data, size, 0, (struct sockaddr *)sin, sizeof(struct sockaddr_in));
+		return len;
+	}
+
+	int writeTo(const void *data, int size, const char *host, int port) {
+		assert(ev_ && "socket is not initailized");
+		struct sockaddr_in sin;
+		memset(&sin, 0, sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_port = htons(port);
+		if(evutil_inet_pton(AF_INET, host, &(sin.sin_addr)) > 0) {
+			writeTo(data, size, &sin);
+		} else {
+			if(NULL == dnsReolver_)
+				dnsReolver_ = new DNSResolver(base_);
+
+			struct write_context_t *context = (struct write_context_t*)malloc(sizeof(struct write_context_t));
+			context->data_alloc = malloc(size);
+			memcpy(context->data_alloc, data, size);
+			context->size = size;
+			context->port = port;
+
+			if(dnsReolver_->resolve(host, &sin, this, context) == false) {
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	virtual int write(const void *data, int size) {
+		assert(ev_ && "socket is not initailized");
+		int len = sendto(event_get_fd(ev_), data, size, 0, (struct sockaddr *)&lastclient_sin_, sizeof(lastclient_sin_));
+		return len;
+	}
+
+	const struct sockaddr_in * lastClientAddress() {
+		return &lastclient_sin_;
+	}
+
+private:
+	void fire_onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) { 
+		lastclient_sin_ = *sin;
+		handler_->onSocket_ReadFrom(data, size, sin);
+	}
+
+private:
+	friend class Reactor;
+	struct event *ev_;
+	int port_;
+	struct sockaddr_in lastclient_sin_;
+	DNSResolver *dnsReolver_;
+	struct sockaddr_in sin_;
+};
+
+
+//------------------------------------------------------------------
+class TcpSocket : public Socket {
+public:
+	TcpSocket(struct event_base *base, const char* host, int port, int timeout) : Socket(base, TCP)
+		, buffermode_(true)
+		, bev_(NULL)
+		, host_(host)
+		, port_(port)
+		, timeout_(timeout)
+		, conn_timer_(NULL) 
+		, writebuffer_(NULL) {
+
+		printf("TcpSocket() host:port mode\n");
+		ev_[0] = ev_[1] = NULL;
+
+		memset(&sin_, 0, sizeof(sin_));
+		sin_.sin_family = AF_INET;
+		sin_.sin_addr.s_addr = htonl(0x7f000001); // TODO, DNSRESOLVE
+		sin_.sin_port = htons(port_);
+	}
+
+	TcpSocket(struct event_base *base, const char* path, int timeout) : Socket(base, TCP)
+		, buffermode_(false)
+		, bev_(NULL)
+		, host_("")
+		, port_(0)
+		, path_(path)
+		, timeout_(timeout)
+		, conn_timer_(NULL) 
+		, writebuffer_(NULL) {
+
+		printf("TcpSocket() path mode\n");
+		ev_[0] = ev_[1] = NULL;
+
+		memset(&sun_, 0, sizeof(sun_));
+		sun_.sun_family = AF_LOCAL;
+		strcpy(sun_.sun_path, path_.c_str());
+	}
+
+	TcpSocket(struct event_base *base, int fd, bool buffermode) : Socket(base, TCP)
+		, buffermode_(buffermode)
+		, bev_(NULL)
+		, port_(0)
+		, timeout_(0)
+		, conn_timer_(NULL) 
+		, writebuffer_(NULL) {
+		printf("TcpSocket() fd mode\n");
+		ev_[0] = ev_[1] = NULL;
+
+		//buffermode_ = false;
+		createEventHandle(fd);
+
+		install();
+	}
+
+	~TcpSocket() {
+		printf("~TcpSocket\n");
+		if(conn_timer_)
+			event_free(conn_timer_);
+
+		close();
+	}
+
+private:
+	static void bufevent_cb(struct bufferevent *bev, short events, void *ptr) {
+		TcpSocket *THIS = (TcpSocket *)ptr;
+		if (events & BEV_EVENT_CONNECTED) {
+			bufferevent_enable(bev, EV_READ|EV_WRITE);
+			THIS->fire_onSocket_Connected();
+		} else if (events & BEV_EVENT_ERROR) {
+			printf("TcpSocket::bufevent_cb > SOCKET ERROR >> %d\n", EVUTIL_SOCKET_ERROR());
+			THIS->fire_onSocket_Error(EVUTIL_SOCKET_ERROR());
+		} else if (events & BEV_EVENT_EOF) {
+			THIS->fire_onSocket_Close();
+		}
+	}
+
+	static void event_cb(evutil_socket_t fd, short what, void *arg) {
+		TcpSocket *THIS = (TcpSocket *)arg;
+
+		if(what & EV_READ) {
+			THIS->_onReadEvent(fd);
+		} 
+		if(what & EV_WRITE){
+			THIS->_onWriteEvent(fd);
+		}
+	}
+	
+	static void read_cb(struct bufferevent *bev, void *ptr) {
+		struct evbuffer *readBuffer = bufferevent_get_input(bev);
+
+		size_t buffer_len = evbuffer_get_length(readBuffer);
+		const void *data = evbuffer_pullup(readBuffer, buffer_len);
+
+		HexDump((const unsigned char*)data, buffer_len, stdout);
+
+		TcpSocket *THIS = (TcpSocket *)ptr;
+		THIS->fire_onSocket_Read(data, buffer_len);
+
+		evbuffer_drain(readBuffer, buffer_len);
+	}
+
+	static void timer_cb(evutil_socket_t fd, short what, void *arg) {
+		TcpSocket *THIS  = (TcpSocket *)arg;
+		THIS->fire_onSocket_Error(ETIMEDOUT);
+	}
+
+	virtual void onDnsResolveResult(int errcode, const char *host, struct evutil_addrinfo *addr, void *ptr) {
+		// TODO
+	}
+
+public:
+	int socketFD() {
+		if(bev_)
+			return bufferevent_getfd(bev_);
+		if(ev_[0])
+			return event_get_fd(ev_[0]);
+		return -1;
+	}
+
+	void connect() {
+
+		if(Socket::Disconnected != state_)
+			throw Exception("Already starting connection");
+
+		if(timeout_ > 0) {
+			if(conn_timer_)
+				event_free(conn_timer_);
+
+			conn_timer_ = evtimer_new(base_, timer_cb, this);
+
+			struct timeval tv = MAKE_TIMEVAL_SEC(timeout_);
+
+			evtimer_add(conn_timer_, &tv);
+		}
+	
+		if(buffermode_)
+			connectBufferMode();
+		else
+			connectEventMode();
+		
+		state_ = Connecting;
+
+		install();
+	}
+
+	int write(const void *data, int size) {
+
+		int ret;
+		if(bev_) {
+			struct evbuffer *tmp = evbuffer_new();
+			evbuffer_add(tmp, data, size);
+			ret = bufferevent_write_buffer(bev_, tmp);
+			evbuffer_free(tmp);
+		} else {
+			ret = evbuffer_add(writebuffer_, data, size);
+			event_add(ev_[1], NULL);
+		}
+
+		return ret;
+	}
+
+	void close() {
+		printf("TcpSocket close : %p %p %p %p\n", bev_, ev_[0], ev_[1], writebuffer_);
+		if(bev_) {
+			bufferevent_free(bev_);
+			bev_ = NULL;
+		}
+
+		if(ev_[0]) {
+			evutil_closesocket(event_get_fd(ev_[0]));
+			event_free(ev_[0]);
+			ev_[0] = NULL;
+		}
+		if(ev_[1]) {
+			event_free(ev_[1]);
+			ev_[1] = NULL;
+		}
+
+		if(writebuffer_) {
+			evbuffer_free(writebuffer_);
+			writebuffer_ = NULL;
+		}
+	}
+
+private:
+	void createEventHandle(evutil_socket_t fd) {
+		if(buffermode_) {
+			if(NULL == bev_) {
+				bev_ = bufferevent_socket_new(base_, fd, BEV_OPT_CLOSE_ON_FREE);
+				bufferevent_enable(bev_, EV_READ|EV_WRITE);
+			}
+		} else {
+			if(NULL == ev_[0])
+				ev_[0] = event_new(base_, fd, EV_READ|EV_PERSIST, event_cb, this);
+			if(NULL == ev_[1])
+				ev_[1] = event_new(base_, fd, EV_WRITE|EV_PERSIST, event_cb, this);
+			if(NULL == writebuffer_) 
+				writebuffer_ = evbuffer_new();
+		}
+	}
+
+	void install() {
+		if(bev_) {
+			bufferevent_setcb(bev_, read_cb, NULL, bufevent_cb, this);
+		}
+		if(ev_[0]) {
+			event_add(ev_[0], NULL);
+		}
+		if(ev_[1]) {
+			event_add(ev_[1], NULL);
+		}
+	}
+
+	void connectEventMode() {
+		int sockfd;
+		bool unixMode = !path_.empty();
+		if((sockfd = ::socket (unixMode ? AF_LOCAL : AF_INET, SOCK_STREAM, 0)) < 0)
+			throw Exception("Error creating unix domain socket");
+
+		createEventHandle(sockfd);
+
+		struct sockaddr *sockaddr;
+		int addrlen;
+		if(false == unixMode) {
+			sockaddr = (struct sockaddr *)&sin_;
+			addrlen = sizeof(sin_);
+		} else {
+			sockaddr = (struct sockaddr *)&sun_;
+			addrlen = sizeof(sun_);
+		}
+
+		evutil_make_socket_nonblocking(sockfd);
+
+		if(::connect(sockfd, (struct sockaddr *)sockaddr, addrlen) < 0) {
+			close();
+			throw Exception("Error starting connection");
+		}
+	}
+
+	void connectBufferMode() {
+		bool unixMode = !path_.empty();
+
+		createEventHandle(-1);
+
+		struct sockaddr *sockaddr;
+		int addrlen;
+		if(false == unixMode) {
+			sockaddr = (struct sockaddr *)&sin_;
+			addrlen = sizeof(sin_);
+			printf("TCP CONNECT START: port = %d\n", port_);
+		} else {
+			sockaddr = (struct sockaddr *)&sun_;
+			addrlen = sizeof(sun_);
+			printf("TCP CONNECT START: path = %s\n", path_.c_str());
+		}
+
+		if (bufferevent_socket_connect(bev_, (struct sockaddr *)sockaddr, addrlen) < 0) {
+			close();
+			throw Exception("Error starting connection");
+		}
+	}
+
+	void _onReadEvent(evutil_socket_t fd) {
+
+		fire_onSocket_ReadEvent(fd);	
+	}
+
+	void _onWriteEvent(evutil_socket_t fd) {
+		if(Socket::Connecting != state_) {
+			evbuffer_write(writebuffer_, fd);	
+
+			if(evbuffer_get_length(writebuffer_) <= 0) {
+				event_del(ev_[1]);
+			}
+		} else {
+			event_del(ev_[1]);
+			fire_onSocket_Connected();
+		}
+	}
+
+	void deleteTimer() {
+		if(conn_timer_) {
+			event_free(conn_timer_);
+			conn_timer_ = NULL;
+		}
+	}
+
+	void fire_onSocket_ReadEvent(int fd) {
+		handler_->onSocket_ReadEvent(fd);
+	}
+
+	void fire_onSocket_Read(const void *data, int size) {
+		handler_->onSocket_Read(data, size);
+	}
+
+	void fire_onSocket_Close() {
+		deleteTimer();
+		state_ = Socket::Disconnected;
+		handler_->onSocket_Close();
+	}
+
+	void fire_onSocket_Error(int error) {
+		if(Connecting == state_)
+			state_ = Socket::Disconnected;
+		handler_->onSocket_Error(error);
+	}
+
+	void fire_onSocket_Connected() {
+		deleteTimer();
+
+		state_ = Socket::Connected;
+
+		handler_->onSocket_Connected();
+	}
+
+private:
+	friend class ServerController;
+	friend class Reactor;
+
+	bool buffermode_;
+	struct bufferevent *bev_;	
+	struct event *ev_[2];	// 0 : read, 1 : write
+	std::string host_;
+	int port_;
+	std::string path_;
+	int timeout_;
+	struct event *conn_timer_;
+	struct sockaddr_in sin_;
+	struct sockaddr_un sun_;
+	struct evbuffer *writebuffer_;
+};
+
+
+//------------------------------------------------------------------
+class ConnectionListener {
+public:
+	ConnectionListener(struct event_base *base, int port) : base_(base)
+		, listener_(NULL)
+		, path_("")
+		, port_(port) { }
+
+	ConnectionListener(struct event_base *base, const char* path) : base_(base)
+		, listener_(NULL)
+		, path_(path)
+		, port_(0) { }
+
+	~ConnectionListener(void) {
+		if(listener_)
+			 evconnlistener_free(listener_);
+	}
+
+	class ConnectionListenerEventHandler {
+	public:
+		virtual ~ConnectionListenerEventHandler() { }
+
+		virtual void onConnectionListener_Accept(boost::shared_ptr<TcpSocket> socket) = 0;
+		virtual void onConnectionListener_Error(int error) { }
+	};
+
+private:
+	static void accept_conn_cb(
+					struct evconnlistener *listener,
+					evutil_socket_t fd, struct sockaddr *address, int socklen,
+					void *ctx) {
+		ConnectionListener *THIS = (ConnectionListener *)ctx;
+		struct event_base *base = evconnlistener_get_base(listener);
+
+		bool portMode = THIS->listeningPath().empty();
+		boost::shared_ptr<TcpSocket> newSocket(new TcpSocket(base, fd, portMode));
+
+		THIS->fire_onConnectionListener_Accept(newSocket);
+	}
+
+	static void accept_error_cb(struct evconnlistener *listener, void *ctx) {
+		int err = EVUTIL_SOCKET_ERROR();
+
+		ConnectionListener *THIS = (ConnectionListener *)ctx;
+		THIS->fire_onConnectionListener_Error(err);
+		//fprintf(stderr, "Got an error %d (%s) on the listener. "
+		//		"Shutting down.\n", err, evutil_socket_error_to_string(err));
+		//event_base_loopexit(base, NULL);
+	}
+
+public:
+
+	void setConnectionListenerEventHandler(ConnectionListenerEventHandler *handler) {
+		handler_ = handler;
+	}
+
+	void *eventBase() {
+		return base_;
+	}
+
+	void listen() {
+		if(listener_) {
+			throw Exception("Already listener created");
+		}
+		struct sockaddr_in sin;
+		struct sockaddr_un sun;
+		struct sockaddr* sinptr;
+		int addrlen;
+
+		if(isUnixDomainListenMode() == false) {
+			memset(&sin, 0, sizeof(sin));
+			sin.sin_family = AF_INET;
+			sin.sin_addr.s_addr = htonl(0);
+			sin.sin_port = htons(port_);
+			sinptr = (struct sockaddr*)&sin;
+			addrlen = sizeof(sin);
+		} else {
+			unlink(path_.c_str());
+			memset(&sin, 0, sizeof(sin));
+			sun.sun_family = AF_LOCAL;
+			strcpy(sun.sun_path, path_.c_str());
+			sinptr = (struct sockaddr*)&sun;
+			addrlen = sizeof(sun);
+		}
+
+		listener_ = evconnlistener_new_bind(base_, accept_conn_cb, this,
+				LEV_OPT_CLOSE_ON_FREE|LEV_OPT_REUSEABLE, -1,
+				sinptr, addrlen);
+
+		evconnlistener_set_error_cb(listener_, accept_error_cb);
+
+		if(!listener_) {
+			throw Exception("Couldn't create listener");
+		}
+	}
+
+	std::string listeningPath() {
+		return path_;
+	}
+
+private:
+	bool isUnixDomainListenMode() {
+		return listeningPath().size() > 0;
+	}
+
+	void fire_onConnectionListener_Accept(boost::shared_ptr<TcpSocket> newSocket) {
+		handler_->onConnectionListener_Accept(newSocket);
+	}
+
+	void fire_onConnectionListener_Error(int error) {
+		handler_->onConnectionListener_Error(error);
+	}
+
+private:
+	friend class ServerController;
+	ConnectionListenerEventHandler *handler_;
+	struct event_base *base_;	
+	struct evconnlistener *listener_;
+	std::string path_;
+	int port_;
+};
+
+
+//------------------------------------------------------------------
+class ClientController : public boost::enable_shared_from_this<ClientController>
+		, public Socket::EventHandler
+		, public Timer::TimerEventHandler {
+
+private:
+	static const int TIMERID_RECONNECT = (1|INTERNAL_TIMER_BIT);
+
+public:
+	ClientController() : reactor_(NULL), reconnectable_(false), retryConnectCnt_(0), timerObj_(NULL) {
+	}
+
+	virtual ~ClientController() {
+		if(timerObj_)
+			delete timerObj_;
+
+		printf("~ClientController()\n");
+	}
+
+public:
+	void setSocket(boost::shared_ptr<Socket> socket) { 
+		socket_ = socket;
+
+		_onPreInitialized();
+		onInitialized();
+	}
+
+	boost::shared_ptr<Socket> socket() {
+		return socket_;
+	}
+
+	boost::shared_ptr<TcpSocket> tcpSocket() {
+		assert(socket_->type() == TCP && "invalid socket type : TCP");
+
+		return boost::static_pointer_cast<TcpSocket>(socket_);
+	}
+
+	boost::shared_ptr<UdpSocket> udpSocket() {
+		assert(socket_->type() == UDP && "invalid socket type : UDP");
+
+		return boost::static_pointer_cast<UdpSocket>(socket_);
+	}
+
+	Reactor *reactor() {
+		return reactor_;
+	}
+
+	void setReconnectable(bool enable) {
+		reconnectable_ = enable;
+
+		if(false == reconnectable_) {
+			if(timerObj_)
+				timerObj_->killTimer(TIMERID_RECONNECT);
+		}
+	}
+
+	void setServerController(ServerController *controller /*weak ptr*/) {
+		serverController_ = controller;
+	}
+
+	ServerController *serverController() {
+		return serverController_;
+	}
+
+	void setTimer(unsigned short id, unsigned int msec, bool repeat) {
+		makeTimer();
+		timerObj_->setTimer(id, msec, repeat);
+	}
+
+	void killTimer(short id) {
+		makeTimer();
+		timerObj_->killTimer(id);
+	}
+
+private:
+	void setReactor(Reactor *reactor) {
+		reactor_ = reactor;
+	}
+
+	void makeTimer() {
+		if(NULL == timerObj_) {
+			struct event_base *base = (struct event_base *)socket()->eventBase();
+			timerObj_ = new Timer(base);
+			timerObj_->setEventHandler(this);
+		}
+	}
+
+	void processReconnect() {
+		if(reconnectable_) {
+			// TODO
+			// need details => jitter, noise check
+			makeTimer();
+			timerObj_->setTimer(TIMERID_RECONNECT, 1000);
+		}
+	}
+
+protected:
+	void fireReadErrorResult(int res) {
+		if (res == -1) {
+			int err = evutil_socket_geterror(socket()->socketFD());
+			if (!SOCKET_ERR_RW_RETRIABLE(err)) {
+				onSocket_Error(err);
+			}
+		} else if (res == 0) {
+			/* eof case */
+			onSocket_Close();
+			socket()->close();
+		}
+	}
+
+	void onSocket_Connected() { 
+		onConnected();
+	}
+	void onSocket_Error(int error) {
+		processReconnect();
+		onError(error);
+	}
+	void onSocket_Close() {
+		processReconnect();
+	}
+	void onSocket_Read(const void *data, int size) { 
+		onReceivedData(data, size);
+	}
+	void onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) {
+		onReceivedDatagram(data, size, sin);
+	}
+
+	void onTimer_Timer(int id) {
+		if(id == TIMERID_RECONNECT) {
+			timerObj_->killTimer(id);
+
+			// TODO : retry max check..
+			retryConnectCnt_++;
+			printf("TIMER : %d\n", TIMERID_RECONNECT);
+
+			tcpSocket()->connect();
+		}
+
+		if(!(id & INTERNAL_TIMER_BIT)) {
+			onTimer(id);
+		}
+	}
+
+private:
+	virtual void _onPreInitialized() { }
+
+protected:
+	virtual void onInitialized() { }
+	virtual void onReceivedData(const void *data, int size) { }
+	virtual void onReceivedDatagram(const void *data, int size, const struct sockaddr_in *sin) { }
+	virtual void onConnected() { }
+	virtual void onClosed() { }
+	virtual void onError(int error) { }
+	virtual void onTimer(unsigned short id) { }
+	
+protected:
+	ServerController *serverController_;	// by weak ptr
+
+private:
+	friend class Reactor;
+	Reactor *reactor_;
+	boost::shared_ptr<Socket> socket_;
+	bool reconnectable_;
+	int retryConnectCnt_;
+	Timer *timerObj_;
+};
+
+
+
+//------------------------------------------------------------------
+class ServerController : public boost::enable_shared_from_this<ServerController>
+		, private ConnectionListener::ConnectionListenerEventHandler
+		, private Timer::TimerEventHandler {
+private:
+	static const int TIMERID_DELAYED_REMOVE = (1|INTERNAL_TIMER_BIT);
+
+public:
+	ServerController() : reactor_(NULL), timerObj_(NULL) {
+	}
+
+	virtual ~ServerController() {
+		if(timerObj_)
+			delete timerObj_;
+
+		printf("~ServerController()\n");
+	}
+	
+public:
+	void setConnectionListener(boost::shared_ptr<ConnectionListener> connListener) { 
+		connListener_ = connListener;
+		connListener->setConnectionListenerEventHandler(this);
+
+		onInitialized();
+	}
+
+	boost::shared_ptr<ConnectionListener> connListener() {
+		return connListener_;
+	}
+
+	void setTimer(unsigned short id, unsigned int msec) {
+		makeTimer();
+		timerObj_->setTimer(id, msec);
+	}
+
+	void killTimer(short id) {
+		makeTimer();
+		timerObj_->killTimer(id);
+	}
+
+	Reactor *reactor() {
+		return reactor_;
+	}
+	
+	void setReactor(Reactor *reactor) {
+		reactor_ = reactor;
+	}
+private:
+
+	void makeTimer() {
+		if(NULL == timerObj_) {
+			struct event_base *base = (struct event_base *)connListener()->eventBase();
+			timerObj_ = new Timer(base);
+			timerObj_->setEventHandler(this);
+		}
+	}
+
+private:
+	void onConnectionListener_Accept(boost::shared_ptr<TcpSocket> socket) { 
+		boost::shared_ptr<ClientController> newController = onAccept(socket);
+
+		newController->setServerController(this);
+		newController->setSocket(socket);
+		socket->setEventHandler(newController.get());
+
+		clients_.insert(newController);
+	}	
+
+	void onConnectionListener_Error(int error) { 
+		onError(error);
+	}	
+
+	void onTimer_Timer(int id) {
+		if(!(id & INTERNAL_TIMER_BIT)) {
+			onTimer(id);
+		} else {
+			switch(id) {
+				case TIMERID_DELAYED_REMOVE:
+					processDelayedRemoveClientFromSet();
+					break;
+			}
+		}
+	}
+
+	void processDelayedRemoveClientFromSet() {
+
+		clientset_t::iterator it = delay_remove_clients_set_.begin();
+		for(; it != delay_remove_clients_set_.end(); it++) {
+
+			clientset_t::iterator itReal = clients_.find(*it);
+			if(itReal != clients_.end()) {
+				clients_.erase(itReal);
+				printf("DELAYED CLIENT REMOVED FROM SET..\n");
+			}
+		}
+
+		delay_remove_clients_set_.clear();
+	}
+
+	void fire_onClientClosed(boost::shared_ptr<ClientController> controller) {
+		onClientClosed(controller);
+
+		makeTimer();
+		timerObj_->setTimer(TIMERID_DELAYED_REMOVE, 10, false);
+
+		delay_remove_clients_set_.insert(controller);
+	}
+
+protected:
+	virtual void onInitialized() { }
+	virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) = 0;
+	virtual void onClientClosed(boost::shared_ptr<ClientController> controller) { }
+	virtual void onError(int error) { }
+	virtual void onTimer(unsigned short id) { }
+
+private:
+	friend class BinaryController;
+	friend class Reactor;
+	Reactor *reactor_;
+	boost::shared_ptr<ConnectionListener> connListener_;
+	Timer *timerObj_;
+
+	typedef std::set<boost::shared_ptr<ClientController> > clientset_t;
+	clientset_t clients_;
+	clientset_t delay_remove_clients_set_;
+};
+
+
+//------------------------------------------------------------------
+class BinaryController : public ClientController {
+public:
+	virtual ~BinaryController() {}
+
+private:
+	void onSocket_ReadEvent(int fd) { 
+		int howmuch = get_n_bytes_readable_on_socket(fd);
+		char *buffer = (char *)malloc(howmuch);
+		int res = ::read(fd, buffer, howmuch);
+
+		if(res > 0)
+			onSocket_Read(buffer, res);
+		else
+			fireReadErrorResult(res);
+
+		free(buffer);
+	}	
+
+	void onSocket_Error(int error) {
+		ClientController::onSocket_Error(error);
+
+		// emitted..
+		onError(error);
+
+		// following codes are deployed here for code compile (foward declaration problem..)
+		if(serverController_)
+			serverController_->fire_onClientClosed(shared_from_this());
+	}
+
+	void onSocket_Close() {
+		// for reconnecting commonly..
+		ClientController::onSocket_Close();
+
+		// emitted..
+		onClosed();
+
+		// following codes are deployed here for code compile (foward declaration problem..)
+		if(serverController_)
+			serverController_->fire_onClientClosed(shared_from_this());
+	}
+};
+
+
+//------------------------------------------------------------------
+class LineController : public BinaryController {
+public:
+	LineController() {
+
+	}
+
+	void onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) {
+		onSocket_Read(data, size);
+		
+		// do NOT save in the buffer by udp packet specification..
+		buffer_.clear();
+	}
+
+	void onSocket_Read(const void *data, int size) {
+		buffer_.append((const char *)data, size);
+ 
+ 		size_t start = 0;
+		do {
+			int delimeterSize = 2;
+			size_t pos = buffer_.find("\r\n", start);
+
+			if(pos == std::string::npos) {
+				delimeterSize = 1;
+				pos = buffer_.find("\n", start);
+			}
+
+			if(pos != std::string::npos) {
+				std::string line = buffer_.substr(start, pos);
+				onLineReceived(line.c_str());
+				buffer_.erase(start, pos+delimeterSize);
+			} else
+				break;
+
+			start = pos+delimeterSize;
+
+		}while(1);
+	}
+
+	virtual void onLineReceived(const char *line) = 0;
+
+private:
+	std::string buffer_;
+};
+
+
+//------------------------------------------------------------------
+class DescriptorController : public BinaryController {
+public:
+	void _onPreInitialized() { 
+		// NOTHING TO DO..
+	}
+
+	void writeDescriptor(int fd) {
+		unsigned char data[2] = { 0xab, 0xcd };
+		struct msghdr   msg;
+		struct iovec    iov[1];
+
+		union {
+			struct cmsghdr    cm;
+			char              control[CMSG_SPACE(sizeof(int))];
+		} control_un;
+		struct cmsghdr  *cmptr;
+
+		msg.msg_control = control_un.control;
+		msg.msg_controllen = sizeof(control_un.control);
+
+		cmptr = CMSG_FIRSTHDR(&msg);
+		cmptr->cmsg_len = CMSG_LEN(sizeof(int));
+		cmptr->cmsg_level = SOL_SOCKET;
+		cmptr->cmsg_type = SCM_RIGHTS;
+		*((int *) CMSG_DATA(cmptr)) = fd;
+
+		msg.msg_name = NULL;
+		msg.msg_namelen = 0;
+
+		iov[0].iov_base = data;
+		iov[0].iov_len = 1;
+		msg.msg_iov = iov;
+		msg.msg_iovlen = 1;
+
+		::sendmsg(socket()->socketFD(), &msg, 0);
+	}
+
+private:
+	void readDescriptor() {
+		char tempBuf;	
+		struct msghdr msg;
+		struct iovec iov[1];
+		ssize_t n;
+		int recvFD = -1;
+
+		union {
+			struct cmsghdr    cm;
+			char              control[CMSG_SPACE(sizeof(int))];
+		} control_un;
+		struct cmsghdr  *cmptr;
+
+		msg.msg_control = control_un.control;
+		msg.msg_controllen = sizeof(control_un.control);
+		msg.msg_name = NULL;
+		msg.msg_namelen = 0;
+
+		iov[0].iov_base = &tempBuf;
+		iov[0].iov_len = 1;
+		msg.msg_iov = iov;
+		msg.msg_iovlen = 1;
+
+		if ( (n = recvmsg(socket()->socketFD(), &msg, 0)) <= 0) {
+			fireReadErrorResult(n);
+			return;
+		}
+
+		if ( (cmptr = CMSG_FIRSTHDR(&msg)) != NULL &&
+				cmptr->cmsg_len == CMSG_LEN(sizeof(int))) {
+			if (cmptr->cmsg_level != SOL_SOCKET)
+			{
+				//trace("control level != SOL_SOCKET");
+			}
+			if (cmptr->cmsg_type != SCM_RIGHTS)
+			{
+				//trace("control type != SCM_RIGHTS");
+			}
+			recvFD = *((int *) CMSG_DATA(cmptr));
+		} 
+
+		onDescriptorReceived(recvFD);
+	}
+	
+public:
+	virtual void onSocket_ReadEvent(int fd) { 
+		readDescriptor();
+	}
+
+	virtual void onDescriptorReceived(int fd) { }
+};
+
+
+//------------------------------------------------------------------
+class HttpParameter {
+public:
+	HttpParameter() {
+	}
+
+	enum parameterType {
+		HEADER_TYPE,
+		FILE_TYPE,
+		STRING_TYPE,
+	};
+
+	typedef struct parameter_t {
+		parameterType type;
+		std::string key;
+		std::string value;
+	}parameter_t;
+
+	void addHeader(const char *key, const char *value) {
+		parameter_t param;
+		param.type = HEADER_TYPE;
+		param.key = key;
+		param.value = value;
+		parameters_.push_back(param);
+	}
+
+	void addParameter(const char *key, const char *value, int valuesize) {
+		parameter_t param;
+		param.type = STRING_TYPE;
+		param.key = key;
+		param.value.assign(value, valuesize);
+		parameters_.push_back(param);
+	}
+	void addParameter(const char *key, const char *value) {
+		addParameter(key, value, strlen(value));
+	}
+	void addParameter(const char *key, int value) {
+		char buffer[256] = {0, };
+		sprintf(buffer, "%d", value);
+		addParameter(key, buffer);
+	}
+	void addFile(const char *key, const char *filePath) {
+		parameter_t param;
+		param.type = FILE_TYPE;
+		param.key = key;
+		param.value = filePath;
+		parameters_.push_back(param);
+	}
+
+	const parameter_t & indexOf(int index) const {
+		return parameters_[index];
+	}
+	int count() const {
+		return parameters_.size();
+	}
+private:
+	std::vector<parameter_t> parameters_;
+};
+
+
+//-----------------------------------------------------------------
+enum HttpMethodType {
+	COOKIE_POST,
+	COOKIE_GET
+};
+
+class HttpRequest {
+public:
+	HttpRequest(struct event_base *base, HttpMethodType method, const char *uri, const HttpParameter *param, int timeout)
+		: base_(base)
+		, state_(Prepare)
+		, evcon_(NULL)
+		, dnsbase_(NULL)
+		, req_(NULL)
+		, evuri_(NULL)
+		, responsebuffer_(NULL)
+		, method_(method)
+		, uri_(uri)
+		, paramTemp_(param)
+		, timeout_(timeout)
+		, handler_(NULL)
+		, chunkmode_(true)
+		, multipart_(true) {
+
+		state_ = Prepare;
+	}
+
+	~HttpRequest() {
+		cleanUp();
+	}
+	class EventHandler
+	{
+	public:
+		virtual ~EventHandler() { }
+		virtual void onHttpRequest_Response(int rescode) { }
+		virtual void onHttpRequest_Timeout() { }
+		virtual void onHttpRequest_ReceivedChunked(int receivedsize) { }
+	};
+
+	enum RequestState {
+		Prepare,
+		Requesting,
+		GotResponse,
+		Timeout,
+	};
+
+public:
+	void setEventHandler(EventHandler *handler) {
+		handler_ = handler;
+	}
+
+	void cleanUp() {
+		if(req_) {
+			evhttp_request_free(req_);
+			req_ = NULL;
+		}
+
+		if(evuri_) {
+			evhttp_uri_free(evuri_);
+			evuri_ = NULL;
+		}
+
+		if(evcon_) {
+			evhttp_connection_free(evcon_);
+			evcon_ = NULL;
+		}
+
+		if(dnsbase_) {
+			evdns_base_free(dnsbase_, 0);
+			dnsbase_ = NULL;
+		}
+
+		if(responsebuffer_) {
+			evbuffer_free(responsebuffer_);
+			responsebuffer_ = NULL;
+		}
+	}
+
+	void cancelRequest() {
+		if(state_ == Requesting) {
+			assert(req_ && "now state is Requesting but req_ is NULL");
+
+			evhttp_cancel_request(req_);	
+			// TODO CHECK IT OUT !!CANCEL!!
+			req_ = NULL;
+		}
+	}
+
+	const void* responseBody() {
+		return (const void*)responseBody_.c_str();
+	}
+
+	int responseBodySize() {
+		return responseBody_.size();
+	}
+
+	void request() {
+		if(Prepare != state_) {
+			throw Exception("Already http requested");
+		}
+
+		parseParameter();
+		makeUriContext();
+		makeHttpRequest();
+		makeHeaderAndBody();
+		std::string requesturi = makeRequestUri();
+		makeHttpConnection();
+
+		startRequest(requesturi);
+	}
+
+private:
+	static void http_chuncked_cb(struct evhttp_request *req, void *arg) {
+		HttpRequest *THIS = (HttpRequest *)arg;
+
+		assert(req && "chunked callback called but req is NULL");
+		THIS->fire_onHttpRequest_ReceivedChunked(req);
+	}
+
+	static void http_done_cb(struct evhttp_request *req, void *arg) {
+
+		HttpRequest *THIS = (HttpRequest *)arg;
+
+		if(req)
+			THIS->fire_onHttpRequest_Response();
+		else
+			THIS->fire_onHttpRequest_Timeout();
+	}
+
+private:
+	void parseParameter() {
+		struct evkeyvalq args;
+		struct evkeyval *get;
+		printf("REQUEST URL = %s\n", uri_.c_str());
+		evhttp_parse_query(uri_.c_str(), &args);
+
+		// from user parameter 
+		if(paramTemp_) {
+			param_ = *paramTemp_;
+		}
+
+		// from uri..
+		TAILQ_FOREACH(get, &args, next) {
+			param_.addParameter(get->key, get->value);
+		}
+	}
+
+	void makeUriContext() {
+		evuri_ = evhttp_uri_parse_with_flags (uri_.c_str(), 0);
+		assert(evuri_ && "evhttp_uri can not be allocated");
+/*
+		printf("REQUEST URI INFORMATION : %s : %d : %s : %s\n", 
+			evhttp_uri_get_host(evuri_), 
+			evhttp_uri_get_port(evuri_), 
+			evhttp_uri_get_path(evuri_),
+			evhttp_uri_get_query(evuri_));
+*/
+	}
+
+	void makeHttpRequest() {
+		req_ = evhttp_request_new (http_done_cb, this);
+		assert(req_ && "evhttp_request can not be allocated");
+
+		evhttp_request_set_chunked_cb(req_, http_chuncked_cb);
+		responsebuffer_ = evbuffer_new();
+	}
+	
+	void makeHeaderAndBody() {
+		_makeBasicHeader();
+
+		int contentlength = 0;
+
+		if(COOKIE_POST == method_) {
+			_makeMultipartBoundary();
+			_makePostHeader();
+			contentlength = _makePostBody();
+		} 
+
+		_makeContentLengthHeader(contentlength);
+	}
+
+	void _makeBasicHeader() {
+		// Basic Header
+		evhttp_add_header(req_->output_headers, "Host", evhttp_uri_get_host(evuri_));
+
+		// Header from user 
+		for(int i = 0; i < param_.count(); i++) {
+			const HttpParameter::parameter_t& p = param_.indexOf(i);
+			if(HttpParameter::HEADER_TYPE != p.type)
+				continue;
+			evhttp_add_header(req_->output_headers, p.key.c_str(), p.value.c_str());
+		}
+	}
+
+	void _makeContentLengthHeader(int size) {
+		char contentlengthStr[20] = {0, };
+		sprintf(contentlengthStr, "%d", size);
+		evhttp_add_header(req_->output_headers, "Content-Length", contentlengthStr); 
+	}
+
+	void _makePostHeader() {
+		if(multipart_) {
+			char header[1024] = {0, };
+			sprintf(header, "multipart/form-data; boundary=%s", boundary_.c_str());
+			evhttp_add_header(req_->output_headers, "Content-Type", header);
+		} else {
+			evhttp_add_header(req_->output_headers, "Content-Type", "application/x-www-form-urlencoded");
+		}
+	}
+
+	void _makeMultipartBoundary() {
+		char temp[1024] = {0, };
+		srand(time(NULL));
+		sprintf(temp, "--%x%x%x%x%x%x%x%x%x%x%x%x%x",
+				rand() % 16, rand() % 16, rand() % 16, rand() % 16, rand() % 16,
+				rand() % 16, rand() % 16, rand() % 16, rand() % 16, rand() % 16,
+				rand() % 16, rand() % 16, rand() % 16);
+
+		boundary_ = temp;
+	}
+
+	int _makePostBody() {
+		if(multipart_) {
+			for(int i = 0; i < param_.count(); i++) {
+				const HttpParameter::parameter_t& p = param_.indexOf(i);
+				switch(p.type) {
+					case HttpParameter::HEADER_TYPE:
+						continue;	// skipped..
+					case HttpParameter::STRING_TYPE:
+						evbuffer_add_printf(req_->output_buffer, "--%s\r\nContent-Disposition: form-data; name=\"%s\"\r\n\r\n",
+								boundary_.c_str(), p.key.c_str());
+						evbuffer_add(req_->output_buffer, p.value.c_str(), p.value.size());
+						evbuffer_add(req_->output_buffer, "\r\n", 2);
+						continue;	
+					case HttpParameter::FILE_TYPE:
+						int fd = open(p.value.c_str(), O_RDONLY);
+						if(fd <= 0)
+							continue;
+						unsigned long long size = getFileSize(p.value.c_str());
+						//TODO
+						std::string filename = "testfile.txt";
+						evbuffer_add_printf(req_->output_buffer, 
+							"--%s\r\nContent-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\nContent-Type: \"%s\"\r\n\r\n",
+							boundary_.c_str(), p.key.c_str(), filename.c_str(), "application/octet-stream");
+						evbuffer_add_file(req_->output_buffer, fd, 0, size);
+						evbuffer_add(req_->output_buffer, "\r\n", 2);
+						close(fd);
+						printf("FILE SIZE %lld\n", size);
+						continue;	
+				}
+			}
+/*
+			char szBuf[10000] = {0, };
+			size_t buffer_len = evbuffer_get_length(req_->output_buffer);
+			const void *data = evbuffer_pullup(req_->output_buffer, buffer_len);
+			memcpy(szBuf, data, buffer_len);
+			printf("BODY\n%s\n", szBuf);
+*/
+		} else {
+			std::string s = _makeGetMethodBody();
+			evbuffer_add(req_->output_buffer, s.c_str(), s.size());
+		}
+
+		return evbuffer_get_length(req_->output_buffer);
+	}
+
+	std::string makeRequestUri() {
+		std::string result;
+		result +=  evhttp_uri_get_path(evuri_);	
+		if(COOKIE_GET == method_) {
+			result += "?";
+			result += _makeGetMethodBody();
+		}
+
+		printf("QUERY %s\n", result.c_str());
+		return result;
+	}
+
+	std::string _makeGetMethodBody() {
+		std::string result;
+		bool first = true;
+		for(int i = 0; i < param_.count(); i++) {
+			const HttpParameter::parameter_t& p = param_.indexOf(i);
+			if(!first)
+				result += "&";
+			if(HttpParameter::STRING_TYPE != p.type)
+				continue;
+			result += p.key;
+			result += "=";
+			char *enc = evhttp_uriencode(p.value.c_str(), p.value.size(), 0);
+			result += enc;
+			free(enc);
+			first = false;
+		}
+		return result;
+	}
+
+	void makeHttpConnection() {
+		evcon_ = evhttp_connection_base_new(base_, dnsbase_, evhttp_uri_get_host(evuri_), evhttp_uri_get_port(evuri_));
+		assert(evcon_ && "evhttp_connection can not be allocated");
+		
+		evhttp_connection_set_timeout(evcon_, timeout_); 
+	}
+
+	static void output_buffer_monitor_cb(struct evbuffer *buffer, const struct evbuffer_cb_info *info, void *arg)
+	{
+		//TODO
+		printf("AAAAAAAAAA %d\n", evbuffer_get_length(buffer));
+	}
+
+	void startRequest(std::string &uri) {
+		dnsbase_ = evdns_base_new(base_, 1);
+		assert(dnsbase_ && "evdns_base can not be allocated");
+
+		evhttp_make_request(evcon_, req_, method_ == COOKIE_POST ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str());
+
+		evbuffer_add_cb(req_->output_buffer, output_buffer_monitor_cb, this);
+
+		state_ = Requesting;
+	}
+
+private:
+	void fire_onHttpRequest_ReceivedChunked(struct evhttp_request *req) {
+		evbuffer_add_buffer(responsebuffer_, evhttp_request_get_input_buffer(req));
+
+		handler_->onHttpRequest_ReceivedChunked(evbuffer_get_length(responsebuffer_));
+	}
+	void fire_onHttpRequest_Timeout() {
+		handler_->onHttpRequest_Timeout();
+
+		req_ = NULL;
+		cleanUp();
+	}
+	void fire_onHttpRequest_Response() {
+		if (req_->response_code == HTTP_OK) {
+
+			struct evbuffer *buffer;
+			if(chunkmode_) {
+				buffer = responsebuffer_;
+			} else {
+				buffer = req_->input_buffer;
+			}
+			size_t buffer_len = evbuffer_get_length(buffer);
+			const void *data = evbuffer_pullup(buffer, buffer_len);
+			responseBody_.assign((const char *)data, buffer_len);
+		}
+
+		handler_->onHttpRequest_Response(req_->response_code);
+
+		req_ = NULL;	// automatically freed in libevent after callback
+		cleanUp();
+		state_ = GotResponse;
+	}
+
+private:
+	struct event_base *base_;
+	RequestState state_;
+	struct evhttp_connection *evcon_;
+	struct evdns_base *dnsbase_;
+	struct evhttp_request *req_;
+	struct evhttp_uri* evuri_;
+	struct evbuffer *responsebuffer_;
+	HttpMethodType method_;
+	std::string uri_;
+	const HttpParameter *paramTemp_;
+	int timeout_;
+	EventHandler *handler_;
+	std::string responseBody_;
+	HttpParameter param_;
+	bool chunkmode_;
+	bool multipart_;
+	std::string boundary_;
+};
+
+
+//------------------------------------------------------------------
+class HttpController : public HttpRequest::EventHandler {
+public:
+	HttpController() : reactor_(NULL) { 
+	}
+
+	virtual ~HttpController() {
+	}
+
+	int responseCode() {
+		return HTTP_OK;
+	}
+
+	void setHttpRequest(boost::shared_ptr<HttpRequest> request) {
+		request_ = request;
+	}
+	void setReactor(Reactor *reactor) {
+		reactor_ = reactor;
+	}
+
+	boost::shared_ptr<HttpRequest> httpRequest() {
+		return request_;
+	}
+
+protected:
+	void onHttpRequest_Response(int rescode) { 
+		onResponse(rescode);
+	}
+	void onHttpRequest_Timeout() {
+		onTimeout();
+	}
+	void onHttpRequest_ReceivedChunked(int receivedsize) { 
+		onReceivedChucked(receivedsize);
+	}
+
+protected:
+	virtual void onResponse(int rescode) { }
+	virtual void onTimeout() { }
+	virtual void onReceivedChucked(int receivedsize) { }
+
+private:
+	Reactor *reactor_;
+	boost::shared_ptr<HttpRequest> request_;
+};
+
+
+//------------------------------------------------------------------
+class Reactor {
+public:
+	Reactor() : base_(NULL) {
+		base_ = event_base_new();
+	}
+
+	bool connectTcp(const char* host, int port, boost::shared_ptr<ClientController> controller, int timeout = 0) {
+		boost::shared_ptr<TcpSocket> tcpSocket(new TcpSocket(base_, host, port, timeout));
+		tcpSocket->setEventHandler(controller.get());
+		tcpSocket->connect();
+
+		controller->setReactor(this);
+		controller->setSocket(tcpSocket);
+		return true;
+	}
+
+	bool connectUnix(const char* path, boost::shared_ptr<ClientController> controller, int timeout = 0) {
+		boost::shared_ptr<TcpSocket> tcpSocket(new TcpSocket(base_, path, timeout));
+		tcpSocket->setEventHandler(controller.get());
+		tcpSocket->connect();
+
+		controller->setReactor(this);
+		controller->setSocket(tcpSocket);
+		return true;
+	}
+
+	bool listenTcp(int port, boost::shared_ptr<ServerController> controller) {
+		boost::shared_ptr<ConnectionListener> connListener(new ConnectionListener(base_, port));
+		connListener->listen();
+
+		controller->setReactor(this);
+		controller->setConnectionListener(connListener);
+		return true;
+	}
+
+	bool listenUnix(const char *path, boost::shared_ptr<ServerController> controller) {
+		boost::shared_ptr<ConnectionListener> connListener(new ConnectionListener(base_, path));
+		connListener->listen();
+
+		controller->setReactor(this);
+		controller->setConnectionListener(connListener);
+		return true;
+	}
+
+	bool bindUdp(int port, boost::shared_ptr<ClientController> controller) {
+		boost::shared_ptr<UdpSocket> udpSocket(new UdpSocket(base_, port));
+		udpSocket->setEventHandler(controller.get());
+		udpSocket->bind();
+
+		controller->setReactor(this);
+		controller->setSocket(udpSocket);
+		return true;
+	}
+
+	bool httpRequest(HttpMethodType method, const char *uri, int timeout, 
+				const HttpParameter *param, 
+				boost::shared_ptr<HttpController> controller) {
+
+		boost::shared_ptr<HttpRequest> request(new HttpRequest(base_, method, uri, param, timeout));
+		request->setEventHandler(controller.get());
+		request->request();
+
+		controller->setReactor(this);
+		controller->setHttpRequest(request);
+		return true;
+	}
+
+	void run() {
+		event_base_dispatch(base_);
+	}
+
+private:
+	 struct event_base *base_;	
+};
+
+} // end of namespace cookie
