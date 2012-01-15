@@ -3,11 +3,6 @@
 1. hiredis : git://github.com/antirez/hiredis.git
 2. libevent 2.0.15 : https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 3. boost 1.33.0 : http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
-4. pthread library
-5. log4cxx : http://apache.mirror.cdnetworks.com//logging/log4cxx/0.10.0/apache-log4cxx-0.10.0.tar.gz 
-   - apr : http://mirror.apache-kr.org//apr/apr-1.4.5.tar.gz
-   - apr-util : http://mirror.apache-kr.org//apr/apr-util-1.4.1.tar.gz
-
 
 # Installing/Configuring
 
@@ -16,6 +11,6 @@ export LD_LIBRARY_PATH=<BOOST STAGE LIB DIR>:$LD_LIBRARY_PATH
 
 configure
 make
-cd example
-tcpserver 
+cd tester
+protocoltest
 
