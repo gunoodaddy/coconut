@@ -194,11 +194,9 @@ public:
 
 	void run() {
 		if(multithread_) {
-			printf("======================1111111111111111111111111111111\n");
 			_startEventLoopInThread();
 			_joinThread();
 		} else {
-			printf("222222222======================1111111111111111111111111111111\n");
 			_startEventLoopBlock();
 		}
 	}
