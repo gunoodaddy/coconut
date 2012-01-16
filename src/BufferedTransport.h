@@ -58,6 +58,10 @@ public:
 		return buffer_.size() - readPos_;
 	}
 
+	const void * basePtr() {
+		return buffer_.c_str();
+	}
+
 	const void * currentPtr() {
 		return buffer_.c_str() + readPos_;
 	}

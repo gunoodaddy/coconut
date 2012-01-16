@@ -56,7 +56,7 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 						//printf("%d %d %d %d %d\n", remain, nread,  header_.length() , payload_pos_ , buffer_->totalSize());
 						if(nread > 0)
 							buffer_->write(tempBuf, nread);
-						if((int)buffer_->totalSize() < header_.length() - payload_pos_)
+						if(buffer_->totalSize() < header_.length() - payload_pos_)
 							break; // need more data..
 					}
 #else
@@ -65,9 +65,9 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 						break; // need mode data..
 #endif
 					initHeader_ = header_;
-					init_payload_pos_ = buffer_->readPos();
+					payload_pos_on_buffer_ = buffer_->readPos();	// must use readPos() return value..
 					state_ = Complete;
-					//printf("## parsing complete : %d %d %d %d %d %d %d\n", remain, header_.length(), buffer_->totalSize(), buffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize());
+					//printf("## parsing complete : remain %d length %d total %d bufremain %d initheaderlen %d pos %d readPaySize %d\n", remain, header_.length(), buffer_->totalSize(), buffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize());
 				}
 			case Complete:
 				return true;
@@ -140,8 +140,10 @@ const void * FrameProtocol::payloadPtr() {
 	// for performance, do not copy to payload_ string.
 	if(payload_.size() > 0)
 		return payload_.c_str();
-	else if(isReadComplete())
-		return payloadBuffer()->currentPtr();
+	else if(isReadComplete()) {
+		if(payload_pos_on_buffer_ < payloadBuffer()->totalSize())
+			return (const char*)payloadBuffer()->basePtr() + payload_pos_on_buffer_;
+	}
 	return NULL;
 }
 
@@ -149,8 +151,11 @@ const void * FrameProtocol::payloadPtr() {
 size_t FrameProtocol::payloadSize() {
 	if(payload_.size() > 0)
 		return payload_.size();
-	else if(isReadComplete())
-		return initHeader_.length() - payload_pos_;
+	else if(isReadComplete()) {
+		int expacted = initHeader_.length() - payload_pos_;
+		if(expacted <= (int)payloadBuffer()->totalSize())
+			return expacted;
+	}
 	return 0;
 }
 
