@@ -1,6 +1,8 @@
 #include "Coconut.h"
 #include <assert.h>
+#if defined(WIN32)
 #include <conio.h>
+#endif
 #include <fcntl.h>
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
@@ -195,7 +197,9 @@ namespace TestLineProtocol {
 		ioServiceContainer = boost::shared_ptr<IOServiceContainer>(new IOServiceContainer);
 		//	ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(threadCount));
 
+#if defined(WIN32)
 		ioServiceContainer->turnOnIOCP(1);
+#endif
 		ioServiceContainer->initialize();
 
 		try {
@@ -920,9 +924,6 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 							
 							payloadSendMemo_ = lprot.linePtr();
 
-							std::string key;
-							key.assign((char *)prot->payloadPtr(), prot->payloadSize());
-
 							for(size_t i = 0; i < slprot.listSize(); i++) {
 								int ticket = redisCtrl_->redisRequest()->get(slprot.stringOf(i).c_str());
 								redisCtrl_->eventGotResponse()->registerObserver(ticket, this);
@@ -1060,6 +1061,7 @@ int main() {
 	logger::setLogHookFunctionCallback(logCallback);
 #endif
 	logger::setLogLevel(logger::LEVEL_TRACE);
+	//logger::setLogLevel(logger::LEVEL_INFO);
 
 	MY_LOG4CXX_INFO(gLogger, "Entering protocol test");
 
