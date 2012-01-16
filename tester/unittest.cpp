@@ -1,21 +1,140 @@
 #include "Coconut.h"
 #include <assert.h>
 #include <fcntl.h>
-#include <log4cxx/logger.h> 
-#include <log4cxx/basicconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
 #include "LineController.h"
 #include "FrameController.h"
 #include "FileDescriptorController.h"
+#include "Logger.h"
 #include "log4cxxutil.h"
+
+#if defined(USE_LOG4CXX)
+#include <log4cxx/logger.h> 
+#include <log4cxx/basicconfigurator.h>
+#include <log4cxx/propertyconfigurator.h>
+using namespace log4cxx;
+LoggerPtr gLogger(Logger::getLogger("MyApp"));
+#endif
 
 using namespace coconut;
 using namespace coconut::protocol;
-using namespace log4cxx;
 
-LoggerPtr gLogger(Logger::getLogger("MyApp"));
+static const char *REDIS_ADDRESS = "61.247.198.102";
+
+namespace TestUDPAndLineProtocol {
+	static const int UDP_PORT = 1234;
+	static int retryCnt = 3;
+
+	class TestUdpClientController : public coconut::LineController {
+	public:
+		virtual void onInitialized() {
+			setTimer(1, 1000, true);
+			sendTest();
+		}
+
+		virtual void onLineReceived(const char *line) {
+			MY_LOG4CXX_INFO(gLogger, "TestUdpClientController LINE RECEIVED : [%s] port : %d\n", 
+					line, ntohs(udpSocket()->lastClientAddress()->sin_port));
+
+			MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+			ioServiceContainer()->stop();	// test success
+		}
+
+		void sendTest() {
+			udpSocket()->writeTo("UDP HELLO\r\n", 11, "localhost", UDP_PORT);
+		}
+
+		virtual void onTimer(unsigned short id) {
+			// retry
+			assert(retryCnt-- > 0 && "time out. failed to receive udp packet"); 
+			sendTest();
+		}
+	};
+
+	class TestUdpServerController : public coconut::LineController {
+	public:
+		virtual void onLineReceived(const char *line) {
+			MY_LOG4CXX_INFO(gLogger, "TestUdpServerController LINE RECEIVED : [%s]\n", line);
+			writeLine(line);
+		}
+	};
+
+	bool doTest() {
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		MY_LOG4CXX_INFO(gLogger, "UDP And Line Protocol Test");
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+
+		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
+		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
+
+		ioServiceContainer->initialize();
+
+		try {
+			boost::shared_ptr<TestUdpServerController> udpServerController(new TestUdpServerController);
+			coconut::NetworkHelper::bindUdp(ioServiceContainer.get(), UDP_PORT, udpServerController);
+
+			boost::shared_ptr<TestUdpClientController> controller(new TestUdpClientController);
+			coconut::NetworkHelper::bindUdp(ioServiceContainer.get(), 0, controller);
+
+			ioServiceContainer->run();
+			return true;
+		} catch(Exception &e) {
+			printf("Exception emitted : %s\n", e.what());
+		}
+		return false;
+	}
+}
+
+
+namespace TestHttpRequestGet
+{
+	class TestHttpController : public coconut::HttpRequestController
+	{
+		virtual void onReceivedChucked(int receivedsize) { 
+			MY_LOG4CXX_INFO(gLogger, "TestHttpController received size : %d byte\n", receivedsize);
+		}
+
+		virtual void onError(coconut::HttpRequest::ErrorCode errorcode) {
+			MY_LOG4CXX_INFO(gLogger, "TestHttpController onError : %d\n", errorcode);
+		}
+
+		virtual void onResponse(int rescode) {
+			MY_LOG4CXX_INFO(gLogger, "TestHttpController onResponse [this = %p], rescode = %d, size = %d\n", 
+				this, rescode, httpRequest()->responseBodySize());
+
+			printf("%s\n", (char *)httpRequest()->responseBody());
+
+			MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+			ioServiceContainer()->stop();	// test success
+		}
+	};
+
+	bool doTest() {
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		MY_LOG4CXX_INFO(gLogger, "Http Request GET Test");
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+
+		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
+		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
+
+		ioServiceContainer->initialize();
+
+		try {
+			std::string uri;
+			uri = "http://119.205.238.162:8081/test.php";
+			boost::shared_ptr<TestHttpController> controller(new TestHttpController);
+			coconut::NetworkHelper::httpRequest(ioServiceContainer.get(), coconut::HTTP_POST, uri.c_str(), 20, NULL, controller);
+
+			ioServiceContainer->run();
+			return true;
+		} catch(Exception &e) {
+			printf("Exception emitted : %s\n", e.what());
+		}
+		return false;
+	}
+
+}
 
 namespace TestLineProtocol {
 
@@ -416,7 +535,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 	}
 }
 
-
+#if ! defined(WIN32)
 namespace TestFileDescriptorProtocol {
 	class TestFDController : public FileDescriptorController {
 		public:
@@ -505,9 +624,10 @@ namespace TestFileDescriptorProtocol {
 		return false;
 	}
 }
+#endif
 
 
-namespace TestRedisRequestController {
+namespace TestRedisRequest {
 	static const int GET_COUNT = 100;
 	//static const int GET_COUNT = 10;
 
@@ -565,7 +685,7 @@ namespace TestRedisRequestController {
 
 	bool doTest() {
 		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "RedisRequestController Test");
+		MY_LOG4CXX_INFO(gLogger, "Redis Request Test");
 		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
@@ -581,7 +701,7 @@ namespace TestRedisRequestController {
 			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
 
 			gRedisCtrl_ = boost::shared_ptr<TestRedisController>(new TestRedisController());
-			NetworkHelper::connectRedis(ioServiceContainer.get(), "localhost", 6379, gRedisCtrl_);
+			NetworkHelper::connectRedis(ioServiceContainer.get(), REDIS_ADDRESS, 6379, gRedisCtrl_);
 
 			ioServiceContainer->run();
 			MY_LOG4CXX_INFO(gLogger, "Test OK");
@@ -636,7 +756,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			TestLoginClientController(const std::string &userId) : dummyLoginId(userId) { }
 
 			virtual void onConnected() {
-				MY_LOG4CXX_DEBUG(gLogger, "onConnected emitted.. thread = %p\n", (void *)pthread_self());
+				MY_LOG4CXX_DEBUG(gLogger, "onConnected emitted\n");
 
 				LineProtocol lprot;
 				lprot.setLine(dummyLoginId);
@@ -686,7 +806,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			TestSendMemoClientController() { }
 
 			virtual void onConnected() {
-				MY_LOG4CXX_DEBUG(gLogger, "onConnected emitted.. thread = %p\n", (void *)pthread_self());
+				MY_LOG4CXX_DEBUG(gLogger, "onConnected emitted\n");
 
 				setTimer(TIMER_ID_CHECK_LOGIN_OK, 100, true);
 				setTimer(TIMER_ID_CHECK_LOGIN_WAIT_PATIENCE, 2000, false);
@@ -819,9 +939,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				// send to memopacket to this user location!.... 
 				// but here is not real world. stop dreaming! 
 #define TOKEN "dummyid="
-				char *find = strstr(res->result()->str.c_str(), TOKEN);
+				const char *find = strstr(res->result()->str.c_str(), TOKEN);
 				assert(find);
-				char *userId = find + strlen(TOKEN);
+				const char *userId = find + strlen(TOKEN);
 
 				gLockMutex.lock();
 				mapUser_t::iterator it = gUserMap.find(userId);
@@ -849,7 +969,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	class TestServerController : public ServerController {
 		virtual void onInitialized() {
 			redisCtrl_ = boost::shared_ptr<TestRedisController>(new TestRedisController());
-			NetworkHelper::connectRedis(ioServiceContainer(), "localhost", 6379, redisCtrl_);
+			NetworkHelper::connectRedis(ioServiceContainer(), REDIS_ADDRESS, 6379, redisCtrl_);
 		}
 		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
 			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController(redisCtrl_)); 
@@ -898,11 +1018,31 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	}
 }
 
+void coconutLog(logger::LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg) {
+	printf("[COCONUT] <%d> %s\n", level, logmsg);
+}
+
 int main() {
+#if defined(USE_LOG4CXX)
 	PropertyConfigurator::configure("log4cxx.properties");
+#endif
+
+//#define SHOW_COCONUT_LOG
+#if defined(SHOW_COCONUT_LOG) || !defined(USE_LOG4CXX)
+	logger::LogHookCallback logCallback;
+	logCallback.trace = coconutLog;
+	logCallback.debug = coconutLog;
+	logCallback.info = coconutLog;
+	logCallback.warning = coconutLog;
+	logCallback.error = coconutLog;
+	logCallback.fatal = coconutLog;
+	logger::setLogHookFunctionCallback(logCallback);
+#endif
+	logger::setLogLevel(logger::LEVEL_TRACE);
 
 	MY_LOG4CXX_INFO(gLogger, "Entering protocol test");
-
+	assert(TestUDPAndLineProtocol::doTest());
+	assert(TestHttpRequestGet::doTest());
 	assert(TestLineProtocol::doTest());
 	assert(TestFrameProtocol::doTest());
 	assert(TestFrameAndStringListProtocol::doTest());
@@ -911,7 +1051,7 @@ int main() {
 	assert(TestFileDescriptorProtocol::doTest());
 #endif
 	assert(TestFrameAndStringListAndLineProtocolAndRedis::doTest());
-	assert(TestRedisRequestController::doTest());
+	assert(TestRedisRequest::doTest());
 
 	MY_LOG4CXX_INFO(gLogger, "Leaving protocol test");
 

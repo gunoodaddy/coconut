@@ -10,7 +10,7 @@ AM_LDFLAGS = $(BOOST_LDFLAGS) -static
 noinst_PROGRAMS = \
 	tester \
 	boosttest \
-	protocoltest
+	unittest
 
 tester_SOURCES = \
 	tester.cpp
@@ -18,8 +18,8 @@ tester_SOURCES = \
 boosttest_SOURCES = \
 	boosttest.cpp
 
-protocoltest_SOURCES = \
-	protocoltest.cpp
+unittest_SOURCES = \
+	unittest.cpp
 
 CLEANFILES=core* tag cscope.* *.log *.log.* .*.sw* *~ result *.sock
 DISTCLEANFILES=$(CLEANFILES)

@@ -34,13 +34,13 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = tester$(EXEEXT) boosttest$(EXEEXT) \
-	protocoltest$(EXEEXT)
+noinst_PROGRAMS = tester$(EXEEXT) boosttest$(EXEEXT) unittest$(EXEEXT)
 subdir = tester
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/aclocal/ax_boost_base.m4 \
 	$(top_srcdir)/aclocal/ax_lib_event.m4 \
+	$(top_srcdir)/aclocal/ax_log4cxx.m4 \
 	$(top_srcdir)/aclocal/libtool.m4 \
 	$(top_srcdir)/aclocal/ltoptions.m4 \
 	$(top_srcdir)/aclocal/ltsugar.m4 \
@@ -57,15 +57,19 @@ PROGRAMS = $(noinst_PROGRAMS)
 am_boosttest_OBJECTS = boosttest.$(OBJEXT)
 boosttest_OBJECTS = $(am_boosttest_OBJECTS)
 boosttest_LDADD = $(LDADD)
-boosttest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
-am_protocoltest_OBJECTS = protocoltest.$(OBJEXT)
-protocoltest_OBJECTS = $(am_protocoltest_OBJECTS)
-protocoltest_LDADD = $(LDADD)
-protocoltest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
+am__DEPENDENCIES_1 =
+boosttest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
+	$(am__DEPENDENCIES_1)
 am_tester_OBJECTS = tester.$(OBJEXT)
 tester_OBJECTS = $(am_tester_OBJECTS)
 tester_LDADD = $(LDADD)
-tester_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
+tester_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
+	$(am__DEPENDENCIES_1)
+am_unittest_OBJECTS = unittest.$(OBJEXT)
+unittest_OBJECTS = $(am_unittest_OBJECTS)
+unittest_LDADD = $(LDADD)
+unittest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
+	$(am__DEPENDENCIES_1)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -78,10 +82,9 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(boosttest_SOURCES) $(protocoltest_SOURCES) \
-	$(tester_SOURCES)
-DIST_SOURCES = $(boosttest_SOURCES) $(protocoltest_SOURCES) \
-	$(tester_SOURCES)
+SOURCES = $(boosttest_SOURCES) $(tester_SOURCES) $(unittest_SOURCES)
+DIST_SOURCES = $(boosttest_SOURCES) $(tester_SOURCES) \
+	$(unittest_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -126,6 +129,7 @@ LDFLAGS = @LDFLAGS@
 LIBEVENT_CPPFLAGS = @LIBEVENT_CPPFLAGS@
 LIBEVENT_LDFLAGS = @LIBEVENT_LDFLAGS@
 LIBEVENT_LIBS = @LIBEVENT_LIBS@
+LIBLOG4CXX = @LIBLOG4CXX@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -149,6 +153,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -193,6 +198,8 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
+log4cxx_CFLAGS = @log4cxx_CFLAGS@
+log4cxx_LIBS = @log4cxx_LIBS@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
@@ -219,8 +226,8 @@ tester_SOURCES = \
 boosttest_SOURCES = \
 	boosttest.cpp
 
-protocoltest_SOURCES = \
-	protocoltest.cpp
+unittest_SOURCES = \
+	unittest.cpp
 
 CLEANFILES = core* tag cscope.* *.log *.log.* .*.sw* *~ result *.sock
 DISTCLEANFILES = $(CLEANFILES)
@@ -270,12 +277,12 @@ clean-noinstPROGRAMS:
 boosttest$(EXEEXT): $(boosttest_OBJECTS) $(boosttest_DEPENDENCIES) 
 	@rm -f boosttest$(EXEEXT)
 	$(CXXLINK) $(boosttest_OBJECTS) $(boosttest_LDADD) $(LIBS)
-protocoltest$(EXEEXT): $(protocoltest_OBJECTS) $(protocoltest_DEPENDENCIES) 
-	@rm -f protocoltest$(EXEEXT)
-	$(CXXLINK) $(protocoltest_OBJECTS) $(protocoltest_LDADD) $(LIBS)
 tester$(EXEEXT): $(tester_OBJECTS) $(tester_DEPENDENCIES) 
 	@rm -f tester$(EXEEXT)
 	$(CXXLINK) $(tester_OBJECTS) $(tester_LDADD) $(LIBS)
+unittest$(EXEEXT): $(unittest_OBJECTS) $(unittest_DEPENDENCIES) 
+	@rm -f unittest$(EXEEXT)
+	$(CXXLINK) $(unittest_OBJECTS) $(unittest_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -284,8 +291,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/boosttest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocoltest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tester.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittest.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
