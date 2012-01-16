@@ -12,6 +12,10 @@
 
 namespace coconut {
 
+#if defined(WIN32)	
+static bool gStartUpWinSock = false;
+#endif
+
 extern void activateMultithreadMode();
 
 class DefaultIOServiceContainer;
@@ -145,7 +149,13 @@ public:
 	}
 
 	void initialize() {
-#if defined(WIN32)		
+#if defined(WIN32)	
+		if(false == gStartUpWinSock) {
+			WSADATA wsaData;
+			::WSAStartup(MAKEWORD(2, 2), &wsaData);
+			gStartUpWinSock = true;
+		}
+
 		if(enabledIOCP_) 
 		{
 			activateMultithreadMode();	
