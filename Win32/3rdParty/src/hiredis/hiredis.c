@@ -1004,9 +1004,10 @@ redisContext *redisConnectWithTimeout(const char *ip, int port, struct timeval t
 }
 
 redisContext *redisConnectNonBlock(const char *ip, int port) {
+	struct timeval tv = {1, 0};	// timeout connection (1sec) by gunoodaddy 
     redisContext *c = redisContextInit();
     c->flags &= ~REDIS_BLOCK;
-    redisContextConnectTcp(c,ip,port,NULL);
+    redisContextConnectTcp(c,ip,port,&tv);
     return c;
 }
 
