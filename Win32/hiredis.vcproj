@@ -171,11 +171,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\3rdParty\src\hiredis\adapters\ae.h"
+				>
+			</File>
+			<File
 				RelativePath=".\3rdParty\src\hiredis\async.h"
 				>
 			</File>
 			<File
 				RelativePath=".\3rdParty\src\hiredis\hiredis.h"
+				>
+			</File>
+			<File
+				RelativePath=".\3rdParty\src\hiredis\adapters\libev.h"
+				>
+			</File>
+			<File
+				RelativePath=".\3rdParty\src\hiredis\adapters\libevent.h"
 				>
 			</File>
 			<File
