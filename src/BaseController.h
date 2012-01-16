@@ -20,7 +20,7 @@ class COCONUT_API BaseController : public boost::enable_shared_from_this<BaseCon
                      , public OccuredErrorControllerEvent::EventHandler 
 {
 public:
-	BaseController() : timerObj_(NULL) {
+	BaseController() : timerObj_(NULL), deferredCaller_(NULL) {
 		controllerEvent_GotResponse_ = new GotResponseControllerEvent;
 		controllerEvent_GotProtocol_ = new GotProtocolControllerEvent;
 		controllerEvent_OccuredError_ = new OccuredErrorControllerEvent;
@@ -34,6 +34,8 @@ public:
 		delete controllerEvent_ClosedConnection_;
 		if(timerObj_)
 			delete timerObj_;
+		if(deferredCaller_)
+			delete deferredCaller_;
 	}
 
 public:
@@ -61,10 +63,12 @@ protected:
 	void _makeTimer();
 
 	virtual void _onPreInitialized() {
-		controllerEvent_GotResponse_->deferredCaller().setIOService(ioService());
-		controllerEvent_GotProtocol_->deferredCaller().setIOService(ioService());
-		controllerEvent_ClosedConnection_->deferredCaller().setIOService(ioService());
-		controllerEvent_OccuredError_->deferredCaller().setIOService(ioService());
+		deferredCaller_ = new DeferredCaller(ioService());
+
+		controllerEvent_ClosedConnection_->setDeferredCaller(deferredCaller_);	
+		controllerEvent_OccuredError_->setDeferredCaller(deferredCaller_);	
+		controllerEvent_GotProtocol_->setDeferredCaller(deferredCaller_);	
+		controllerEvent_GotResponse_->setDeferredCaller(deferredCaller_);	
 
 		onInitialized();
 	}
@@ -112,6 +116,7 @@ protected:
 	OccuredErrorControllerEvent *controllerEvent_OccuredError_;
 	
 	Timer *timerObj_;
+	DeferredCaller *deferredCaller_;
 };
 
 } // end of namespace coconut

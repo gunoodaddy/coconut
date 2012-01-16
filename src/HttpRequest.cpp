@@ -371,7 +371,11 @@ public:
 	}
 
 	void makeHttpConnection() {
-		evcon_ = evhttp_connection_base_new(ioService_->base(), dnsbase_, evhttp_uri_get_host(evuri_), evhttp_uri_get_port(evuri_));
+		int port = evhttp_uri_get_port(evuri_);
+		if(port < 0)
+			port = 80;
+		LOG_TRACE("Http Connection Making.. : %s:%d", evhttp_uri_get_host(evuri_), port);
+		evcon_ = evhttp_connection_base_new(ioService_->base(), dnsbase_, evhttp_uri_get_host(evuri_), port);
 		assert(evcon_ && "evhttp_connection can not be allocated");
 		
 		evhttp_connection_set_timeout(evcon_, timeout_); 
@@ -418,6 +422,8 @@ public:
 	// TODO reading progress feature supported,
 	// but "writing" progress feature NOT supported
 	void fire_onHttpRequest_Error(HttpRequest::ErrorCode errorcode) {
+		LOG_DEBUG("HttpRequest Got error");
+
 		cleanUp(false); // automatically freed in libevent after callback
 
 		owner_->eventHandler()->onHttpRequest_Error(errorcode);

@@ -41,14 +41,13 @@ void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
 	// onAccept emitted..
 	boost::shared_ptr<ClientController> newController = onAccept(newTcpSocket);
 
-	newController->setSocket(newTcpSocket, false);
+	newController->setSocket(newTcpSocket);
 	newTcpSocket->setEventHandler(newController.get());
 
 	// for client event..
 	newController->eventClosedConnection()->registerObserver(this);
 
 	newTcpSocket->attachSocketHandle(newSocket, false);	// for multithreading.. this method call last!
-	newController->fireOnInitialized();
 	newTcpSocket->install();
 
 	clients_.insert(newController);

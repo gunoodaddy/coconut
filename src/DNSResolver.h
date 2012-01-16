@@ -22,16 +22,11 @@ public:
 	};
 
 public:
-	boost::shared_ptr<IOService> ioService() {
-		return ioService_;
-	}
-
 	void cleanUp();
 	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
 
 private:
 	DNSResolverImpl *impl_;
-	boost::shared_ptr<IOService> ioService_;	
 };
 
 } // end of namespace coconut

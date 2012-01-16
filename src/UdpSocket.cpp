@@ -91,12 +91,15 @@ public:
 
 		if(0 != port_) {
 			LOG_INFO("UDP BIND START : port = %d\n", port_);
-			if (::bind(sock, (struct sockaddr*)&sin_, sizeof(struct sockaddr)) < 0) 
+			if (::bind(sock, (struct sockaddr*)&sin_, sizeof(struct sockaddr)) < 0) {
 				throw SocketException("Error binding datagram socket");
+			}
 		}
 
 		ev_ = event_new(owner_->ioService()->base(), sock, EV_READ|EV_PERSIST, event_cb, this);
 		event_add(ev_, NULL);	// TODO UDP READ TIMEOUT??
+
+		owner_->eventHandler()->onSocket_Initialized();
 	}
 
 	void close() {
@@ -257,6 +260,10 @@ int UdpSocket::writeTo(const void *data, size_t size, const char *host, int port
 
 int UdpSocket::write(const void *data, size_t size) {
 	return impl_->write(data, size);
+}
+
+const struct sockaddr_in * UdpSocket::lastClientAddress() {
+	return impl_->lastClientAddress();
 }
 
 }

@@ -8,7 +8,7 @@ namespace coconut {
 
 class DNSResolverImpl {
 public:
-	DNSResolverImpl() : dnsbase_(NULL) { }
+	DNSResolverImpl(boost::shared_ptr<IOService> ioService) : ioService_(ioService), dnsbase_(NULL) { }
 	~DNSResolverImpl() {
 		cleanUp();
 	}
@@ -48,7 +48,7 @@ public:
 
 	bool resolve(const char *host, struct sockaddr_in *sin, DNSResolver::EventHandler* handler, void *ptr) {
 		if(NULL == dnsbase_) {
-			dnsbase_ = evdns_base_new(owner_->ioService()->base(), 1);
+			dnsbase_ = evdns_base_new(ioService_->base(), 1);
 		}
 
 		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.find(host);
@@ -103,6 +103,7 @@ private:
 
 private:
 	DNSResolver *owner_;
+	boost::shared_ptr<IOService> ioService_;	
 	struct evdns_base *dnsbase_;
 
 	std::map<std::string, struct dns_context_t *> mapcontext_;
@@ -110,8 +111,8 @@ private:
 
 //-------------------------------------------------------------------------------------------------------
 
-DNSResolver::DNSResolver(boost::shared_ptr<IOService> ioService) : ioService_(ioService) {
-	impl_ = new DNSResolverImpl;
+DNSResolver::DNSResolver(boost::shared_ptr<IOService> ioService) {
+	impl_ = new DNSResolverImpl(ioService);
 }
 
 DNSResolver::~DNSResolver() {

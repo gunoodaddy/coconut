@@ -35,6 +35,7 @@ public:
 	public:
 		virtual ~EventHandler() { }
 
+		virtual void onSocket_Initialized() { }
 		virtual void onSocket_Connected() { }
 		virtual void onSocket_Error(int error, const char *strerror) { }
 		virtual void onSocket_ReadEvent(int fd) { }

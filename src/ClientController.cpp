@@ -36,6 +36,10 @@ void ClientController::processReconnect() {
 	}
 }
 
+void ClientController::onSocket_Initialized() {
+	fireOnInitialized();
+}
+
 void ClientController::onSocket_Connected() { 
 	onConnected();
 }

@@ -6,7 +6,7 @@
 namespace coconut { namespace logger {
 
 static LogLevel gCurrentLogLevel_ = LEVEL_INFO;
-static struct LogHookCallback gLogHookCallback;
+static LogHookCallback gLogHookCallback;
 
 void hexdump(const unsigned char *data, const int len, FILE * fp) {           
 	const unsigned char *p;
@@ -59,7 +59,7 @@ void setLogLevel(LogLevel level) {
 	gCurrentLogLevel_ = level;
 }
 
-void setLogHookFunctionCallback(struct LogHookCallback &callback) {
+void setLogHookFunctionCallback(LogHookCallback callback) {
 	gLogHookCallback = callback;
 }
 
@@ -78,7 +78,7 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 	if(log[len_format - 1] == '\n')
 		log[len_format - 1] = '\0';
 	
-	void (*hook)(const char *fileName, int fileLine, const char *functionName, const char *logmsg) = NULL;
+	void (*hook)(LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg) = NULL;
 
 	switch(level) {
 		case LEVEL_TRACE:
@@ -102,7 +102,7 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 	}
 
 	if(hook) {
-		hook(file, line, function, log); 
+		hook(level, file, line, function, log); 
 	} else {
 		/*
 		   va_list args;

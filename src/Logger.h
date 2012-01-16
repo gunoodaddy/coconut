@@ -18,11 +18,11 @@
 	if (coconut::logger::currentLogLevel() <= coconut::logger::LEVEL_WARNING || coconut::enableDebugMode()) \
 		coconut::logger::logprintf(__FILE__, __FUNCTION__, __LINE__, coconut::logger::LEVEL_WARNING, __VA_ARGS__); 
 
-#define LOG_ERROR(logger, ...) \
+#define LOG_ERROR(...) \
 	if (coconut::logger::currentLogLevel() <= coconut::logger::LEVEL_ERROR || coconut::enableDebugMode()) \
 		coconut::logger::logprintf(__FILE__, __FUNCTION__, __LINE__, coconut::logger::LEVEL_ERROR, __VA_ARGS__); 
 
-#define LOG_FATAL(logger, ...) \
+#define LOG_FATAL(...) \
 	if (coconut::logger::currentLogLevel() <= coconut::logger::LEVEL_FATAL || coconut::enableDebugMode()) \
 		coconut::logger::logprintf(__FILE__, __FUNCTION__, __LINE__, coconut::logger::LEVEL_FATAL, __VA_ARGS__); 
 
@@ -38,17 +38,17 @@ enum LogLevel{
 };
 
 /* Log Hook Callback */
-struct LogHookCallback {
-	void (*trace)  (const char *fileName, int fileLine, const char *functionName, const char *logmsg);
-	void (*debug)  (const char *fileName, int fileLine, const char *functionName, const char *logmsg);
-	void (*info)   (const char *fileName, int fileLine, const char *functionName, const char *logmsg);
-	void (*warning)(const char *fileName, int fileLine, const char *functionName, const char *logmsg);
-	void (*error)  (const char *fileName, int fileLine, const char *functionName, const char *logmsg);
-	void (*fatal)  (const char *fileName, int fileLine, const char *functionName, const char *logmsg);
-};
+typedef struct COCONUT_API LogHookCallback {
+	void (*trace)  (LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
+	void (*debug)  (LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
+	void (*info)   (LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
+	void (*warning)(LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
+	void (*error)  (LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
+	void (*fatal)  (LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
+}LogHookCallback;
 
 void setLogLevel(LogLevel level);
-void setLogHookFunctionCallback(struct LogHookCallback &callback);
+void setLogHookFunctionCallback(LogHookCallback callback);
 LogLevel currentLogLevel();
 
 void logprintf(const char *file, const char *function, int line, LogLevel level, const char * format, ...);

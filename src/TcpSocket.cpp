@@ -262,6 +262,7 @@ public:
 			ev_read_ = event_new(owner_->ioService()->base(), fd, EV_READ|EV_PERSIST, event_cb, this);
 		if(NULL == ev_write_)
 			ev_write_ = event_new(owner_->ioService()->base(), fd, EV_WRITE|EV_PERSIST, event_cb, this);
+		owner_->eventHandler()->onSocket_Initialized();
 	}
 
 	void _createBufferEvent(coconut_socket_t fd) {
@@ -269,6 +270,7 @@ public:
 			bev_ = bufferevent_socket_new(owner_->ioService()->base(), fd, BEV_OPT_CLOSE_ON_FREE);
 			bufferevent_enable(bev_, EV_READ|EV_WRITE);
 		}
+		owner_->eventHandler()->onSocket_Initialized();
 	}
 
 	void install() {
@@ -475,7 +477,7 @@ public:
 			} while(0);
 
 			if(destroy) {
-				LOG_FATAL(logger, "write error  size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR());
+				LOG_FATAL("write error  size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
 				close();
 			}
 #else

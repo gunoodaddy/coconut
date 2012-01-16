@@ -17,16 +17,20 @@ typedef std::set<BaseController*> setObservers_t;
 
 class BaseControllerEvent {
 public:
-	BaseControllerEvent() : deferredCaller_() { }
+	BaseControllerEvent() : deferredCaller_(NULL) { }
 
 	virtual ~BaseControllerEvent() { }
 
-	DeferredCaller & deferredCaller() {
+	DeferredCaller * deferredCaller() {
 		return deferredCaller_;
 	}
 
+	void setDeferredCaller(DeferredCaller *deferredCaller) {
+		deferredCaller_ = deferredCaller;
+	}
+
 protected:
-	DeferredCaller deferredCaller_;
+	DeferredCaller *deferredCaller_;
 	Mutex lockObserver_;
 };
 

@@ -26,7 +26,7 @@ void GotProtocolControllerEvent::fireObservers(
 		for(; it != observersTemp.end(); it++) {
 
 			if((*it)->ioService()->isCalledInMountedThread() == false) {
-				(*it)->eventGotProtocol()->deferredCaller().deferredCall(
+				(*it)->eventGotProtocol()->deferredCaller()->deferredCall(
 						boost::bind(&BaseController::_onPreControllerEvent_GotProtocol, *it, targetController, prot)
 						);
 			} else {
@@ -56,7 +56,7 @@ void OccuredErrorControllerEvent::fireObservers(
 		for(; it != observersTemp.end(); it++) {
 
 			if((*it)->ioService()->isCalledInMountedThread() == false) {
-				(*it)->eventOccuredError()->deferredCaller().deferredCall(
+				(*it)->eventOccuredError()->deferredCaller()->deferredCall(
 						boost::bind(&BaseController::_onPreControllerEvent_OccuredError, *it, targetController, error)
 						);
 			} else {
@@ -85,7 +85,7 @@ void ClosedConnectionControllerEvent::fireObservers(
 		for(; it != observersTemp.end(); it++) {
 
 			if((*it)->ioService()->isCalledInMountedThread() == false) {
-				(*it)->eventClosedConnection()->deferredCaller().deferredCall(
+				(*it)->eventClosedConnection()->deferredCaller()->deferredCall(
 						boost::bind(&BaseController::_onPreControllerEvent_ClosedConnection, *it, targetController, error)
 						);
 			} else {
@@ -115,7 +115,7 @@ void GotResponseControllerEvent::fireObservers(
 			for(; it != observersTemp.end(); it++) {
 
 				if((*it)->ioService()->isCalledInMountedThread() == false) {
-					(*it)->eventGotResponse()->deferredCaller().deferredCall(
+					(*it)->eventGotResponse()->deferredCaller()->deferredCall(
 							boost::bind(&BaseController::_onPreControllerEvent_GotResponse, *it, targetController, ticket)
 							);
 				} else {

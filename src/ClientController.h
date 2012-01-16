@@ -23,12 +23,8 @@ public:
 
 public:
 	// strategy pattern
-	void setSocket(boost::shared_ptr<BaseSocket> socket, bool callInit = true) { 
+	void setSocket(boost::shared_ptr<BaseSocket> socket) {
 		socket_ = socket;
-
-		if(callInit) {
-			fireOnInitialized();
-		}
 	}
 
 	void setProtocolFactory(boost::shared_ptr<protocol::BaseProtocolFactory> factory) {
@@ -56,8 +52,6 @@ public:
 
 	void setReconnectable(bool enable);
 
-private:
-	void processReconnect();
 	void fireOnInitialized() {
 		if(false == initFlag_) {
 			initFlag_ = true;
@@ -66,6 +60,10 @@ private:
 	}
 
 private:
+	void processReconnect();
+
+private:
+	void onSocket_Initialized();
 	void onSocket_Connected();
 	void onSocket_Error(int error, const char*strerror);
 	void onSocket_Close();
@@ -84,7 +82,6 @@ protected:
 
 	
 protected:
-	friend class ServerController;
 	BaseIOServiceContainer *ioServiceContainer_;
 	boost::shared_ptr<BaseSocket> socket_;
 	boost::shared_ptr<protocol::BaseProtocolFactory> protocolFactory_;
