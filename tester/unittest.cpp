@@ -1,5 +1,6 @@
 #include "Coconut.h"
 #include <assert.h>
+#include <conio.h>
 #include <fcntl.h>
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
@@ -21,6 +22,7 @@ using namespace coconut;
 using namespace coconut::protocol;
 
 static const char *REDIS_ADDRESS = "61.247.198.102";
+static int gPortBase = 8000;
 
 namespace TestUDPAndLineProtocol {
 	static const int UDP_PORT = 1234;
@@ -78,6 +80,7 @@ namespace TestUDPAndLineProtocol {
 			coconut::NetworkHelper::bindUdp(ioServiceContainer.get(), 0, controller);
 
 			ioServiceContainer->run();
+
 			return true;
 		} catch(Exception &e) {
 			printf("Exception emitted : %s\n", e.what());
@@ -140,7 +143,7 @@ namespace TestLineProtocol {
 
 	class TestClientController : public LineController {
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called");
+			MY_LOG4CXX_DEBUG(gLogger, "onConnected called : %d", socket()->socketFD());
 			recvedLine_ = 0;
 			socket()->write("HELLO\r\n", 7);
 			socket()->write("HELLO\r\n", 7);
@@ -163,6 +166,10 @@ namespace TestLineProtocol {
 	};
 
 	class TestServerClientController : public LineController {
+		virtual void onInitialized() {
+			MY_LOG4CXX_DEBUG(gLogger, "onInitialized called : %d", socket()->socketFD());
+			//socket()->write("HELLO\r\n", 7);
+		}
 		virtual void onLineReceived(const char *line) {
 			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onLineReceived called : %s", line);
 			writeLine("How's it going?");
@@ -170,8 +177,11 @@ namespace TestLineProtocol {
 	};
 
 	class TestServerController : public ServerController {
+
 		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
+			
 			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController); 
+			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onAccept called : %p", newController.get());
 			return newController;
 		}
 	};
@@ -181,18 +191,21 @@ namespace TestLineProtocol {
 		MY_LOG4CXX_INFO(gLogger, "Line Protocol Test");
 		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
 
-		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
-		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
+		boost::shared_ptr<IOServiceContainer> ioServiceContainer;
+		ioServiceContainer = boost::shared_ptr<IOServiceContainer>(new IOServiceContainer);
 		//	ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(threadCount));
 
+		ioServiceContainer->turnOnIOCP(1);
 		ioServiceContainer->initialize();
 
 		try {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
-			NetworkHelper::listenTcp(ioServiceContainer.get(), 8000, serverController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
-			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
+
+			gPortBase++;
 
 			ioServiceContainer->run();
 			return true;
@@ -276,10 +289,10 @@ namespace TestFrameProtocol {
 
 		try {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
-			NetworkHelper::listenTcp(ioServiceContainer.get(), 8000, serverController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
-			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase++, clientController);
 
 			ioServiceContainer->run();
 			return true;
@@ -379,10 +392,12 @@ namespace TestFrameAndStringListProtocol {
 
 		try {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
-			NetworkHelper::listenTcp(ioServiceContainer.get(), 8000, serverController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
-			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
+
+			gPortBase++;
 
 			ioServiceContainer->run();
 			return true;
@@ -521,10 +536,12 @@ namespace TestFrameAndStringListAndLineProtocol {
 
 		try {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
-			NetworkHelper::listenTcp(ioServiceContainer.get(), 8000, serverController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
-			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
+
+			gPortBase++;
 
 			ioServiceContainer->run();
 			return true;
@@ -694,14 +711,16 @@ namespace TestRedisRequest {
 
 		try {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
-			NetworkHelper::listenTcp(ioServiceContainer.get(), 8000, serverController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
 			// from user.. this user send to below 2 users..
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
-			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
 
 			gRedisCtrl_ = boost::shared_ptr<TestRedisController>(new TestRedisController());
 			NetworkHelper::connectRedis(ioServiceContainer.get(), REDIS_ADDRESS, 6379, gRedisCtrl_);
+
+			gPortBase++;
 
 			ioServiceContainer->run();
 			MY_LOG4CXX_INFO(gLogger, "Test OK");
@@ -991,11 +1010,11 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
 		try {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
-			NetworkHelper::listenTcp(ioServiceContainer.get(), 8000, serverController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
 			// from user.. this user send to below 2 users..
 			boost::shared_ptr<TestSendMemoClientController> clientController(new TestSendMemoClientController);
-			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, clientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
 
 			// to user.. dummy logged-in user client.
 			std::vector<boost::shared_ptr<BaseController> > clients;
@@ -1003,10 +1022,12 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				char userId[1024] = {0, };
 				sprintf(userId, "userid_num%d@naver.com", i);
 				boost::shared_ptr<TestLoginClientController> loginUser(new TestLoginClientController(userId));
-				NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", 8000, loginUser);
+				NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, loginUser);
 
 				clients.push_back(loginUser);
 			}
+
+			gPortBase++;
 
 			ioServiceContainer->run();
 			MY_LOG4CXX_INFO(gLogger, "Test OK");
@@ -1041,6 +1062,7 @@ int main() {
 	logger::setLogLevel(logger::LEVEL_TRACE);
 
 	MY_LOG4CXX_INFO(gLogger, "Entering protocol test");
+
 	assert(TestUDPAndLineProtocol::doTest());
 	assert(TestHttpRequestGet::doTest());
 	assert(TestLineProtocol::doTest());
@@ -1055,5 +1077,8 @@ int main() {
 
 	MY_LOG4CXX_INFO(gLogger, "Leaving protocol test");
 
+#if defined(WIN32)
+	_getch();
+#endif
 	return 0;
 }
