@@ -136,11 +136,15 @@ public:
 #endif
 	}
 
+	bool isStopped() {
+		return loopExitFlag_;
+	}
+
 	BaseIOServiceContainer *ioServiceContainer() {
 		return ioServiceContainer_;
 	}
 
-	struct event_base * base() {
+	struct event_base * coreHandle() {
 		return base_;
 	}
 
@@ -213,7 +217,7 @@ public:
 
 #if defined(WIN32)
 	void turnOnIOCP(size_t cpuCnt) {
-		cpuCnt = cpuCnt;
+		cpuCnt_ = cpuCnt;
 		enabledIOCP_ = true;
 	}
 #endif
@@ -223,6 +227,7 @@ public:
 			LOG_DEBUG("IOService stop eventloop..");
 			struct timeval tv = MAKE_TIMEVAL_MSEC(10);
 			event_base_loopexit(base_, &tv);
+			loopExitFlag_ = true;
 			//event_base_loopbreak(base_);
 		}
 	}
@@ -289,7 +294,6 @@ public:
 	void dispatchEvent() {
 		event_base_dispatch(base_);
 
-		loopExitFlag_ = true;
 		LOG_INFO("finished dispatch event.. this = %p", this);
 		// TODO gracefully program exit logic need...
 		//assert(false && "event loop exit???? why?");
@@ -376,12 +380,16 @@ bool IOService::isCalledInMountedThread() {
 	return impl_->isCalledInMountedThread();
 }
 
+bool IOService::isStopped() {
+	return impl_->isStopped();
+}
+
 BaseIOServiceContainer *IOService::ioServiceContainer() {
 	return impl_->ioServiceContainer();
 }
 
-struct event_base * IOService::base() {
-	return impl_->base();
+struct event_base * IOService::coreHandle() {
+	return impl_->coreHandle();
 }
 
 Mutex & IOService::mutex() {

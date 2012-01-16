@@ -66,7 +66,7 @@ public:
 		}
 		redisContext_->data = this;
 
-		redisLibeventAttach(redisContext_, ioService_->base());
+		redisLibeventAttach(redisContext_, ioService_->coreHandle());
 		redisAsyncSetConnectCallback(redisContext_, connectCallback);
 		redisAsyncSetDisconnectCallback(redisContext_, disconnectCallback);
 	}

@@ -11,6 +11,7 @@ public:
 	IOServiceContainer(int threadCount = 0) : threadCount_(threadCount) 
 #if defined(WIN32)
 		, iocpEnabled_(false)
+		, cpuCnt_(0)
 #endif
 	{
 	}

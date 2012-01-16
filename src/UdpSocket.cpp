@@ -44,6 +44,7 @@ private:
 private:
 	static void event_cb(coconut_socket_t fd, short what, void *arg) {
 		UdpSocketImpl *SELF = (UdpSocketImpl *)arg;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 
 		if(what & EV_READ) {
 			char buf[UDP_BUF_SIZE] = {0, };
@@ -57,6 +58,10 @@ private:
 	}
 	
 public:
+	boost::shared_ptr<IOService> ioService() {
+		return owner_->ioService();
+	}
+
 	coconut_socket_t socketFD() {
 		if(ev_)
 			return event_get_fd(ev_);
@@ -96,7 +101,7 @@ public:
 			}
 		}
 
-		ev_ = event_new(owner_->ioService()->base(), sock, EV_READ|EV_PERSIST, event_cb, this);
+		ev_ = event_new(owner_->ioService()->coreHandle(), sock, EV_READ|EV_PERSIST, event_cb, this);
 		event_add(ev_, NULL);	// TODO UDP READ TIMEOUT??
 
 		owner_->eventHandler()->onSocket_Initialized();

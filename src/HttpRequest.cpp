@@ -375,14 +375,14 @@ public:
 		if(port < 0)
 			port = 80;
 		LOG_TRACE("Http Connection Making.. : %s:%d", evhttp_uri_get_host(evuri_), port);
-		evcon_ = evhttp_connection_base_new(ioService_->base(), dnsbase_, evhttp_uri_get_host(evuri_), port);
+		evcon_ = evhttp_connection_base_new(ioService_->coreHandle(), dnsbase_, evhttp_uri_get_host(evuri_), port);
 		assert(evcon_ && "evhttp_connection can not be allocated");
 		
 		evhttp_connection_set_timeout(evcon_, timeout_); 
 	}
 
 	void startRequest(std::string &uri) {
-		dnsbase_ = evdns_base_new(ioService_->base(), 1);
+		dnsbase_ = evdns_base_new(ioService_->coreHandle(), 1);
 		assert(dnsbase_ && "evdns_base can not be allocated");
 
 		evhttp_make_request(evcon_, req_, method_ == HTTP_POST ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str());

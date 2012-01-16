@@ -24,6 +24,7 @@ void IOServiceContainer::turnOnIOCP(size_t cpuCnt) {
 		throw Exception("iocp is turned on, but your thread count setting is not 0");
 	}
 
+	cpuCnt_ = cpuCnt;
 	if(cpuCnt_ == 0)
 		cpuCnt_ = 1;
 

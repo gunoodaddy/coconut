@@ -6,13 +6,16 @@
 #include <boost/thread.hpp>
 #endif
 
-//#define __USE_PTHREAD__
 #ifdef __USE_PTHREAD__
 #include <pthread.h>
 #endif
 #include "ThreadUtil.h"
 
 #define ScopedIOServiceLock(ioService)	ScopedMutexLock(ioService->mutex())
+
+#define CHECK_IOSERVICE_STOP_VOID_RETURN(ioService)	\
+	if(ioService->isStopped())	\
+		return;
 
 struct event_base;
 
@@ -46,10 +49,10 @@ public:
 	void stop();
 
 	bool isCalledInMountedThread();
+	bool isStopped();
 
 	BaseIOServiceContainer *ioServiceContainer();
-	struct event_base * base();
-	void triggerEvent();
+	struct event_base * coreHandle();
 	Mutex &mutex();
 
 #if defined(WIN32)

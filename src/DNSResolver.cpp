@@ -48,7 +48,7 @@ public:
 
 	bool resolve(const char *host, struct sockaddr_in *sin, DNSResolver::EventHandler* handler, void *ptr) {
 		if(NULL == dnsbase_) {
-			dnsbase_ = evdns_base_new(ioService_->base(), 1);
+			dnsbase_ = evdns_base_new(ioService_->coreHandle(), 1);
 		}
 
 		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.find(host);

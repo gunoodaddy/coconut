@@ -14,6 +14,7 @@ libcoconut_la_SOURCES = \
                        Timer.cpp \
                        DNSResolver.cpp \
                        BufferedTransport.cpp \
+                       BaseSocket.cpp \
                        TcpSocket.cpp \
                        UdpSocket.cpp \
                        ConnectionListener.cpp \

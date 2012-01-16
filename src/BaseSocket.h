@@ -17,6 +17,7 @@
 #else
 #include <arpa/inet.h>
 #endif
+#include "ThreadUtil.h"
 
 namespace coconut {
 
@@ -81,7 +82,9 @@ public:
 	}
 
 	void setEventHandler(EventHandler *handler) {
+		lockHandler_.lock();
 		handler_ = handler;
+		lockHandler_.unlock();
 	}
 
 	EventHandler *eventHandler() {
@@ -118,12 +121,21 @@ public:
 		return -1;
 	}
 
+public:
+	void fire_onSocket_Initialized();
+	void fire_onSocket_Connected();
+	void fire_onSocket_Error(int error, const char *strerror);
+	void fire_onSocket_ReadEvent(int fd);
+	void fire_onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin);
+	void fire_onSocket_Close();
+
 protected:
 	boost::shared_ptr<IOService> ioService_;	
 	SocketType type_;
 	SocketState state_;
 	EventHandler *handler_;
 	std::string lastErrorString_;
+	Mutex lockHandler_;
 };
 
 }

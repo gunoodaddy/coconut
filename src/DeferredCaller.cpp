@@ -19,7 +19,7 @@ public:
 
 	DeferredCallerImpl(boost::shared_ptr<IOService> ioService) 
 		: ioService_(ioService), eventDeferred_(NULL) {
-		eventDeferred_ = event_new(ioService->base(), -1, EV_READ|EV_PERSIST, cb_func, this);
+		eventDeferred_ = event_new(ioService->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
 	}
 
 	~DeferredCallerImpl() { 
@@ -51,7 +51,7 @@ public:
 			event_free(eventDeferred_);
 			eventDeferred_ = NULL;
 		}
-		eventDeferred_ = event_new(ioService->base(), -1, EV_READ|EV_PERSIST, cb_func, this);
+		eventDeferred_ = event_new(ioService->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
 	}
 
 	void deferredCall(deferedMethod_t func) {

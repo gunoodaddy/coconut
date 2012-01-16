@@ -63,6 +63,8 @@ public:
 
 	static void bufevent_cb(struct bufferevent *bev, short events, void *ptr) {
 		TcpSocketImpl *SELF = (TcpSocketImpl *)ptr;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
+
 		if (events & BEV_EVENT_CONNECTED) {
 			bufferevent_enable(bev, EV_READ|EV_WRITE);
 			SELF->fire_onSocket_Connected();
@@ -76,6 +78,7 @@ public:
 
 	static void event_cb(coconut_socket_t fd, short what, void *arg) {
 		TcpSocketImpl *SELF = (TcpSocketImpl *)arg;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 
 		if(what & EV_READ) {
 			SELF->_onReadEvent(fd);
@@ -100,15 +103,18 @@ public:
 		hexdump((const unsigned char*)data, buffer_len, stdout);
 
 		TcpSocketImpl *SELF = (TcpSocketImpl *)ptr;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 		SELF->fire_onSocket_Read(data, buffer_len);
 
 		evbuffer_drain(readBuffer, buffer_len);
 #elif defined(READ_MODE_3)
 		TcpSocketImpl *SELF = (TcpSocketImpl *)ptr;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 		SELF->fire_onSocket_ReadEvent(bufferevent_getfd(bev));	
 #else
 		// WORST PERFOMANCE!!!
 		TcpSocketImpl *SELF = (TcpSocketImpl *)ptr;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 		struct evbuffer *readBuffer = bufferevent_get_input(bev);
 		size_t buffer_len = evbuffer_get_length(readBuffer);
 		char *buffer = new char[buffer_len];
@@ -120,9 +126,14 @@ public:
 
 	static void timer_cb(coconut_socket_t fd, short what, void *arg) {
 		TcpSocketImpl *SELF  = (TcpSocketImpl *)arg;
+		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 		SELF->fire_onSocket_Error(COOKIE_ETIMEDOUT);
 	}
 
+public:
+	boost::shared_ptr<IOService> ioService() {
+		return owner_->ioService();
+	}
 
 	coconut_socket_t socketFD() {
 		if(bev_)
@@ -222,7 +233,7 @@ public:
 
 		_createBufferEvent(-1);
 
-		dnsbase_ = evdns_base_new(owner_->ioService()->base(), 1);
+		dnsbase_ = evdns_base_new(owner_->ioService()->coreHandle(), 1);
 		int ret = bufferevent_socket_connect_hostname(bev_, dnsbase_, AF_UNSPEC, host_.c_str(), port_);
 
 		if(0 != ret) {
@@ -259,29 +270,45 @@ public:
 
 	void _createEvent(coconut_socket_t fd) {
 		if(NULL == ev_read_)
-			ev_read_ = event_new(owner_->ioService()->base(), fd, EV_READ|EV_PERSIST, event_cb, this);
+			ev_read_ = event_new(owner_->ioService()->coreHandle(), fd, EV_READ|EV_PERSIST, event_cb, this);
 		if(NULL == ev_write_)
-			ev_write_ = event_new(owner_->ioService()->base(), fd, EV_WRITE|EV_PERSIST, event_cb, this);
-		owner_->eventHandler()->onSocket_Initialized();
-	}
+			ev_write_ = event_new(owner_->ioService()->coreHandle(), fd, EV_WRITE|EV_PERSIST, event_cb, this);
 
-	void _createBufferEvent(coconut_socket_t fd) {
-		if(NULL == bev_) {
-			bev_ = bufferevent_socket_new(owner_->ioService()->base(), fd, BEV_OPT_CLOSE_ON_FREE);
-			bufferevent_enable(bev_, EV_READ|EV_WRITE);
-		}
-		owner_->eventHandler()->onSocket_Initialized();
-	}
-
-	void install() {
-		ScopedIOServiceLock(owner_->ioService());
 		if(NULL == write_evbuffer_) 
 			write_evbuffer_ = evbuffer_new();
 		if(NULL == write_kbuffer_) 
 			write_kbuffer_ = kbuffer_new();
 
+		owner_->fire_onSocket_Initialized();
+	}
+
+	void _createBufferEvent(coconut_socket_t fd) {
+		if(NULL == bev_) {
+			bev_ = bufferevent_socket_new(owner_->ioService()->coreHandle(), fd, BEV_OPT_CLOSE_ON_FREE);
+			bufferevent_enable(bev_, EV_READ|EV_WRITE);
+		}
+	
+		if(NULL == write_evbuffer_) 
+			write_evbuffer_ = evbuffer_new();
+		if(NULL == write_kbuffer_) 
+			write_kbuffer_ = kbuffer_new();
+
+		owner_->fire_onSocket_Initialized();
+	}
+
+	void install() {
+		ScopedIOServiceLock(owner_->ioService());
+
 		if(bev_) {
 			bufferevent_setcb(bev_, read_cb, NULL, bufevent_cb, this);
+
+			struct evbuffer *readBuffer = bufferevent_get_input(bev_);
+			if(readBuffer) {
+				size_t buffer_len = evbuffer_get_length(readBuffer);
+				if(buffer_len > 0) {
+					read_cb(bev_, this);
+				}
+			}
 		}
 		if(ev_read_) {
 			event_add(ev_read_, NULL);
@@ -331,6 +358,8 @@ public:
 			return size;
 		} else {
 			char *p = (char *)malloc(size);
+			if(NULL == p) 
+				return -1;
 #if defined(WIN32)
 			int res = ::recv(socketFD(), (char *)p, size, 0);
 #else
@@ -340,6 +369,7 @@ public:
 				data.assign(p, res);
 			else
 				checkResponseSocket(res);
+			free(p);
 			return res;
 		}
 	}
@@ -360,7 +390,6 @@ public:
 #else
 			int res = ::read(socketFD(), data, size);
 #endif
-
 			if(res <= 0)
 				checkResponseSocket(res);
 			return res;
@@ -391,7 +420,7 @@ public:
 			struct evbuffer *output = bufferevent_get_output(bev_);
 			ret = evbuffer_add(output, data, size);
 			if(ret == 0) {
-				//bufferevent_enable(bev_, EV_READ|EV_WRITE);
+				//bufferevent_enable(bev_, EV_WRITE);
 				ret = size;
 			}
 		} else {
@@ -437,7 +466,6 @@ public:
 		}
 	}
 
-
 	void _onReadEvent(coconut_socket_t fd) {
 		fire_onSocket_ReadEvent(fd);	
 	}
@@ -474,7 +502,7 @@ public:
 					}
 					break;
 				}
-			} while(0);
+			} while(false);
 
 			if(destroy) {
 				LOG_FATAL("write error  size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
@@ -496,8 +524,9 @@ public:
 		fire_onSocket_Error(COOKIE_ETIMEDOUT);
 	}
 
-	void fire_onSocket_ReadEvent(int fd) {
-		owner_->eventHandler()->onSocket_ReadEvent(fd);
+private:	// fire event callback
+	inline void fire_onSocket_ReadEvent(int fd) {
+		owner_->fire_onSocket_ReadEvent(fd);
 	}
 
 	/*
@@ -511,13 +540,13 @@ public:
 				this, socketFD(), owner_->eventHandler(), EVUTIL_SOCKET_ERROR());
 		_deleteTimer();
 		owner_->setState(BaseSocket::Disconnected);
-		owner_->eventHandler()->onSocket_Close();
+		owner_->fire_onSocket_Close();
 		close();
 	}
 
 	void fire_onSocket_Error(int error) {
-		LOG_DEBUG("fire_onSocket_Error : this = %p, fd = %d, error = %d, %s\n", 
-					this, socketFD(), EVUTIL_SOCKET_ERROR(), evutil_socket_error_to_string(error));
+		LOG_DEBUG("fire_onSocket_Error : this = %p, fd = %d, error = %d, %s, handler = %p\n", 
+					this, socketFD(), EVUTIL_SOCKET_ERROR(), evutil_socket_error_to_string(error), owner_->eventHandler());
 
 		errorDetected_ = true;
 		owner_->setLastErrorString(evutil_socket_error_to_string(error));
@@ -529,7 +558,7 @@ public:
 			}
 		}
 		owner_->setState(BaseSocket::Disconnected);
-		owner_->eventHandler()->onSocket_Error(error, owner_->lastErrorString());
+		owner_->fire_onSocket_Error(error, owner_->lastErrorString());
 		close();
 	}
 
@@ -559,7 +588,7 @@ public:
 		}
 
 		_deleteTimer();
-		owner_->eventHandler()->onSocket_Connected();
+		owner_->fire_onSocket_Connected();
 	}
 
 private:

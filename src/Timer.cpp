@@ -47,7 +47,7 @@ public:
 		} else {
 			LOG_DEBUG("NEW TIMER : ioService = %p id = %d sec = %d.%d\n", owner_->ioService().get(), id, msec/1000, msec % 1000);
 			context = (struct timer_context_t *)malloc(sizeof(struct timer_context_t)); 
-			context->timer = evtimer_new(owner_->ioService()->base(), timer_cb, context);
+			context->timer = evtimer_new(owner_->ioService()->coreHandle(), timer_cb, context);
 
 			mapTimers_.insert(std::map<int, struct timer_context_t *>::value_type(id, context));
 		}

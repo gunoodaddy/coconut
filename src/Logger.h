@@ -47,12 +47,14 @@ typedef struct COCONUT_API LogHookCallback {
 	void (*fatal)  (LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg);
 }LogHookCallback;
 
-void setLogLevel(LogLevel level);
-void setLogHookFunctionCallback(LogHookCallback callback);
-LogLevel currentLogLevel();
+COCONUT_API void setLogLevel(LogLevel level);
 
-void logprintf(const char *file, const char *function, int line, LogLevel level, const char * format, ...);
+COCONUT_API void setLogHookFunctionCallback(LogHookCallback callback);
 
-void hexdump(const unsigned char *data, const int len, FILE * fp);
+COCONUT_API LogLevel currentLogLevel();
+
+COCONUT_API void logprintf(const char *file, const char *function, int line, LogLevel level, const char * format, ...);
+
+COCONUT_API void hexdump(const unsigned char *data, const int len, FILE * fp);
 
 } }  // end of namespace coconut / logger

@@ -81,12 +81,12 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libcoconut_la_LIBADD =
 am_libcoconut_la_OBJECTS = kbuffer.lo Coconut.lo Logger.lo \
 	IOService.lo IOServiceContainer.lo DeferredCaller.lo Timer.lo \
-	DNSResolver.lo BufferedTransport.lo TcpSocket.lo UdpSocket.lo \
-	ConnectionListener.lo RedisRequest.lo RedisResponse.lo \
-	HttpRequest.lo BaseProtocol.lo LineProtocol.lo \
-	FrameProtocol.lo FileDescriptorProtocol.lo BaseController.lo \
-	BaseControllerEvent.lo ClientController.lo ServerController.lo \
-	LineController.lo FrameController.lo \
+	DNSResolver.lo BufferedTransport.lo BaseSocket.lo TcpSocket.lo \
+	UdpSocket.lo ConnectionListener.lo RedisRequest.lo \
+	RedisResponse.lo HttpRequest.lo BaseProtocol.lo \
+	LineProtocol.lo FrameProtocol.lo FileDescriptorProtocol.lo \
+	BaseController.lo BaseControllerEvent.lo ClientController.lo \
+	ServerController.lo LineController.lo FrameController.lo \
 	FileDescriptorController.lo HttpRequestController.lo \
 	RedisController.lo NetworkHelper.lo
 libcoconut_la_OBJECTS = $(am_libcoconut_la_OBJECTS)
@@ -258,6 +258,7 @@ libcoconut_la_SOURCES = \
                        Timer.cpp \
                        DNSResolver.cpp \
                        BufferedTransport.cpp \
+                       BaseSocket.cpp \
                        TcpSocket.cpp \
                        UdpSocket.cpp \
                        ConnectionListener.cpp \
@@ -395,6 +396,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseControllerEvent.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseProtocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseSocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BufferedTransport.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ClientController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Coconut.Plo@am__quote@
