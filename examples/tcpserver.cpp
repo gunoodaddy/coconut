@@ -46,8 +46,8 @@ int main(int argc, char **argv) {
 	if(argc > 3 && atoi(argv[3]) == 1)
 		coconut::setEnableDebugMode();
 
-	boost::shared_ptr<coconut::BaseIOServiceContainer> ioServiceContainer;
-	ioServiceContainer = boost::shared_ptr<coconut::BaseIOServiceContainer>(new coconut::IOServiceContainer(threadCount));
+	boost::shared_ptr<coconut::IOServiceContainer> ioServiceContainer;
+	ioServiceContainer = boost::shared_ptr<coconut::IOServiceContainer>(new coconut::IOServiceContainer(threadCount));
 
 	ioServiceContainer->initialize();
 	
