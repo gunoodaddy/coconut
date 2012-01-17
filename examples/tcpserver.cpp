@@ -46,18 +46,16 @@ int main(int argc, char **argv) {
 	if(argc > 3 && atoi(argv[3]) == 1)
 		coconut::setEnableDebugMode();
 
-	boost::shared_ptr<coconut::IOServiceContainer> ioServiceContainer;
-	ioServiceContainer = boost::shared_ptr<coconut::IOServiceContainer>(new coconut::IOServiceContainer(threadCount));
-
-	ioServiceContainer->initialize();
+	coconut::IOServiceContainer ioServiceContainer(threadCount);
+	ioServiceContainer.initialize();
 	
 	try {
 		boost::shared_ptr<MyServerController> serverController(new MyServerController);
 
-		coconut::NetworkHelper::listenTcp(ioServiceContainer.get(), port, serverController);
+		coconut::NetworkHelper::listenTcp(&ioServiceContainer, port, serverController);
 
 		LOG4CXX_INFO(logger, "tcpserver started..");
-		ioServiceContainer->run();
+		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {
 		printf("Exception emitted : %s\n", e.what());
 	}
