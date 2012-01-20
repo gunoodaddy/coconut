@@ -425,7 +425,6 @@ public:
 			}
 		} else {
 #if defined(_KBUFFER_)
-			LOG_DEBUG("WW %d %d", socketFD(), size);
 			ret = kbuffer_add(write_kbuffer_, data, size);
 #else
 			ret = evbuffer_add(write_evbuffer_, data, size);
