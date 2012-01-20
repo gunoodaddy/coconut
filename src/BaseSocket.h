@@ -120,7 +120,14 @@ public:
 		assert(0 && "BaseSocket::write can not be called directly");
 		return -1;
 	}
-
+	virtual const void * peek(size_t &size) {
+		assert(0 && "BaseSocket::peek can not be called directly");
+		size = 0;
+		return NULL;
+	}
+	virtual void ackReadSize(size_t size) {
+		assert(0 && "BaseSocket::ackReadSize can not be called directly");
+	}
 public:
 	void fire_onSocket_Initialized();
 	void fire_onSocket_Connected();

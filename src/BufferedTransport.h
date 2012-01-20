@@ -32,7 +32,7 @@ public:
 	int read(std::string &data, size_t size) {
 		ScopedMutexLock(lock_);
 		if(remainingSize() < size) {
-			throw ProtocolException("read size exceed rest buffer size");
+			size = remainingSize();
 		}
 		data.assign((const char *)currentPtr(), size);
 		fastforward(size);
@@ -42,13 +42,24 @@ public:
 	int read(void *ptr, size_t size) {
 		ScopedMutexLock(lock_);
 		if(remainingSize() < size) {
-			throw ProtocolException("read size exceed rest buffer size");
+			size = remainingSize();
 		}
 		memcpy(ptr, currentPtr(), size);
 		fastforward(size);
 		return size;
 	}
 
+	const void * peek(size_t &size) {
+		ScopedMutexLock(lock_);
+		if(remainingSize() < size) {
+			size = remainingSize();
+		}
+		return currentPtr();
+	}
+
+	void ackReadSize(size_t size) {
+		fastforward(size);
+	}
 public:
 	size_t totalSize() {
 		return buffer_.size();
