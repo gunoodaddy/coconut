@@ -14,7 +14,7 @@ public:
 
 	void sendMessage() {
 		if(++currSentCount_ <= sendCount_) {
-			socket()->write((const void *)"HELLO\r\n", 7);
+			writeLine("HELLO");
 		}
 	}
 	virtual void onLineReceived(const char *line) {
@@ -54,14 +54,11 @@ public:
 	virtual void onTimer(unsigned short id) {
 		LOG_DEBUG("onTimer emitted.. %d\n", id);
 
-		tcpSocket()->connect();
+		// reconnect!
+		if(id == 1)
+			tcpSocket()->connect();
 	}
 	
-	/*
-	virtual void onReceivedData(const void *data, int size) {
-		LOG_DEBUG("onRead emitted.. %d\n", size);
-	}
-	*/
 private:
 	int id_;
 	int sendCount_;
