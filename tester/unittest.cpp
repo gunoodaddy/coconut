@@ -7,7 +7,9 @@
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
 #include "LineController.h"
+#include "JSONController.h"
 #include "FrameController.h"
+#include "JSONProtocol.h"
 #include "FileDescriptorController.h"
 #include "Logger.h"
 #include "log4cxxutil.h"
@@ -141,6 +143,7 @@ namespace TestHttpRequestGet
 
 }
 
+
 namespace TestLineProtocol {
 
 	class TestClientController : public LineController {
@@ -191,6 +194,86 @@ namespace TestLineProtocol {
 	bool doTest() {
 		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
 		MY_LOG4CXX_INFO(gLogger, "Line Protocol Test");
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+
+		boost::shared_ptr<IOServiceContainer> ioServiceContainer;
+		ioServiceContainer = boost::shared_ptr<IOServiceContainer>(new IOServiceContainer);
+		//	ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(threadCount));
+
+#if defined(WIN32)
+		ioServiceContainer->turnOnIOCP(1);
+#endif
+		ioServiceContainer->initialize();
+
+		try {
+			boost::shared_ptr<TestServerController> serverController(new TestServerController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
+
+			boost::shared_ptr<TestClientController> clientController(new TestClientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
+
+			gPortBase++;
+
+			ioServiceContainer->run();
+			return true;
+		} catch(Exception &e) {
+			printf("Exception emitted : %s\n", e.what());
+		}
+		return false;
+	}
+}
+
+
+namespace TestJSONProtocol {
+	static const char *JSON_STR = "{\"RootA\":\"Value in parent\",\"ChildNode\":{\"ChildA\":\"String Value\",\"ChildB\":\"42\"}}";
+
+	class TestClientController : public JSONController {
+		virtual void onConnected() {
+			MY_LOG4CXX_DEBUG(gLogger, "onConnected called : %d", socket()->socketFD());
+			writeJSON(JSON_STR);
+			writeJSON(JSON_STR);
+			recvedLine_ = 0;
+		}
+
+		virtual void onJSONReceived(const char *json) {
+			MY_LOG4CXX_INFO(gLogger, "[SERVER] onJSONReceived called : %s", json);
+
+			assert(strcmp(JSON_STR, json) == 0);
+
+			recvedLine_++;
+			if(recvedLine_ == 2) {
+				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				ioServiceContainer()->stop();	// test success
+			}
+		}
+
+		private:
+		int recvedLine_;
+	};
+
+	class TestServerClientController : public JSONController {
+		virtual void onInitialized() {
+			MY_LOG4CXX_DEBUG(gLogger, "onInitialized called : %d", socket()->socketFD());
+		}
+		virtual void onJSONReceived(const char *json) {
+			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onJSONReceived called : %s", json);
+			writeJSON(json);
+		}
+	};
+
+	class TestServerController : public ServerController {
+
+		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
+			
+			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController); 
+			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onAccept called : %p", newController.get());
+			return newController;
+		}
+	};
+
+	bool doTest() {
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		MY_LOG4CXX_INFO(gLogger, "JSON Protocol Test");
 		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
 
 		boost::shared_ptr<IOServiceContainer> ioServiceContainer;
@@ -297,6 +380,96 @@ namespace TestFrameProtocol {
 
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
 			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase++, clientController);
+
+			ioServiceContainer->run();
+			return true;
+		} catch(Exception &e) {
+			printf("Exception emitted : %s\n", e.what());
+		}
+		return false;
+	}
+}
+
+
+namespace TestFrameAndJSONProtocol {
+	static const int COMMAND = 813;
+	static const char *JSON_STR = "{\"RootA\":\"Value in parent\",\"ChildNode\":{\"ChildA\":\"String Value\",\"ChildB\":\"42\"}}";
+
+	class TestClientController : public FrameController {
+
+		virtual void onConnected() {
+			MY_LOG4CXX_DEBUG(gLogger, "onConnected called");
+			recvedLine_ = 0;
+
+			boost::shared_ptr<JSONProtocol> jsonprot(new JSONProtocol);
+			jsonprot->setJSON(JSON_STR);
+			jsonprot->processSerialize();
+
+			FrameHeader header(COMMAND, 0);
+			writeFrame(header, jsonprot->writingBuffer());
+			writeFrame(header, jsonprot->writingBuffer());
+		}
+
+		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
+			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			
+			boost::shared_ptr<JSONProtocol> jsonprot(new JSONProtocol(prot));
+			jsonprot->processReadFromPayloadBuffer();
+			assert(jsonprot->isReadComplete());
+			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] json = %s", jsonprot->jsonPtr());
+
+			assert(strcmp(JSON_STR, jsonprot->jsonPtr()) == 0);
+
+			recvedLine_++;
+			if(recvedLine_ == 2) {
+				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				ioServiceContainer()->stop();	// test success
+			}
+		}
+
+		private:
+		int recvedLine_;
+	};
+
+	class TestServerClientController : public FrameController {
+		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
+			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+
+			boost::shared_ptr<JSONProtocol> jsonprot(new JSONProtocol(prot));
+			jsonprot->processReadFromPayloadBuffer();
+
+			assert(jsonprot->isReadComplete());
+
+			jsonprot->processSerialize();
+			FrameHeader header(prot->header().command() + 1, 2);
+			writeFrame(header, jsonprot->writingBuffer());
+		}
+	};
+
+	class TestServerController : public ServerController {
+		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
+			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController); 
+			return newController;
+		}
+	};
+
+	bool doTest() {
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		MY_LOG4CXX_INFO(gLogger, "Frame And String List Protocol Test");
+		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+
+		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
+		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
+		ioServiceContainer->initialize();
+
+		try {
+			boost::shared_ptr<TestServerController> serverController(new TestServerController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
+
+			boost::shared_ptr<TestClientController> clientController(new TestClientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
+
+			gPortBase++;
 
 			ioServiceContainer->run();
 			return true;
@@ -1060,15 +1233,17 @@ int main() {
 	logCallback.fatal = coconutLog;
 	logger::setLogHookFunctionCallback(logCallback);
 #endif
-	logger::setLogLevel(logger::LEVEL_TRACE);
-	//logger::setLogLevel(logger::LEVEL_INFO);
+	//logger::setLogLevel(logger::LEVEL_TRACE);
+	logger::setLogLevel(logger::LEVEL_INFO);
 
 	MY_LOG4CXX_INFO(gLogger, "Entering protocol test");
 
 	assert(TestUDPAndLineProtocol::doTest());
 	assert(TestHttpRequestGet::doTest());
 	assert(TestLineProtocol::doTest());
+	assert(TestJSONProtocol::doTest());
 	assert(TestFrameProtocol::doTest());
+	assert(TestFrameAndJSONProtocol::doTest());
 	assert(TestFrameAndStringListProtocol::doTest());
 	assert(TestFrameAndStringListAndLineProtocol::doTest());
 #if ! defined(WIN32)
