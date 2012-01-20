@@ -8431,6 +8431,10 @@ _lt_linker_boilerplate=`cat conftest.err`
 $RM -r conftest*
 
 
+## CAVEAT EMPTOR:
+## There is no encapsulation within the following macros, do not change
+## the running order or otherwise move them around unless you know exactly
+## what you are doing...
 if test -n "$compiler"; then
 
 lt_prog_compiler_no_builtin_flag=
@@ -15746,7 +15750,6 @@ $as_echo "#define HAVE_LIBEVENT /**/" >>confdefs.h
           fi
 
 
-AX_LOG4CXX(, AC_MSG_ERROR([log4cxx not found]))
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for event_base_dispatch in -levent" >&5
 $as_echo_n "checking for event_base_dispatch in -levent... " >&6; }

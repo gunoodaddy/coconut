@@ -18,7 +18,6 @@ AC_PROG_LIBTOOL
 # Checks for libraries.
 AX_BOOST_BASE([1.32.0], , [AC_MSG_ERROR([Boost C++ Libraries are not installed, but are required by libbgpparser])])
 AX_LIB_EVENT([2.0.15], , [AC_MSG_ERROR([libevent not found])])
-AX_LOG4CXX(, [AC_MSG_ERROR([log4cxx not found])])
 
 AC_CHECK_LIB(event, event_base_dispatch, [], AC_MSG_ERROR([event library not found]))
 AC_CHECK_LIB(event_pthreads, evthread_use_pthreads, [], AC_MSG_ERROR([event_pthread library not found]))
