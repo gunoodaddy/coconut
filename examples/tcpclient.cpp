@@ -1,14 +1,7 @@
 #include "Coconut.h"
-#include <log4cxx/logger.h> 
-#include <log4cxx/basicconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
 #include "LineController.h"
-#include "log4cxxutil.h"
-
-using namespace log4cxx;
-LoggerPtr logger(Logger::getLogger("MyApp"));
 
 #define BIND_PORT	8765
 
@@ -26,7 +19,7 @@ public:
 	}
 	virtual void onLineReceived(const char *line) {
 		recvLineCount_++;
-		MY_LOG4CXX_DEBUG(logger, "LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
+		LOG_DEBUG("LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
 
 		sendMessage();
 
@@ -35,38 +28,38 @@ public:
 			gettimeofday(&tvEnd, NULL);
 
 			double diffMsec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
-			MY_LOG4CXX_INFO(logger,"[%d:%p] Test OK! %f msec\n", id_, (void *)pthread_self(), diffMsec);
+			LOG_INFO("[%d:%p] Test OK! %f msec\n", id_, (void *)pthread_self(), diffMsec);
 		}
 	}
 
 	virtual void onError(int error, const char *strerror) {
-		MY_LOG4CXX_INFO(logger,"onError emitted..\n");
+		LOG_INFO("onError emitted..\n");
 		setTimer(1, 2000, false);
 	}
 
 	virtual void onClosed() { 
-		MY_LOG4CXX_INFO(logger,"onClose emitted..\n");
+		LOG_INFO("onClose emitted..\n");
 		setTimer(1, 2000, false);
 		socket()->write((const void *)"PENDING1\n", 9);
 		socket()->write((const void *)"PENDING2\n", 9);
 	}
 
 	virtual void onConnected() {
-		MY_LOG4CXX_INFO(logger,"onConnected emitted..\n");
+		LOG_INFO("onConnected emitted..\n");
 
 		gettimeofday(&tvStart_, NULL);
 		sendMessage();
 	}
 
 	virtual void onTimer(unsigned short id) {
-		MY_LOG4CXX_DEBUG(logger, "onTimer emitted.. %d\n", id);
+		LOG_DEBUG("onTimer emitted.. %d\n", id);
 
 		tcpSocket()->connect();
 	}
 	
 	/*
 	virtual void onReceivedData(const void *data, int size) {
-		MY_LOG4CXX_DEBUG(logger, "onRead emitted.. %d\n", size);
+		LOG_DEBUG("onRead emitted.. %d\n", size);
 	}
 	*/
 private:
@@ -80,7 +73,6 @@ private:
 
 int main(int argc, char **argv) {
 
-	PropertyConfigurator::configure("log4cxx_tcpclient.properties");
 	if(argc < 4) {
 		printf("usage : %s [port] [client-count] [send-count]\n", argv[0]);
 		return -1;
@@ -105,7 +97,7 @@ int main(int argc, char **argv) {
 		// event loop start!
 		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {
-		MY_LOG4CXX_DEBUG(logger, "Exception emitted : %s\n", e.what());
+		LOG_DEBUG("Exception emitted : %s\n", e.what());
 	}
 
 	// exit..

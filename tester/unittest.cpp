@@ -12,15 +12,6 @@
 #include "JSONProtocol.h"
 #include "FileDescriptorController.h"
 #include "Logger.h"
-#include "log4cxxutil.h"
-
-#if defined(USE_LOG4CXX)
-#include <log4cxx/logger.h> 
-#include <log4cxx/basicconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
-using namespace log4cxx;
-LoggerPtr gLogger(Logger::getLogger("MyApp"));
-#endif
 
 using namespace coconut;
 using namespace coconut::protocol;
@@ -40,10 +31,10 @@ namespace TestUDPAndLineProtocol {
 		}
 
 		virtual void onLineReceived(const char *line) {
-			MY_LOG4CXX_INFO(gLogger, "TestUdpClientController LINE RECEIVED : [%s] port : %d\n", 
+			LOG_INFO("TestUdpClientController LINE RECEIVED : [%s] port : %d\n", 
 					line, ntohs(udpSocket()->lastClientAddress()->sin_port));
 
-			MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+			LOG_INFO("************ Test Success ************");
 			ioServiceContainer()->stop();	// test success
 		}
 
@@ -61,15 +52,15 @@ namespace TestUDPAndLineProtocol {
 	class TestUdpServerController : public coconut::LineController {
 	public:
 		virtual void onLineReceived(const char *line) {
-			MY_LOG4CXX_INFO(gLogger, "TestUdpServerController LINE RECEIVED : [%s]\n", line);
+			LOG_INFO("TestUdpServerController LINE RECEIVED : [%s]\n", line);
 			writeLine(line);
 		}
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "UDP And Line Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("UDP And Line Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
@@ -99,28 +90,28 @@ namespace TestHttpRequestGet
 	class TestHttpController : public coconut::HttpRequestController
 	{
 		virtual void onReceivedChucked(int receivedsize) { 
-			MY_LOG4CXX_INFO(gLogger, "TestHttpController received size : %d byte\n", receivedsize);
+			LOG_INFO("TestHttpController received size : %d byte\n", receivedsize);
 		}
 
 		virtual void onError(coconut::HttpRequest::ErrorCode errorcode) {
-			MY_LOG4CXX_INFO(gLogger, "TestHttpController onError : %d\n", errorcode);
+			LOG_INFO("TestHttpController onError : %d\n", errorcode);
 		}
 
 		virtual void onResponse(int rescode) {
-			MY_LOG4CXX_INFO(gLogger, "TestHttpController onResponse [this = %p], rescode = %d, size = %d\n", 
+			LOG_INFO("TestHttpController onResponse [this = %p], rescode = %d, size = %d\n", 
 				this, rescode, httpRequest()->responseBodySize());
 
 			printf("%s\n", (char *)httpRequest()->responseBody());
 
-			MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+			LOG_INFO("************ Test Success ************");
 			ioServiceContainer()->stop();	// test success
 		}
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Http Request GET Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Http Request GET Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
@@ -148,19 +139,19 @@ namespace TestLineProtocol {
 
 	class TestClientController : public LineController {
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called : %d", socket()->socketFD());
+			LOG_DEBUG("onConnected called : %d", socket()->socketFD());
 			recvedLine_ = 0;
 			socket()->write("HELLO\r\n", 7);
 			socket()->write("HELLO\r\n", 7);
 		}
 
 		virtual void onLineReceived(const char *line) {
-			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onLineReceived called : %s", line);
+			LOG_DEBUG("[CLIENT] onLineReceived called : %s", line);
 
 			if(strcmp(line, "How's it going?") == 0) {
 				recvedLine_++;
 				if(recvedLine_ == 2) {
-					MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+					LOG_INFO("************ Test Success ************");
 					ioServiceContainer()->stop();	// test success
 				}
 			}
@@ -172,11 +163,11 @@ namespace TestLineProtocol {
 
 	class TestServerClientController : public LineController {
 		virtual void onInitialized() {
-			MY_LOG4CXX_DEBUG(gLogger, "onInitialized called : %d", socket()->socketFD());
+			LOG_DEBUG("onInitialized called : %d", socket()->socketFD());
 			//socket()->write("HELLO\r\n", 7);
 		}
 		virtual void onLineReceived(const char *line) {
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onLineReceived called : %s", line);
+			LOG_DEBUG("[SERVER] onLineReceived called : %s", line);
 			writeLine("How's it going?");
 		}
 	};
@@ -186,15 +177,15 @@ namespace TestLineProtocol {
 		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
 			
 			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController); 
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onAccept called : %p", newController.get());
+			LOG_DEBUG("[SERVER] onAccept called : %p", newController.get());
 			return newController;
 		}
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Line Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Line Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<IOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<IOServiceContainer>(new IOServiceContainer);
@@ -229,20 +220,20 @@ namespace TestJSONProtocol {
 
 	class TestClientController : public JSONController {
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called : %d", socket()->socketFD());
+			LOG_DEBUG("onConnected called : %d", socket()->socketFD());
 			writeJSON(JSON_STR);
 			writeJSON(JSON_STR);
 			recvedLine_ = 0;
 		}
 
 		virtual void onJSONReceived(const char *json) {
-			MY_LOG4CXX_INFO(gLogger, "[SERVER] onJSONReceived called : %s", json);
+			LOG_INFO("[SERVER] onJSONReceived called : %s", json);
 
 			assert(strcmp(JSON_STR, json) == 0);
 
 			recvedLine_++;
 			if(recvedLine_ == 2) {
-				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				LOG_INFO("************ Test Success ************");
 				ioServiceContainer()->stop();	// test success
 			}
 		}
@@ -253,10 +244,10 @@ namespace TestJSONProtocol {
 
 	class TestServerClientController : public JSONController {
 		virtual void onInitialized() {
-			MY_LOG4CXX_DEBUG(gLogger, "onInitialized called : %d", socket()->socketFD());
+			LOG_DEBUG("onInitialized called : %d", socket()->socketFD());
 		}
 		virtual void onJSONReceived(const char *json) {
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onJSONReceived called : %s", json);
+			LOG_DEBUG("[SERVER] onJSONReceived called : %s", json);
 			writeJSON(json);
 		}
 	};
@@ -266,15 +257,15 @@ namespace TestJSONProtocol {
 		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
 			
 			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController); 
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onAccept called : %p", newController.get());
+			LOG_DEBUG("[SERVER] onAccept called : %p", newController.get());
 			return newController;
 		}
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "JSON Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("JSON Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<IOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<IOServiceContainer>(new IOServiceContainer);
@@ -310,7 +301,7 @@ namespace TestFrameProtocol {
 	class TestClientController : public FrameController {
 
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called");
+			LOG_DEBUG("onConnected called");
 			recvedLine_ = 0;
 
 			FrameHeader header(COMMAND, 0);
@@ -322,7 +313,7 @@ namespace TestFrameProtocol {
 		}
 
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d %s:%d", prot->header().command(), prot->payloadPtr(), prot->payloadSize());
+			LOG_DEBUG("[CLIENT] onFrameReceived called : %d %s:%d", prot->header().command(), prot->payloadPtr(), prot->payloadSize());
 			
 			std::string payload;
 			payload.assign((char *)prot->payloadPtr(), prot->payloadSize());
@@ -335,7 +326,7 @@ namespace TestFrameProtocol {
 
 			recvedLine_++;
 			if(recvedLine_ == 5) {
-				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				LOG_INFO("************ Test Success ************");
 				ioServiceContainer()->stop();	// test success
 			}
 		}
@@ -346,7 +337,7 @@ namespace TestFrameProtocol {
 
 	class TestServerClientController : public FrameController {
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onFrameReceived called : %d %s:%d", prot->header().command(), prot->payloadPtr(), prot->payloadSize());
+			LOG_DEBUG("[SERVER] onFrameReceived called : %d %s:%d", prot->header().command(), prot->payloadPtr(), prot->payloadSize());
 			
 			std::string payload;
 			payload.assign((char *)prot->payloadPtr(), prot->payloadSize());
@@ -366,9 +357,9 @@ namespace TestFrameProtocol {
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Frame Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Frame Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
@@ -398,7 +389,7 @@ namespace TestFrameAndJSONProtocol {
 	class TestClientController : public FrameController {
 
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called");
+			LOG_DEBUG("onConnected called");
 			recvedLine_ = 0;
 
 			boost::shared_ptr<JSONProtocol> jsonprot(new JSONProtocol);
@@ -411,18 +402,18 @@ namespace TestFrameAndJSONProtocol {
 		}
 
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 			
 			boost::shared_ptr<JSONProtocol> jsonprot(new JSONProtocol(prot));
 			jsonprot->processReadFromPayloadBuffer();
 			assert(jsonprot->isReadComplete());
-			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] json = %s", jsonprot->jsonPtr());
+			LOG_DEBUG("[CLIENT] json = %s", jsonprot->jsonPtr());
 
 			assert(strcmp(JSON_STR, jsonprot->jsonPtr()) == 0);
 
 			recvedLine_++;
 			if(recvedLine_ == 2) {
-				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				LOG_INFO("************ Test Success ************");
 				ioServiceContainer()->stop();	// test success
 			}
 		}
@@ -433,7 +424,7 @@ namespace TestFrameAndJSONProtocol {
 
 	class TestServerClientController : public FrameController {
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			LOG_DEBUG("[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 			boost::shared_ptr<JSONProtocol> jsonprot(new JSONProtocol(prot));
 			jsonprot->processReadFromPayloadBuffer();
@@ -454,9 +445,9 @@ namespace TestFrameAndJSONProtocol {
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Frame And String List Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Frame And String List Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
@@ -487,7 +478,7 @@ namespace TestFrameAndStringListProtocol {
 	class TestClientController : public FrameController {
 
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called");
+			LOG_DEBUG("onConnected called");
 			recvedLine_ = 0;
 
 			boost::shared_ptr<StringListProtocol> slprot(new StringListProtocol);
@@ -502,14 +493,14 @@ namespace TestFrameAndStringListProtocol {
 		}
 
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 			
 			boost::shared_ptr<StringListProtocol> slprot(new StringListProtocol(prot));
 			slprot->processReadFromPayloadBuffer();
 
 			assert(slprot->isReadComplete());
 			for(size_t i = 0; i < slprot->listSize(); i++) {
-				MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] list string [%d] = %s\n", i, slprot->stringOf(i).c_str());
+				LOG_DEBUG("[CLIENT] list string [%d] = %s\n", i, slprot->stringOf(i).c_str());
 			}
 
 			assert(slprot->listSize() == 4);
@@ -519,7 +510,7 @@ namespace TestFrameAndStringListProtocol {
 			assert(slprot->stringOf(3) == "NEW ID4 FROM SERVER");
 			recvedLine_++;
 			if(recvedLine_ == 2) {
-				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				LOG_INFO("************ Test Success ************");
 				ioServiceContainer()->stop();	// test success
 			}
 		}
@@ -530,7 +521,7 @@ namespace TestFrameAndStringListProtocol {
 
 	class TestServerClientController : public FrameController {
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			LOG_DEBUG("[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 			boost::shared_ptr<StringListProtocol> slprot(new StringListProtocol(prot));
 			slprot->processReadFromPayloadBuffer();
@@ -541,7 +532,7 @@ namespace TestFrameAndStringListProtocol {
 			assert(slprot->stringOf(1) == "ID2");
 			assert(slprot->stringOf(2) == "ID3");
 			for(size_t i = 0; i < slprot->listSize(); i++) {
-				MY_LOG4CXX_DEBUG(gLogger, "[SERVER] list string [%d] = %s\n", i, slprot->stringOf(i).c_str());
+				LOG_DEBUG("[SERVER] list string [%d] = %s\n", i, slprot->stringOf(i).c_str());
 			}
 
 			slprot->addString("NEW ID4 FROM SERVER");
@@ -559,9 +550,9 @@ namespace TestFrameAndStringListProtocol {
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Frame And String List Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Frame And String List Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
@@ -592,7 +583,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 	class TestClientController : public FrameController {
 
 		virtual void onConnected() {
-			MY_LOG4CXX_DEBUG(gLogger, "onConnected called : %p", this);
+			LOG_DEBUG("onConnected called : %p", this);
 			recvedLine_ = 0;
 
 			boost::shared_ptr<StringListProtocol> slprot(new StringListProtocol);
@@ -615,7 +606,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 		}
 
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 			
 			boost::shared_ptr<StringListProtocol> slprot(new StringListProtocol(prot));
 			boost::shared_ptr<LineProtocol> lprot(new LineProtocol(slprot));
@@ -623,7 +614,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 
 			assert(lprot->isReadComplete());
 			for(size_t i = 0; i < slprot->listSize(); i++) {
-				MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] list string [%d] = %s\n", i, slprot->stringOf(i).c_str());
+				LOG_DEBUG("[CLIENT] list string [%d] = %s\n", i, slprot->stringOf(i).c_str());
 			}
 
 			if(recvedLine_ % 2 == 0) {
@@ -644,7 +635,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 
 			recvedLine_++;
 			if(recvedLine_ == 6) {
-				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				LOG_INFO("************ Test Success ************");
 				ioServiceContainer()->stop();	// test success
 			}
 		}
@@ -657,7 +648,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 		public:
 		TestServerClientController() : writeFrameMode(0) { }
 		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-			MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			LOG_DEBUG("[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 			StringListProtocol slprot(prot.get());
 			LineProtocol lprot(&slprot);
@@ -666,7 +657,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 			
 			assert(lprot.isReadComplete());
 			for(size_t i = 0; i < slprot.listSize(); i++) {
-				MY_LOG4CXX_DEBUG(gLogger, "[SERVER] list string [%d] = %s\n", i, slprot.stringOf(i).c_str());
+				LOG_DEBUG("[SERVER] list string [%d] = %s\n", i, slprot.stringOf(i).c_str());
 			}
 
 			assert(slprot.listSize() == 5);
@@ -682,10 +673,10 @@ namespace TestFrameAndStringListAndLineProtocol {
 			lprot.processSerialize();
 
 			if(writeFrameMode++ % 2 == 0) {
-				MY_LOG4CXX_DEBUG(gLogger, "[SERVER] write mode == 0");
+				LOG_DEBUG("[SERVER] write mode == 0");
 				lprot.processWrite(socket());
 			} else {
-				MY_LOG4CXX_DEBUG(gLogger, "[SERVER] write mode == 1");
+				LOG_DEBUG("[SERVER] write mode == 1");
 				FrameHeader header(prot->header().command() + 813, 2);
 				writeFrame(header, &lprot);
 			}
@@ -703,9 +694,9 @@ namespace TestFrameAndStringListAndLineProtocol {
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Frame And String List And Line Protocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Frame And String List And Line Protocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(2));
@@ -737,13 +728,13 @@ namespace TestFileDescriptorProtocol {
 			}
 
 			virtual void onInitialized() {
-				MY_LOG4CXX_DEBUG(gLogger, "TestFDController onInitialized emitted.. %d -> %d\n", socket()->socketFD(), fd_);
+				LOG_DEBUG("TestFDController onInitialized emitted.. %d -> %d\n", socket()->socketFD(), fd_);
 
 				if(fd_ > 0)
 					writeDescriptor(fd_);
 			}
 			virtual void onDescriptorReceived(int fd) {
-				MY_LOG4CXX_DEBUG(gLogger, "TestFDController onDescriptorReceived emitted.. %d\n", fd);
+				LOG_DEBUG("TestFDController onDescriptorReceived emitted.. %d\n", fd);
 
 				if(fd <= 0)
 					return;
@@ -751,7 +742,7 @@ namespace TestFileDescriptorProtocol {
 				char buff[1024] = {0, };
 				while(true) {
 					if(read(fd, buff, sizeof(buff)) > 0) {
-						MY_LOG4CXX_DEBUG(gLogger, "%s", buff);
+						LOG_DEBUG("%s", buff);
 						continue;
 					}
 					break;
@@ -761,7 +752,7 @@ namespace TestFileDescriptorProtocol {
 				assert(strstr(buff, "// END"));
 
 				close(fd);
-				MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+				LOG_INFO("************ Test Success ************");
 				ioServiceContainer()->stop();	// test success
 			}
 
@@ -778,7 +769,7 @@ namespace TestFileDescriptorProtocol {
 		public:
 			virtual void onInitialized() {
 				fd_ = open("test.txt", O_RDONLY);
-				MY_LOG4CXX_DEBUG(gLogger, "TestUnixServerController onInitialized file descriptor = %d\n", fd_);
+				LOG_DEBUG("TestUnixServerController onInitialized file descriptor = %d\n", fd_);
 			}
 
 			virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
@@ -792,9 +783,9 @@ namespace TestFileDescriptorProtocol {
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "FileDescriptorProtocol Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("FileDescriptorProtocol Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(2));
@@ -830,10 +821,10 @@ namespace TestRedisRequest {
 	class TestRedisController : public RedisController {
 		public:
 			virtual void onConnected() {
-				MY_LOG4CXX_INFO(gLogger,"!! REDIS CONNECTED");
+				LOG_INFO("!! REDIS CONNECTED");
 			}
 			virtual void onResponse(boost::shared_ptr<RedisResponse> response) {
-				MY_LOG4CXX_DEBUG(gLogger,"!! REDIS RESPONSE : Ticket %d", response->ticket());
+				LOG_DEBUG("!! REDIS RESPONSE : Ticket %d", response->ticket());
 			}
 	};
 
@@ -848,7 +839,7 @@ namespace TestRedisRequest {
 					sprintf(userId, "userid_num%d@naver.com", i);
 					int ticket = gRedisCtrl_->get(userId, this);
 					(void)ticket;
-					//MY_LOG4CXX_INFO(gLogger,"!! >>>>>>>>>>>>>>>>>>>>>>>>>> REQUSET REDIS GET COMMAND : %d = %s", ticket, userId);
+					//LOG_INFO("!! >>>>>>>>>>>>>>>>>>>>>>>>>> REQUSET REDIS GET COMMAND : %d = %s", ticket, userId);
 				}
 			}
 
@@ -858,9 +849,9 @@ namespace TestRedisRequest {
 					int ticket) {
 				recvedCnt_ ++;
 
-				MY_LOG4CXX_DEBUG(gLogger,"onControllerEvent_GotResponse emitted.. ticket %d, recvCnt %d\n", ticket, recvedCnt_);
+				LOG_DEBUG("onControllerEvent_GotResponse emitted.. ticket %d, recvCnt %d\n", ticket, recvedCnt_);
 				if(recvedCnt_ == GET_COUNT) {
-					MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+					LOG_INFO("************ Test Success ************");
 					ioServiceContainer()->stop();	// test success
 				}
 			}
@@ -878,9 +869,9 @@ namespace TestRedisRequest {
 
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Redis Request Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Redis Request Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(2));
@@ -900,7 +891,7 @@ namespace TestRedisRequest {
 			gPortBase++;
 
 			ioServiceContainer->run();
-			MY_LOG4CXX_INFO(gLogger, "Test OK");
+			LOG_INFO("Test OK");
 			return true;
 		} catch(Exception &e) {
 			printf("Exception emitted : %s\n", e.what());
@@ -943,7 +934,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	class TestRedisController : public RedisController {
 		public:
 			virtual void onResponse(boost::shared_ptr<RedisResponse> response) {
-				MY_LOG4CXX_DEBUG(gLogger,"!! REDIS RESPONSE : Ticket %d => %s\n", response->ticket(), response->result()->str.c_str());
+				LOG_DEBUG("!! REDIS RESPONSE : Ticket %d => %s\n", response->ticket(), response->result()->str.c_str());
 			}
 	};
 
@@ -952,7 +943,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			TestLoginClientController(const std::string &userId) : dummyLoginId(userId) { }
 
 			virtual void onConnected() {
-				MY_LOG4CXX_DEBUG(gLogger, "onConnected emitted\n");
+				LOG_DEBUG("onConnected emitted\n");
 
 				LineProtocol lprot;
 				lprot.setLine(dummyLoginId);
@@ -962,7 +953,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 
 			virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-				MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+				LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 				// got response
 				switch(prot->header().command()) {
@@ -982,9 +973,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 							gLockMutex.lock();
 							gRecvMemoCnt++;
 							gLockMutex.unlock();
-							MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] recv COMMAND_SEND_MEMO cnt %d / %d\n", gRecvMemoCnt, gLoginUserCnt);
+							LOG_DEBUG("[CLIENT] recv COMMAND_SEND_MEMO cnt %d / %d\n", gRecvMemoCnt, gLoginUserCnt);
 							if(gRecvMemoCnt == gLoginUserCnt) {
-								MY_LOG4CXX_INFO(gLogger, "************ Test Success ************");
+								LOG_INFO("************ Test Success ************");
 								ioServiceContainer()->stop();	// test success
 							}
 						}							
@@ -1002,7 +993,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			TestSendMemoClientController() { }
 
 			virtual void onConnected() {
-				MY_LOG4CXX_DEBUG(gLogger, "onConnected emitted\n");
+				LOG_DEBUG("onConnected emitted\n");
 
 				setTimer(TIMER_ID_CHECK_LOGIN_OK, 100, true);
 				setTimer(TIMER_ID_CHECK_LOGIN_WAIT_PATIENCE, 2000, false);
@@ -1020,7 +1011,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				}
 
 				if(gLoginUserCnt == LOGIN_USER_COUNT) {
-					MY_LOG4CXX_INFO(gLogger, "--------------- All user login complete! (: -----------------");
+					LOG_INFO("--------------- All user login complete! (: -----------------");
 
 					// send memo packet
 					StringListProtocol slprot;
@@ -1041,7 +1032,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 
 			virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-				MY_LOG4CXX_DEBUG(gLogger, "[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+				LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 				// got response
 				switch(prot->header().command()) {
@@ -1062,7 +1053,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 					, ticketLogin_(0) { }
 
 			virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-				MY_LOG4CXX_DEBUG(gLogger, "[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+				LOG_DEBUG("[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 				// got request from client
 				switch(prot->header().command()) {
@@ -1114,11 +1105,11 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			virtual void onControllerEvent_GotResponse(
 					boost::shared_ptr<BaseController> controller, 
 					int ticket) {
-				MY_LOG4CXX_DEBUG(gLogger,"[SERVER] onControllerEvent_GotResponse emitted.. ticket %d\n", ticket);
+				LOG_DEBUG("[SERVER] onControllerEvent_GotResponse emitted.. ticket %d\n", ticket);
 
 				boost::shared_ptr<RedisController> redis = REDIS_CTRL(controller); 
 				boost::shared_ptr<RedisResponse> res = redis->getAndDeleteResponseOfTicket(ticket);
-				MY_LOG4CXX_INFO(gLogger, "REDIS RESULT : %s, ticket %d, %d\n", res->result()->str.c_str(), ticket, ticketLogin_);
+				LOG_INFO("REDIS RESULT : %s, ticket %d, %d\n", res->result()->str.c_str(), ticket, ticketLogin_);
 
 				if(ticket == ticketLogin_) {
 					// doing login progress..
@@ -1139,7 +1130,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				gLockMutex.lock();
 				mapUser_t::iterator it = gUserMap.find(userId);
 				if(it == gUserMap.end()) {
-					MY_LOG4CXX_FATAL(gLogger, "gUserMap not found user session. %s, %s, %d\n", userId, res->result()->str.c_str(), gUserMap.size());
+					LOG_FATAL("gUserMap not found user session. %s, %s, %d\n", userId, res->result()->str.c_str(), gUserMap.size());
 					assert(false && "gUserMap not found user session");
 				}
 				gLockMutex.unlock();
@@ -1173,9 +1164,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	};
 
 	bool doTest() {
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
-		MY_LOG4CXX_INFO(gLogger, "Frame And StringList And Line Protocol And RedisRequestController Test");
-		MY_LOG4CXX_INFO(gLogger, "=====================================================================");
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Frame And StringList And Line Protocol And RedisRequestController Test");
+		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
 		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer(2));
@@ -1204,7 +1195,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			gPortBase++;
 
 			ioServiceContainer->run();
-			MY_LOG4CXX_INFO(gLogger, "Test OK");
+			LOG_INFO("Test OK");
 			return true;
 		} catch(Exception &e) {
 			printf("Exception emitted : %s\n", e.what());
@@ -1218,12 +1209,8 @@ void coconutLog(logger::LogLevel level, const char *fileName, int fileLine, cons
 }
 
 int main() {
-#if defined(USE_LOG4CXX)
-	PropertyConfigurator::configure("log4cxx.properties");
-#endif
-
 //#define SHOW_COCONUT_LOG
-#if defined(SHOW_COCONUT_LOG) || !defined(USE_LOG4CXX)
+#if defined(SHOW_COCONUT_LOG)
 	logger::LogHookCallback logCallback;
 	logCallback.trace = coconutLog;
 	logCallback.debug = coconutLog;
@@ -1236,7 +1223,7 @@ int main() {
 	//logger::setLogLevel(logger::LEVEL_TRACE);
 	logger::setLogLevel(logger::LEVEL_INFO);
 
-	MY_LOG4CXX_INFO(gLogger, "Entering protocol test");
+	LOG_INFO("Entering protocol test");
 
 	assert(TestUDPAndLineProtocol::doTest());
 	assert(TestHttpRequestGet::doTest());
@@ -1252,7 +1239,7 @@ int main() {
 	assert(TestFrameAndStringListAndLineProtocolAndRedis::doTest());
 	assert(TestRedisRequest::doTest());
 
-	MY_LOG4CXX_INFO(gLogger, "Leaving protocol test");
+	LOG_INFO("Leaving protocol test");
 
 #if defined(WIN32)
 	_getch();

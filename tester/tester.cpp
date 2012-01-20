@@ -1,18 +1,12 @@
 #include "Coconut.h"
 #include <fcntl.h>
-#include <log4cxx/logger.h> 
-#include <log4cxx/basicconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
 #include "NetworkHelper.h"
 #include "LineController.h"
 #include "FileDescriptorController.h"
 #include "FrameProtocol.h"
 #include "IOServiceContainer.h"
-#include "log4cxxutil.h"
 
-using namespace log4cxx;
 using namespace coconut::protocol;
-LoggerPtr logger(Logger::getLogger("MyApp"));
 
 #define UDP_PORT	7777
 #define BIND_PORT	8765
@@ -44,7 +38,7 @@ public:
 	}
 
 	virtual void onResponse(boost::shared_ptr<coconut::RedisResponse> response) {
-		MY_LOG4CXX_INFO(logger,"!! REDIS RESPONSE : Ticket %d => %s\n", response->ticket(), response->result()->str.c_str());
+		LOG_INFO("!! REDIS RESPONSE : Ticket %d => %s\n", response->ticket(), response->result()->str.c_str());
 	}
 };
 
@@ -58,12 +52,12 @@ public:
 
 	/*
 	void onReceivedDatagram(const void *data, int size, const struct sockaddr_in *sin) {
-		MY_LOG4CXX_DEBUG(logger, "onReadFrom emitted.. %d from %s:%d\n", size, inet_ntoa(sin->sin_addr), ntohs(sin->sin_port));
+		LOG_DEBUG( "onReadFrom emitted.. %d from %s:%d\n", size, inet_ntoa(sin->sin_addr), ntohs(sin->sin_port));
 	}
 	*/
 
 	virtual void onLineReceived(const char *line) {
-		MY_LOG4CXX_DEBUG(logger, "MyUdpClientController LINE RECEIVED : [%s]\n", line);
+		LOG_DEBUG( "MyUdpClientController LINE RECEIVED : [%s]\n", line);
 		//writeLine(line);
 		socket()->write(line, strlen(line));
 	}
@@ -82,20 +76,20 @@ public:
 class MyHttpController : public coconut::HttpRequestController
 {
 	virtual void onReceivedChucked(int receivedsize) { 
-		MY_LOG4CXX_DEBUG(logger, "MyHttpController received size : %d byte\n", receivedsize);
+		LOG_DEBUG( "MyHttpController received size : %d byte\n", receivedsize);
 	}
 
 	virtual void onError(coconut::HttpRequest::ErrorCode errorcode) {
-		MY_LOG4CXX_DEBUG(logger, "MyHttpController onError : %d\n", errorcode);
+		LOG_DEBUG( "MyHttpController onError : %d\n", errorcode);
 	}
 
 	virtual void onResponse(int rescode) {
-		MY_LOG4CXX_INFO(logger,"MyHttpController onResponse [this = %p]\n", this);
-		MY_LOG4CXX_INFO(logger,"Header [%s]\n", httpRequest()->findHeader("profimg-name-base64").c_str());
+		LOG_INFO("MyHttpController onResponse [this = %p]\n", this);
+		LOG_INFO("Header [%s]\n", httpRequest()->findHeader("profimg-name-base64").c_str());
 
 		int fd = ::open("result", O_CREAT | O_TRUNC | O_WRONLY, 00644);
 		int len = write(fd, httpRequest()->responseBody(), httpRequest()->responseBodySize());
-		MY_LOG4CXX_INFO(logger,"HTTP RESULT SAVE FILE : %d bytes\n", len);
+		LOG_INFO("HTTP RESULT SAVE FILE : %d bytes\n", len);
 		close(fd);
 
 //		ioServiceContainer()->stop();
@@ -109,22 +103,22 @@ public:
 	MyClientController(int id) : id_(id) {
 	}
 	virtual void onLineReceived(const char *line) {
-		MY_LOG4CXX_DEBUG(logger, "[%d] MyClientController LINE RECEIVED : [%s]\n", id_, line);
+		LOG_DEBUG( "[%d] MyClientController LINE RECEIVED : [%s]\n", id_, line);
 //		socket()->write(line, strlen(line));
 //		socket()->write("\r\n", 2);
 	}
 
 	virtual void onError(int error, const char *strerror) {
-		MY_LOG4CXX_DEBUG(logger, "[%d] MyClientController onError emitted.. %d %s, thread = %p, socket = %p\n", 
+		LOG_DEBUG( "[%d] MyClientController onError emitted.. %d %s, thread = %p, socket = %p\n", 
 				id_, error, strerror, (void*)pthread_self(), socket().get());
 	}
 
 	virtual void onClosed() { 
-		MY_LOG4CXX_DEBUG(logger, "[%d] MyClientController onClose emitted..\n", id_);
+		LOG_DEBUG( "[%d] MyClientController onClose emitted..\n", id_);
 	}
 
 	virtual void onConnected() {
-		MY_LOG4CXX_DEBUG(logger, "[%d] MyClientController onConnected emitted.. thread = %p\n", id_, (void *)pthread_self());
+		LOG_DEBUG( "[%d] MyClientController onConnected emitted.. thread = %p\n", id_, (void *)pthread_self());
 		socket()->write((const void *)"HELLO\r\n", 7);
 
 #ifdef TEST_REDIS
@@ -145,12 +139,12 @@ public:
 	virtual void onControllerEvent_GotResponse(
 						boost::shared_ptr<coconut::BaseController> controller, 
 						int ticket) {
-		MY_LOG4CXX_INFO(logger,"[%d] MyClientController onControllerEvent_GotResponse emitted.. ticket %d\n", id_, ticket);
+		LOG_INFO("[%d] MyClientController onControllerEvent_GotResponse emitted.. ticket %d\n", id_, ticket);
 
 #ifdef TEST_HTTP
 		if(httpController_.get() == controller.get()) {
 			boost::shared_ptr<MyHttpController> d = boost::static_pointer_cast<MyHttpController>(controller); 
-			MY_LOG4CXX_DEBUG(logger, "d.responseBody() ==>[this = %p]\n%s\n", controller.get(), (char *)d->httpRequest()->responseBody());
+			LOG_DEBUG( "d.responseBody() ==>[this = %p]\n%s\n", controller.get(), (char *)d->httpRequest()->responseBody());
 		}
 			// for close test
 			//setTimer(1024, 1000, false);
@@ -161,7 +155,7 @@ public:
 			try {
 				boost::shared_ptr<coconut::RedisController> d = boost::static_pointer_cast<coconut::RedisController>(controller); 
 				boost::shared_ptr<coconut::RedisResponse> res = d->getAndDeleteResponseOfTicket(ticket);
-				MY_LOG4CXX_INFO(logger, "REDIS RESULT : %s\n", res->result()->str.c_str());
+				LOG_INFO( "REDIS RESULT : %s\n", res->result()->str.c_str());
 
 				// redis close test
 				d->redisRequest()->close();
@@ -176,12 +170,12 @@ public:
 	}
 	
 	virtual void onTimer(unsigned short id) {
-		MY_LOG4CXX_INFO(logger,"[%d] MyClientController onTimer emitted.. %d\n", id_, id);
+		LOG_INFO("[%d] MyClientController onTimer emitted.. %d\n", id_, id);
 		socket()->close();
 	}
 	
 	virtual void onReceivedData(const void *data, int size) {
-		MY_LOG4CXX_DEBUG(logger, "[%d] MyClientController onRead emitted.. %d\n", id_, size);
+		LOG_DEBUG( "[%d] MyClientController onRead emitted.. %d\n", id_, size);
 	}
 
 	int id() {
@@ -205,20 +199,20 @@ public:
 	}
 	
 	virtual void onInitialized() {
-		MY_LOG4CXX_DEBUG(logger, "MyFDController onInitialized emitted.. %d -> %d\n", socket()->socketFD(), fd_);
+		LOG_DEBUG( "MyFDController onInitialized emitted.. %d -> %d\n", socket()->socketFD(), fd_);
 
 		if(fd_ > 0)
 			writeDescriptor(fd_);
 	}
 	virtual void onConnected() {
-		MY_LOG4CXX_DEBUG(logger, "MyFDController onConnected emitted..\n");
+		LOG_DEBUG( "MyFDController onConnected emitted..\n");
 	}
 	virtual void onReceivedData(const void *data, int size) {
-		MY_LOG4CXX_DEBUG(logger, "MyFDController onRead emitted.. fd %d, size = %d\n", socket()->socketFD(), size);
+		LOG_DEBUG( "MyFDController onRead emitted.. fd %d, size = %d\n", socket()->socketFD(), size);
 	}
 	
 	virtual void onDescriptorReceived(int fd) {
-		MY_LOG4CXX_DEBUG(logger, "MyFDController onDescriptorReceived emitted.. %d\n", fd);
+		LOG_DEBUG( "MyFDController onDescriptorReceived emitted.. %d\n", fd);
 
 		if(fd <= 0)
 			return;
@@ -226,7 +220,7 @@ public:
 		while(true) {
 			char buff[1024] = {0, };
 			if(read(fd, buff, sizeof(buff)) > 0) {
-				MY_LOG4CXX_DEBUG(logger, "%s", buff);
+				LOG_DEBUG( "%s", buff);
 				continue;
 			}
 			break;
@@ -250,7 +244,7 @@ public:
 	virtual void onInitialized() {
 		fd_ = open("test.txt", O_RDONLY);
 
-		MY_LOG4CXX_DEBUG(logger, "MyUnixServerController onInitialized file descriptor = %d\n", fd_);
+		LOG_DEBUG( "MyUnixServerController onInitialized file descriptor = %d\n", fd_);
 	}
 
 	virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
@@ -284,16 +278,16 @@ public:
 						boost::shared_ptr<coconut::protocol::BaseProtocol> prot) {
 		boost::shared_ptr<LineProtocol> d = boost::static_pointer_cast<LineProtocol>(prot); 
 
-		MY_LOG4CXX_DEBUG(logger, "MyTcpServerController onControllerEvent_GotProtocol emitted.. line = %s", d->linePtr());
+		LOG_DEBUG( "MyTcpServerController onControllerEvent_GotProtocol emitted.. line = %s", d->linePtr());
 	}
 	
 	virtual void onControllerEvent_ClosedConnection(
 						boost::shared_ptr<coconut::BaseController> controller, 
 						int error) {
-		MY_LOG4CXX_DEBUG(logger, "MyTcpServerController onControllerEvent_ClosedConnection emitted.. error : %d\n", error);
+		LOG_DEBUG( "MyTcpServerController onControllerEvent_ClosedConnection emitted.. error : %d\n", error);
 
 		boost::shared_ptr<MyClientController> d = boost::static_pointer_cast<MyClientController>(controller); 
-		MY_LOG4CXX_INFO(logger,"MyTcpServerController client closed id %d\n", d->id());
+		LOG_INFO("MyTcpServerController client closed id %d\n", d->id());
 
 		clientset_t::iterator it = clients_.find(d);
 		if(it != clients_.end()) {
@@ -302,7 +296,7 @@ public:
 	}
 
 	virtual void onTimer(unsigned short id) {
-		MY_LOG4CXX_DEBUG(logger, "MyTcpServerController onTimer emitted.. %d\n", id);
+		LOG_DEBUG( "MyTcpServerController onTimer emitted.. %d\n", id);
 	}
 
 private:
@@ -313,12 +307,7 @@ private:
 
 //==========================================================
 int main(int argc, char **argv) {
-	if(argc > 1)
-		PropertyConfigurator::configure(argv[1]);
-	else
-		PropertyConfigurator::configure("log4cxx_tester.properties");
-
-	MY_LOG4CXX_INFO(logger, "Entering application : %d", argc);
+	LOG_INFO( "Entering application : %d", argc);
 
 	coconut::IOServiceContainer ioServiceContainer(20);
 //	coconut::IOServiceContainer ioServiceContainer;
@@ -333,7 +322,7 @@ int main(int argc, char **argv) {
 		coconut::NetworkHelper::listenTcp(&ioServiceContainer, BIND_PORT, tcpServerController);
 
 #ifdef TEST_TCP_CLIENT
-		MY_LOG4CXX_DEBUG(logger, "=============== TCP CLIENT START =============\n");
+		LOG_DEBUG( "=============== TCP CLIENT START =============\n");
 		for(int i = 0; i < TEST_TCP_CLIENT_COUNT; i++) {
 			// tcp client test
 			boost::shared_ptr<MyClientController> controller(new MyClientController(i));
@@ -342,7 +331,7 @@ int main(int argc, char **argv) {
 
 			clients.push_back(controller);
 		}
-		MY_LOG4CXX_DEBUG(logger, "=============== TCP CLIENT END ===============\n");
+		LOG_DEBUG( "=============== TCP CLIENT END ===============\n");
 #endif
 #endif
 
@@ -352,7 +341,7 @@ int main(int argc, char **argv) {
 		coconut::NetworkHelper::bindUdp(&ioServiceContainer, UDP_PORT, udpController);
 
 #ifdef TEST_UDP_CLIENT
-		MY_LOG4CXX_DEBUG(logger, "=============== UDP CLIENT START =============\n");
+		LOG_DEBUG( "=============== UDP CLIENT START =============\n");
 		for(int i = 0; i < 1; i++) {
 			// tcp client test
 			boost::shared_ptr<MyUdpClientController> controller(new MyUdpClientController);
@@ -361,7 +350,7 @@ int main(int argc, char **argv) {
 
 			clients.push_back(controller);
 		}
-		MY_LOG4CXX_DEBUG(logger, "=============== UDP CLIENT END ===============\n");
+		LOG_DEBUG( "=============== UDP CLIENT END ===============\n");
 #endif
 #endif
 
@@ -396,16 +385,16 @@ int main(int argc, char **argv) {
 		boost::shared_ptr<MyHttpController> httpController(new MyHttpController);
 		coconut::NetworkHelper::httpRequest(&ioServiceContainer, coconut::HTTP_POST, uri.c_str(), 20, &params, httpController);
 		//coconut::NetworkHelper::httpRequest(&ioServiceContainer, coconut::HTTP_GET, uri.c_str(), 20, &params, httpController);
-		MY_LOG4CXX_DEBUG(logger, "HTTP REQUEST ASYNC!!!\n");
+		LOG_DEBUG( "HTTP REQUEST ASYNC!!!\n");
 #endif
 		// event loop start!
 		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {
-		MY_LOG4CXX_DEBUG(logger, "Exception emitted : %s\n", e.what());
+		LOG_DEBUG( "Exception emitted : %s\n", e.what());
 	}
 
 	// exit..
-	MY_LOG4CXX_INFO(logger, "Leaving application");
+	LOG_INFO( "Leaving application");
 	return 0;
 }
 

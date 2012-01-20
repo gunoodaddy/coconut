@@ -5,9 +5,7 @@
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
 #include "LineController.h"
-
-using namespace log4cxx;
-LoggerPtr logger(Logger::getLogger("MyApp"));
+#include "Logger.h"
 
 //#define USE_LINE_CONTROLLER
 
@@ -34,8 +32,6 @@ class MyServerController : public coconut::ServerController {
 };
 
 int main(int argc, char **argv) {
-	PropertyConfigurator::configure("log4cxx_tcpserver.properties");
-
 	if(argc < 3) {
 		printf("usage : %s [port] [thread-count] [verbose:1,0]\n", argv[0]);
 		return -1;
@@ -54,10 +50,10 @@ int main(int argc, char **argv) {
 
 		coconut::NetworkHelper::listenTcp(&ioServiceContainer, port, serverController);
 
-		LOG4CXX_INFO(logger, "tcpserver started..");
+		LOG_INFO("tcpserver started..");
 		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {
-		printf("Exception emitted : %s\n", e.what());
+		LOG_FATAL("Exception emitted : %s\n", e.what());
 	}
 	return 0;
 }
