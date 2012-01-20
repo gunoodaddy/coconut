@@ -540,8 +540,8 @@ private:	// fire event callback
 				this, socketFD(), owner_->eventHandler(), EVUTIL_SOCKET_ERROR());
 		_deleteTimer();
 		owner_->setState(BaseSocket::Disconnected);
-		owner_->fire_onSocket_Close();
 		close();
+		owner_->fire_onSocket_Close();
 	}
 
 	void fire_onSocket_Error(int error) {
@@ -558,8 +558,8 @@ private:	// fire event callback
 			}
 		}
 		owner_->setState(BaseSocket::Disconnected);
-		owner_->fire_onSocket_Error(error, owner_->lastErrorString());
 		close();
+		owner_->fire_onSocket_Error(error, owner_->lastErrorString());
 	}
 
 	void fire_onSocket_Connected() {
