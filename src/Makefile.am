@@ -22,14 +22,16 @@ libcoconut_la_SOURCES = \
                        RedisResponse.cpp \
                        HttpRequest.cpp \
                        BaseProtocol.cpp \
-                       LineProtocol.cpp \
                        FrameProtocol.cpp \
+                       LineProtocol.cpp \
+                       JSONProtocol.cpp \
                        FileDescriptorProtocol.cpp \
                        BaseController.cpp \
                        BaseControllerEvent.cpp \
                        ClientController.cpp \
                        ServerController.cpp  \
                        LineController.cpp \
+                       JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
                        HttpRequestController.cpp \
@@ -61,11 +63,13 @@ include_coconut_HEADERS = \
                          RedisRequest.h \
                        	 RedisResponse.h \
                          HttpRequest.h \
+						 JSONProtocol.h \
 						 LineProtocol.h \
 						 FrameProtocol.h \
                          FileDescriptorProtocol.h \
                          ClientController.h \
                          LineController.h \
+                         JSONController.h \
                          FrameController.h \
                          FileDescriptorController.h \
                          ServerController.h \

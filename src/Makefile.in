@@ -84,9 +84,10 @@ am_libcoconut_la_OBJECTS = kbuffer.lo Coconut.lo Logger.lo \
 	DNSResolver.lo BufferedTransport.lo BaseSocket.lo TcpSocket.lo \
 	UdpSocket.lo ConnectionListener.lo RedisRequest.lo \
 	RedisResponse.lo HttpRequest.lo BaseProtocol.lo \
-	LineProtocol.lo FrameProtocol.lo FileDescriptorProtocol.lo \
-	BaseController.lo BaseControllerEvent.lo ClientController.lo \
-	ServerController.lo LineController.lo FrameController.lo \
+	FrameProtocol.lo LineProtocol.lo JSONProtocol.lo \
+	FileDescriptorProtocol.lo BaseController.lo \
+	BaseControllerEvent.lo ClientController.lo ServerController.lo \
+	LineController.lo JSONController.lo FrameController.lo \
 	FileDescriptorController.lo HttpRequestController.lo \
 	RedisController.lo NetworkHelper.lo
 libcoconut_la_OBJECTS = $(am_libcoconut_la_OBJECTS)
@@ -266,14 +267,16 @@ libcoconut_la_SOURCES = \
                        RedisResponse.cpp \
                        HttpRequest.cpp \
                        BaseProtocol.cpp \
-                       LineProtocol.cpp \
                        FrameProtocol.cpp \
+                       LineProtocol.cpp \
+                       JSONProtocol.cpp \
                        FileDescriptorProtocol.cpp \
                        BaseController.cpp \
                        BaseControllerEvent.cpp \
                        ClientController.cpp \
                        ServerController.cpp  \
                        LineController.cpp \
+                       JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
                        HttpRequestController.cpp \
@@ -305,11 +308,13 @@ include_coconut_HEADERS = \
                          RedisRequest.h \
                        	 RedisResponse.h \
                          HttpRequest.h \
+						 JSONProtocol.h \
 						 LineProtocol.h \
 						 FrameProtocol.h \
                          FileDescriptorProtocol.h \
                          ClientController.h \
                          LineController.h \
+                         JSONController.h \
                          FrameController.h \
                          FileDescriptorController.h \
                          ServerController.h \
@@ -411,6 +416,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpRequestController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOService.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOServiceContainer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONController.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Logger.Plo@am__quote@
