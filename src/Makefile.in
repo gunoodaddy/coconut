@@ -41,12 +41,6 @@ DIST_COMMON = $(include_coconut_HEADERS) $(srcdir)/Makefile.am \
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/aclocal/ax_boost_base.m4 \
 	$(top_srcdir)/aclocal/ax_lib_event.m4 \
-	$(top_srcdir)/aclocal/ax_log4cxx.m4 \
-	$(top_srcdir)/aclocal/libtool.m4 \
-	$(top_srcdir)/aclocal/ltoptions.m4 \
-	$(top_srcdir)/aclocal/ltsugar.m4 \
-	$(top_srcdir)/aclocal/ltversion.m4 \
-	$(top_srcdir)/aclocal/lt~obsolete.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -160,7 +154,6 @@ LDFLAGS = @LDFLAGS@
 LIBEVENT_CPPFLAGS = @LIBEVENT_CPPFLAGS@
 LIBEVENT_LDFLAGS = @LIBEVENT_LDFLAGS@
 LIBEVENT_LIBS = @LIBEVENT_LIBS@
-LIBLOG4CXX = @LIBLOG4CXX@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -184,7 +177,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -229,8 +221,6 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
-log4cxx_CFLAGS = @log4cxx_CFLAGS@
-log4cxx_LIBS = @log4cxx_LIBS@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@

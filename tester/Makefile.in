@@ -41,12 +41,6 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/aclocal/ax_boost_base.m4 \
 	$(top_srcdir)/aclocal/ax_lib_event.m4 \
-	$(top_srcdir)/aclocal/ax_log4cxx.m4 \
-	$(top_srcdir)/aclocal/libtool.m4 \
-	$(top_srcdir)/aclocal/ltoptions.m4 \
-	$(top_srcdir)/aclocal/ltsugar.m4 \
-	$(top_srcdir)/aclocal/ltversion.m4 \
-	$(top_srcdir)/aclocal/lt~obsolete.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -58,24 +52,19 @@ PROGRAMS = $(noinst_PROGRAMS)
 am_boosttest_OBJECTS = boosttest.$(OBJEXT)
 boosttest_OBJECTS = $(am_boosttest_OBJECTS)
 boosttest_LDADD = $(LDADD)
-am__DEPENDENCIES_1 =
-boosttest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
-	$(am__DEPENDENCIES_1)
+boosttest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_jsontest_OBJECTS = jsontest.$(OBJEXT)
 jsontest_OBJECTS = $(am_jsontest_OBJECTS)
 jsontest_LDADD = $(LDADD)
-jsontest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
-	$(am__DEPENDENCIES_1)
+jsontest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_tester_OBJECTS = tester.$(OBJEXT)
 tester_OBJECTS = $(am_tester_OBJECTS)
 tester_LDADD = $(LDADD)
-tester_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
-	$(am__DEPENDENCIES_1)
+tester_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_unittest_OBJECTS = unittest.$(OBJEXT)
 unittest_OBJECTS = $(am_unittest_OBJECTS)
 unittest_LDADD = $(LDADD)
-unittest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la \
-	$(am__DEPENDENCIES_1)
+unittest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -136,7 +125,6 @@ LDFLAGS = @LDFLAGS@
 LIBEVENT_CPPFLAGS = @LIBEVENT_CPPFLAGS@
 LIBEVENT_LDFLAGS = @LIBEVENT_LDFLAGS@
 LIBEVENT_LIBS = @LIBEVENT_LIBS@
-LIBLOG4CXX = @LIBLOG4CXX@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -160,7 +148,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -205,8 +192,6 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
-log4cxx_CFLAGS = @log4cxx_CFLAGS@
-log4cxx_LIBS = @log4cxx_LIBS@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
