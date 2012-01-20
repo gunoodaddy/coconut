@@ -1,7 +1,7 @@
 
 DEFAULT_INCLUDES = -I.. -I. -I$(top_builddir)/src
 
-LDADD = $(top_builddir)/src/libcoconut.la $(log4cxx_LIBS) -lboost_thread -llog4cxx
+LDADD = $(top_builddir)/src/libcoconut.la $(log4cxx_LIBS) -lboost_thread -llog4cxx -ljson
 
 AM_CPPFLAGS = $(BOOST_CPPFLAGS)
 AM_CXXFLAGS = -Wall
@@ -10,6 +10,7 @@ AM_LDFLAGS = $(BOOST_LDFLAGS) -static
 noinst_PROGRAMS = \
 	tester \
 	boosttest \
+	jsontest \
 	unittest
 
 tester_SOURCES = \
@@ -17,6 +18,9 @@ tester_SOURCES = \
 
 boosttest_SOURCES = \
 	boosttest.cpp
+
+jsontest_SOURCES = \
+	jsontest.cpp
 
 unittest_SOURCES = \
 	unittest.cpp
