@@ -1,4 +1,5 @@
 #include "Coconut.h"
+#include "Logger.h"
 #include "IOService.h"
 #include "RedisController.h"
 #include "RedisRequest.h"

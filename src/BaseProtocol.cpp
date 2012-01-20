@@ -1,4 +1,5 @@
 #include "Coconut.h"
+#include "Logger.h"
 #include <BaseProtocol.h>
 #include <VirtualTransportHelper.h>
 

@@ -1,4 +1,5 @@
 #include "Coconut.h"
+#include "Logger.h"
 #include "FrameController.h"
 
 using namespace coconut::protocol;

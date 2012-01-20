@@ -1,4 +1,5 @@
 #include "Coconut.h"
+#include "Logger.h"
 #include "ClientController.h"
 #include "BufferedTransport.h"
 #include "IOService.h"

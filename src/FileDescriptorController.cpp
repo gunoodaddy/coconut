@@ -1,4 +1,5 @@
 #include "Coconut.h"
+#include "Logger.h"
 #include "FileDescriptorController.h"
 
 using namespace coconut::protocol;

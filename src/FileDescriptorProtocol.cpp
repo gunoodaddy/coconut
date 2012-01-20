@@ -1,4 +1,5 @@
 #include "Coconut.h"
+#include "Logger.h"
 #include "FileDescriptorProtocol.h"
 #include "BaseSocket.h"
 #if ! defined(WIN32)
