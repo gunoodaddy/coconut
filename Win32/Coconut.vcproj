@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;..\;..\src;&quot;$(BOOST_HOME)&quot;;&quot;$(LIBEVENT_HOME)\include&quot;;&quot;$(LIBEVENT_HOME)\WIN32-Code&quot;;&quot;$(HIREDIS_HOME)&quot;"
+				AdditionalIncludeDirectories=".\;..\;..\src;&quot;$(BOOST_HOME)&quot;;&quot;$(LIBEVENT_HOME)\include&quot;;&quot;$(LIBEVENT_HOME)\WIN32-Code&quot;;&quot;$(HIREDIS_HOME)&quot;;..\3rdParty\src\"
 				PreprocessorDefinitions="COCONUT_USE_PRECOMPILE;HIREDIS_WIN;WIN32;_DEBUG;_WINDOWS;_USRDLL;COCONUT_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -65,7 +65,7 @@
 				AdditionalDependencies="libevent.lib hiredis.lib statLibJson.lib wsock32.lib Ws2_32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)D.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(BOOST_HOME)\stage\lib&quot;;3rdParty\lib;$(SolutionDir)$(ConfigurationName)"
+				AdditionalLibraryDirectories="&quot;$(BOOST_HOME)\stage\lib&quot;;..\3rdParty\lib;&quot;$(SolutionDir)$(ConfigurationName)&quot;"
 				ModuleDefinitionFile="coconut.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName)D.pdb"
@@ -362,28 +362,12 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\HttpRequest.cpp"
+				RelativePath="..\src\HttpClient.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\HttpRequestController.cpp"
+				RelativePath="..\src\HttpServer.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\IOService.cpp"
@@ -391,6 +375,14 @@
 			</File>
 			<File
 				RelativePath="..\src\IOServiceContainer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\JSONController.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\JSONProtocol.cpp"
 				>
 			</File>
 			<File
@@ -443,18 +435,6 @@
 			</File>
 			<File
 				RelativePath="..\src\NetworkHelper.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\src\RedisController.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -608,11 +588,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\HttpRequest.h"
+				RelativePath="..\src\HttpClient.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\HttpRequestController.h"
+				RelativePath="..\src\HttpServer.h"
 				>
 			</File>
 			<File
@@ -621,6 +601,14 @@
 			</File>
 			<File
 				RelativePath="..\src\IOServiceContainer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\JSONController.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\JSONProtocol.h"
 				>
 			</File>
 			<File
@@ -649,10 +637,6 @@
 			</File>
 			<File
 				RelativePath="..\src\ReactorContext.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\RedisController.h"
 				>
 			</File>
 			<File
