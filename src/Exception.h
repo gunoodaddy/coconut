@@ -4,7 +4,7 @@ namespace coconut {
 
 class COCONUT_API Exception : public std::exception {
 public:
-	Exception(): message_(), code_(0) {}
+	Exception(): code_(0) {}
 	Exception(const char *message) : code_(0) {
 		memcpy(message_, message, strlen(message));
 	}

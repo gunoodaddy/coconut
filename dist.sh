@@ -40,3 +40,4 @@ make maintainer-clean
 cd ..
 
 tar czvf "${DISTDIR}".tar.gz "${DISTDIR}"
+echo "${DISTDIR}".tar.gz
