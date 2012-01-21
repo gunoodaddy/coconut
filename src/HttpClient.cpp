@@ -416,7 +416,7 @@ public:
 
 		evbuffer_add_buffer(responsebuffer_, evhttp_request_get_input_buffer(req_));
 
-		owner_->eventHandler()->onHttpClient_ReceivedChunked(evbuffer_get_length(responsebuffer_));
+		owner_->eventHandler()->onHttpClient_ReceivedChunked(owner_, evbuffer_get_length(responsebuffer_));
 	}
 
 	// TODO reading progress feature supported,
@@ -426,7 +426,7 @@ public:
 
 		cleanUp(false); // automatically freed in libevent after callback
 
-		owner_->eventHandler()->onHttpClient_Error(errorcode);
+		owner_->eventHandler()->onHttpClient_Error(owner_, errorcode);
 	}
 
 	void fire_onHttpClient_Error() {
@@ -452,7 +452,7 @@ public:
 		}
 
 		cleanUp(false); // automatically freed in libevent after callback
-		owner_->eventHandler()->onHttpClient_Response(responseCode_);
+		owner_->eventHandler()->onHttpClient_Response(owner_, responseCode_);
 	}
 
 private:

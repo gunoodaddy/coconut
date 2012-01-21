@@ -17,7 +17,6 @@ using namespace coconut::protocol;
 //#define TEST_UDP
 //#define TEST_UDP_CLIENT
 #define TEST_UDS
-//#define TEST_HTTP
 #define TEST_REDIS
 
 //==========================================================
@@ -73,31 +72,6 @@ public:
 
 
 //==========================================================
-class MyHttpController : public coconut::HttpClientController
-{
-	virtual void onReceivedChucked(int receivedsize) { 
-		LOG_DEBUG( "MyHttpController received size : %d byte\n", receivedsize);
-	}
-
-	virtual void onError(coconut::HttpClient::ErrorCode errorcode) {
-		LOG_DEBUG( "MyHttpController onError : %d\n", errorcode);
-	}
-
-	virtual void onResponse(int rescode) {
-		LOG_INFO("MyHttpController onResponse [this = %p]\n", this);
-		LOG_INFO("Header [%s]\n", httpClient()->findHeader("profimg-name-base64").c_str());
-
-		int fd = ::open("result", O_CREAT | O_TRUNC | O_WRONLY, 00644);
-		int len = write(fd, httpClient()->responseBody(), httpClient()->responseBodySize());
-		LOG_INFO("HTTP RESULT SAVE FILE : %d bytes\n", len);
-		close(fd);
-
-//		ioServiceContainer()->stop();
-	}
-};
-
-
-//==========================================================
 class MyClientController : public coconut::LineController {
 public:
 	MyClientController(int id) : id_(id) {
@@ -125,30 +99,12 @@ public:
 		ticket_ = MyRedisController::instanceOfSingleton(ioServiceContainer())->redisRequest()->get("keh");
 		MyRedisController::instanceOfSingleton(ioServiceContainer())->eventGotResponse()->registerObserver(ticket_, this);
 #endif
-
-#ifdef TEST_HTTP
-		std::string uri = "http://119.205.238.162:8081/test.php?arg=0&arg2=2&userid='tester@hangame.com'";
-		boost::shared_ptr<MyHttpController> httpController(new MyHttpController);
-		coconut::NetworkHelper::httpClient(ioServiceContainer(), coconut::HTTP_POST, uri.c_str(), 20, NULL, httpController);
-
-		httpController_ = httpController;
-		httpController->eventGotResponse()->registerObserver(0, this);
-#endif
 	}
 
 	virtual void onControllerEvent_GotResponse(
 						boost::shared_ptr<coconut::BaseController> controller, 
 						int ticket) {
 		LOG_INFO("[%d] MyClientController onControllerEvent_GotResponse emitted.. ticket %d\n", id_, ticket);
-
-#ifdef TEST_HTTP
-		if(httpController_.get() == controller.get()) {
-			boost::shared_ptr<MyHttpController> d = boost::static_pointer_cast<MyHttpController>(controller); 
-			LOG_DEBUG( "d.responseBody() ==>[this = %p]\n%s\n", controller.get(), (char *)d->httpClient()->responseBody());
-		}
-			// for close test
-			//setTimer(1024, 1000, false);
-#endif
 
 #ifdef TEST_REDIS
 		if(MyRedisController::instanceOfSingleton().get() == controller.get()) {
@@ -185,9 +141,6 @@ public:
 private:
 	int id_;
 	coconut::ticket_t ticket_;
-#ifdef TEST_HTTP
-	boost::shared_ptr<MyHttpController> httpController_;
-#endif
 };
 
 
@@ -365,28 +318,6 @@ int main(int argc, char **argv) {
 		coconut::NetworkHelper::connectUnix(&ioServiceContainer, "server.sock", unixClientController);
 #endif
 
-#ifdef TEST_HTTP
-		// http request test
-		srand(time(NULL));
-		coconut::HttpParameter params;
-		params.addParameter("userid", "anycall300@hangame.com");
-		params.addParameter("targetid", "anycall300@hangame.com");
-		params.addParameter("sizetype", "1");
-		params.addParameter("action", "down");
-//		params.addParameter("action", "up");
-		params.addParameter("imgcrc", rand() % 1000);
-		params.addFile("profileImage", "testfilemedium.txt");
-		//params.addFile("profileImage", "/home/gtalk/src/coconut/sample/test.png");
-
-		std::string uri = "http://119.205.238.162:8081/test.php?arg=0&arg2=2&userid='tester@hangame.com'";
-		//std::string uri = "http://119.205.238.162:8081/nphone/OpenTalkProfile.php?arg=0&arg2=2&userid='tester@hangame.com'";
-		//std::string uri = "http://119.205.238.162:8081/nphone/MyProfileImage.php";
-		//std::string uri = "http://was.gp.hangame.com:8081/nphone/OpenTalkProfile.php?arg=0&arg2=2&userid='tester@hangame.com'";
-		boost::shared_ptr<MyHttpController> httpController(new MyHttpController);
-		coconut::NetworkHelper::httpClient(&ioServiceContainer, coconut::HTTP_POST, uri.c_str(), 20, &params, httpController);
-		//coconut::NetworkHelper::httpClient(&ioServiceContainer, coconut::HTTP_GET, uri.c_str(), 20, &params, httpController);
-		LOG_DEBUG( "HTTP REQUEST ASYNC!!!\n");
-#endif
 		// event loop start!
 		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {

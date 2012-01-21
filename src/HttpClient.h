@@ -89,9 +89,9 @@ public:
 	{
 	public:
 		virtual ~EventHandler() { }
-		virtual void onHttpClient_Response(int rescode) { }
-		virtual void onHttpClient_Error(ErrorCode errorcode) { }
-		virtual void onHttpClient_ReceivedChunked(int receivedsize) { }
+		virtual void onHttpClient_Response(HttpClient *client, int rescode) { }
+		virtual void onHttpClient_Error(HttpClient *client, ErrorCode errorcode) { }
+		virtual void onHttpClient_ReceivedChunked(HttpClient *client, int receivedsize) { }
 	};
 
 public:

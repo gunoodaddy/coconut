@@ -66,19 +66,6 @@ void NetworkHelper::bindUdp( BaseIOServiceContainer *ioServiceContainer,
 	udpSocket->bind();
 }
 
-void NetworkHelper::httpClient( BaseIOServiceContainer *ioServiceContainer, 
-                                 HttpMethodType method, 
-                                 const char *uri, 
-                                 int timeout, 
-                                 const HttpParameter *param, 
-                                 boost::shared_ptr<HttpClientController> controller) {
-
-	boost::shared_ptr<HttpClient> request(new HttpClient(ioServiceContainer->ioService(), method, uri, param, timeout));
-	request->setEventHandler(controller.get());
-	controller->setHttpClient(request);
-	request->request();
-}
-
 void NetworkHelper::connectRedis( BaseIOServiceContainer *ioServiceContainer, 
                                   const char* host, 
                                   int port, 

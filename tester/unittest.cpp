@@ -5,6 +5,7 @@
 #endif
 #include <fcntl.h>
 #include "NetworkHelper.h"
+#include "IOService.h"
 #include "IOServiceContainer.h"
 #include "LineController.h"
 #include "JSONController.h"
@@ -87,24 +88,24 @@ namespace TestUDPAndLineProtocol {
 
 namespace TestHttpClientGet
 {
-	class TestHttpController : public coconut::HttpClientController
+	class TestHttpController : public coconut::HttpClient::EventHandler
 	{
-		virtual void onReceivedChucked(int receivedsize) { 
+		virtual void onHttpClient_ReceivedChunked(HttpClient *client, int receivedsize) { 
 			LOG_INFO("TestHttpController received size : %d byte\n", receivedsize);
 		}
 
-		virtual void onError(coconut::HttpClient::ErrorCode errorcode) {
+		virtual void onHttpClient_Error(HttpClient *client, coconut::HttpClient::ErrorCode errorcode) {
 			LOG_INFO("TestHttpController onError : %d\n", errorcode);
 		}
 
-		virtual void onResponse(int rescode) {
+		virtual void onHttpClient_Response(HttpClient *client, int rescode) {
 			LOG_INFO("TestHttpController onResponse [this = %p], rescode = %d, size = %d\n", 
-				this, rescode, httpClient()->responseBodySize());
+				this, rescode, client->responseBodySize());
 
-			printf("%s\n", (char *)httpClient()->responseBody());
+			printf("%s\n", (char *)client->responseBody());
 
 			LOG_INFO("************ Test Success ************");
-			ioServiceContainer()->stop();	// test success
+			client->ioService()->ioServiceContainer()->stop();	// test success
 		}
 	};
 
@@ -113,21 +114,22 @@ namespace TestHttpClientGet
 		LOG_INFO("Http Request GET Test");
 		LOG_INFO("=====================================================================");
 
-		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
-		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
-
-		ioServiceContainer->initialize();
+		IOServiceContainer ioServiceContainer;
+		ioServiceContainer.initialize();
 
 		try {
 			std::string uri;
 			uri = "http://119.205.238.162:8081/test.php";
-			boost::shared_ptr<TestHttpController> controller(new TestHttpController);
-			coconut::NetworkHelper::httpClient(ioServiceContainer.get(), coconut::HTTP_POST, uri.c_str(), 20, NULL, controller);
+			TestHttpController controller;
 
-			ioServiceContainer->run();
+			HttpClient client(ioServiceContainer.ioService(), coconut::HTTP_POST, uri.c_str(), NULL, 20);
+			client.setEventHandler(&controller);
+			client.request();
+
+			ioServiceContainer.run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			LOG_FATAL("Exception emitted : %s\n", e.what());
 		}
 		return false;
 	}

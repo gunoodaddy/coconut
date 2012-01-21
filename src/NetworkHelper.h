@@ -35,13 +35,6 @@ public:
                          int port, 
                          boost::shared_ptr<ClientController> controller);
 
-	static void httpClient( BaseIOServiceContainer *ioServiceContainer, 
-                             HttpMethodType method, 
-                             const char *uri, 
-                             int timeout, 
-                             const HttpParameter *param, 
-                             boost::shared_ptr<HttpClientController> controller);
-
 	static void connectRedis( BaseIOServiceContainer *ioServiceContainer, 
                               const char* host, 
                               int port, 
