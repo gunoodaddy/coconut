@@ -14,6 +14,7 @@ noinst_PROGRAMS = \
 	udpclient \
 	udsserver \
 	udsclient \
+	httpserver \
 	fdserver \
 	fdclient
 
@@ -40,6 +41,9 @@ fdserver_SOURCES = \
 
 fdclient_SOURCES = \
 	fdclient.cpp
+
+httpserver_SOURCES = \
+	httpserver.cpp
 
 CLEANFILES=core* tag cscope.* *.log *.log.* .*.sw* *~ result *.sock
 DISTCLEANFILES=$(CLEANFILES)

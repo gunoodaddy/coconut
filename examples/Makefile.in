@@ -36,7 +36,8 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = tcpserver$(EXEEXT) tcpclient$(EXEEXT) \
 	udpserver$(EXEEXT) udpclient$(EXEEXT) udsserver$(EXEEXT) \
-	udsclient$(EXEEXT) fdserver$(EXEEXT) fdclient$(EXEEXT)
+	udsclient$(EXEEXT) httpserver$(EXEEXT) fdserver$(EXEEXT) \
+	fdclient$(EXEEXT)
 subdir = examples
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -58,6 +59,10 @@ am_fdserver_OBJECTS = fdserver.$(OBJEXT)
 fdserver_OBJECTS = $(am_fdserver_OBJECTS)
 fdserver_LDADD = $(LDADD)
 fdserver_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
+am_httpserver_OBJECTS = httpserver.$(OBJEXT)
+httpserver_OBJECTS = $(am_httpserver_OBJECTS)
+httpserver_LDADD = $(LDADD)
+httpserver_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_tcpclient_OBJECTS = tcpclient.$(OBJEXT)
 tcpclient_OBJECTS = $(am_tcpclient_OBJECTS)
 tcpclient_LDADD = $(LDADD)
@@ -94,12 +99,14 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) $(tcpclient_SOURCES) \
+SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) \
+	$(httpserver_SOURCES) $(tcpclient_SOURCES) \
 	$(tcpserver_SOURCES) $(udpclient_SOURCES) $(udpserver_SOURCES) \
 	$(udsclient_SOURCES) $(udsserver_SOURCES)
 DIST_SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) \
-	$(tcpclient_SOURCES) $(tcpserver_SOURCES) $(udpclient_SOURCES) \
-	$(udpserver_SOURCES) $(udsclient_SOURCES) $(udsserver_SOURCES)
+	$(httpserver_SOURCES) $(tcpclient_SOURCES) \
+	$(tcpserver_SOURCES) $(udpclient_SOURCES) $(udpserver_SOURCES) \
+	$(udsclient_SOURCES) $(udsserver_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -255,6 +262,9 @@ fdserver_SOURCES = \
 fdclient_SOURCES = \
 	fdclient.cpp
 
+httpserver_SOURCES = \
+	httpserver.cpp
+
 CLEANFILES = core* tag cscope.* *.log *.log.* .*.sw* *~ result *.sock
 DISTCLEANFILES = $(CLEANFILES)
 all: all-am
@@ -306,6 +316,9 @@ fdclient$(EXEEXT): $(fdclient_OBJECTS) $(fdclient_DEPENDENCIES)
 fdserver$(EXEEXT): $(fdserver_OBJECTS) $(fdserver_DEPENDENCIES) 
 	@rm -f fdserver$(EXEEXT)
 	$(CXXLINK) $(fdserver_OBJECTS) $(fdserver_LDADD) $(LIBS)
+httpserver$(EXEEXT): $(httpserver_OBJECTS) $(httpserver_DEPENDENCIES) 
+	@rm -f httpserver$(EXEEXT)
+	$(CXXLINK) $(httpserver_OBJECTS) $(httpserver_LDADD) $(LIBS)
 tcpclient$(EXEEXT): $(tcpclient_OBJECTS) $(tcpclient_DEPENDENCIES) 
 	@rm -f tcpclient$(EXEEXT)
 	$(CXXLINK) $(tcpclient_OBJECTS) $(tcpclient_LDADD) $(LIBS)
@@ -333,6 +346,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdserver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udpclient.Po@am__quote@
