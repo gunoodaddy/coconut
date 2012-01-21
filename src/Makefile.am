@@ -20,7 +20,8 @@ libcoconut_la_SOURCES = \
                        ConnectionListener.cpp \
                        RedisRequest.cpp \
                        RedisResponse.cpp \
-                       HttpRequest.cpp \
+                       HttpClient.cpp \
+                       HttpServer.cpp \
                        BaseProtocol.cpp \
                        FrameProtocol.cpp \
                        LineProtocol.cpp \
@@ -34,7 +35,7 @@ libcoconut_la_SOURCES = \
                        JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
-                       HttpRequestController.cpp \
+                       HttpClientController.cpp \
                        RedisController.cpp \
                        NetworkHelper.cpp
 
@@ -62,7 +63,8 @@ include_coconut_HEADERS = \
                          ConnectionListener.h \
                          RedisRequest.h \
                        	 RedisResponse.h \
-                         HttpRequest.h \
+                         HttpClient.h \
+                         HttpServer.h \
 						 JSONProtocol.h \
 						 LineProtocol.h \
 						 FrameProtocol.h \
@@ -74,7 +76,7 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          RedisController.h \
-                         HttpRequestController.h \
+                         HttpClientController.h \
                          NetworkHelper.h
 
 CLEANFILES=core* tag cscope.* .*.sw*

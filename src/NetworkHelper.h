@@ -6,7 +6,7 @@
 #include "BaseIOServiceContainer.h"
 #include "ServerController.h"
 #include "ClientController.h"
-#include "HttpRequestController.h"
+#include "HttpClientController.h"
 #include "RedisController.h"
 
 namespace coconut {
@@ -35,12 +35,12 @@ public:
                          int port, 
                          boost::shared_ptr<ClientController> controller);
 
-	static void httpRequest( BaseIOServiceContainer *ioServiceContainer, 
+	static void httpClient( BaseIOServiceContainer *ioServiceContainer, 
                              HttpMethodType method, 
                              const char *uri, 
                              int timeout, 
                              const HttpParameter *param, 
-                             boost::shared_ptr<HttpRequestController> controller);
+                             boost::shared_ptr<HttpClientController> controller);
 
 	static void connectRedis( BaseIOServiceContainer *ioServiceContainer, 
                               const char* host, 

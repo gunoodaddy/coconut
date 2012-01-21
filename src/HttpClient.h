@@ -1,8 +1,13 @@
 #pragma once
 
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/shared_ptr.hpp>
+#endif
+
 namespace coconut {
 
-class HttpRequestImpl;
+class IOService;
+class HttpClientImpl;
 
 class COCONUT_API HttpParameter {
 public:
@@ -58,14 +63,14 @@ private:
 };
 
 
-class COCONUT_API HttpRequest {
+class COCONUT_API HttpClient {
 public:
-	HttpRequest(boost::shared_ptr<IOService> ioService, 
+	HttpClient(boost::shared_ptr<IOService> ioService, 
 				HttpMethodType method, 
 				const char *uri, 
 				const HttpParameter *param, 
 				int timeout);
-	~HttpRequest();
+	~HttpClient();
 
 	enum ErrorCode {
 		None,
@@ -84,9 +89,9 @@ public:
 	{
 	public:
 		virtual ~EventHandler() { }
-		virtual void onHttpRequest_Response(int rescode) { }
-		virtual void onHttpRequest_Error(ErrorCode errorcode) { }
-		virtual void onHttpRequest_ReceivedChunked(int receivedsize) { }
+		virtual void onHttpClient_Response(int rescode) { }
+		virtual void onHttpClient_Error(ErrorCode errorcode) { }
+		virtual void onHttpClient_ReceivedChunked(int receivedsize) { }
 	};
 
 public:
@@ -113,7 +118,7 @@ public:
 	void request();
 
 private:
-	HttpRequestImpl *impl_;
+	HttpClientImpl *impl_;
 	EventHandler *handler_;
 };
 

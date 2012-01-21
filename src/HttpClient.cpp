@@ -1,6 +1,6 @@
 #include "Coconut.h"
+#include "HttpClient.h"
 #include "IOService.h"
-#include "HttpRequest.h"
 #include "Exception.h"
 #include "Logger.h"
 #include <event2/dns.h>
@@ -37,9 +37,9 @@
 
 namespace coconut {
 
-class HttpRequestImpl {
+class HttpClientImpl {
 public:
-	HttpRequestImpl(HttpRequest *owner, 
+	HttpClientImpl(HttpClient *owner, 
 					boost::shared_ptr<IOService> ioService, 
 					HttpMethodType method, 
 					const char *uri, 
@@ -47,7 +47,7 @@ public:
 					int timeout) 
 		: owner_(owner)
 		, ioService_(ioService)
-		, state_(HttpRequest::Prepare)
+		, state_(HttpClient::Prepare)
 		, evcon_(NULL)
 		, dnsbase_(NULL)
 		, req_(NULL)
@@ -61,11 +61,11 @@ public:
 		, multipart_(true)
 		, responseCode_(HTTP_INTERNAL) {
 
-		state_ = HttpRequest::Prepare;
+		state_ = HttpClient::Prepare;
 	}
 
-	~HttpRequestImpl() {
-		LOG_TRACE("~HttpRequest : %p", this);
+	~HttpClientImpl() {
+		LOG_TRACE("~HttpClientImpl : %p", this);
 		cleanUp(true);
 	}
 
@@ -107,7 +107,7 @@ public:
 	void cleanUp(bool deleteReqFlag) {
 		ScopedIOServiceLock(ioService_);
 
-		state_ = HttpRequest::Prepare;
+		state_ = HttpClient::Prepare;
 
 		if(evcon_) {
 			evhttp_connection_free(evcon_);
@@ -141,9 +141,9 @@ public:
 
 			evhttp_cancel_request(req_);	
 
-			fire_onHttpRequest_Error(HttpRequest::Canceled);
+			fire_onHttpClient_Error(HttpClient::Canceled);
 
-			state_ = HttpRequest::Prepare;
+			state_ = HttpClient::Prepare;
 		}
 	}
 
@@ -169,7 +169,7 @@ public:
 
 	void request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) {
 		ScopedIOServiceLock(ioService_);
-		if(HttpRequest::Prepare != state_) {
+		if(HttpClient::Prepare != state_) {
 			throw IllegalStateException("Already http requested, you need to call cancelRequest");
 		}
 
@@ -184,7 +184,7 @@ public:
 
 	void request() {
 		ScopedIOServiceLock(ioService_);
-		if(HttpRequest::Prepare != state_) {
+		if(HttpClient::Prepare != state_) {
 			throw IllegalStateException("Already http requested, you need to call cancelRequest");
 		}
 		requestInternal();
@@ -216,7 +216,7 @@ public:
 			evhttp_uri_get_query(evuri_));
 	}
 
-	void makeHttpRequest() {
+	void makeHttpClient() {
 		req_ = evhttp_request_new (http_done_cb, this);
 		assert(req_ && "evhttp_request can not be allocated");
 
@@ -387,7 +387,7 @@ public:
 
 		evhttp_make_request(evcon_, req_, method_ == HTTP_POST ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str());
 
-		state_ = HttpRequest::Requesting;
+		state_ = HttpClient::Requesting;
 	}
 
 	void makeResultHeaders() {
@@ -411,40 +411,40 @@ public:
 		responseBody_.assign((const char *)data, buffer_len);
 	}
 
-	void fire_onHttpRequest_ReceivedChunked() {
-		state_ = HttpRequest::ReceivingResponse;
+	void fire_onHttpClient_ReceivedChunked() {
+		state_ = HttpClient::ReceivingResponse;
 
 		evbuffer_add_buffer(responsebuffer_, evhttp_request_get_input_buffer(req_));
 
-		owner_->eventHandler()->onHttpRequest_ReceivedChunked(evbuffer_get_length(responsebuffer_));
+		owner_->eventHandler()->onHttpClient_ReceivedChunked(evbuffer_get_length(responsebuffer_));
 	}
 
 	// TODO reading progress feature supported,
 	// but "writing" progress feature NOT supported
-	void fire_onHttpRequest_Error(HttpRequest::ErrorCode errorcode) {
-		LOG_DEBUG("HttpRequest Got error");
+	void fire_onHttpClient_Error(HttpClient::ErrorCode errorcode) {
+		LOG_DEBUG("HttpClient Got error");
 
 		cleanUp(false); // automatically freed in libevent after callback
 
-		owner_->eventHandler()->onHttpRequest_Error(errorcode);
+		owner_->eventHandler()->onHttpClient_Error(errorcode);
 	}
 
-	void fire_onHttpRequest_Error() {
-		HttpRequest::ErrorCode errorcode;
-		if(state_ == HttpRequest::Requesting) {
+	void fire_onHttpClient_Error() {
+		HttpClient::ErrorCode errorcode;
+		if(state_ == HttpClient::Requesting) {
 			if(chunkmode_ == false) {
-				errorcode = HttpRequest::ResponseError;
+				errorcode = HttpClient::ResponseError;
 				// TODO How to divide error and connection timeout...
 			} else {
-				errorcode = HttpRequest::ConnectionTimeout;
+				errorcode = HttpClient::ConnectionTimeout;
 			}
 		} else {
-			errorcode = HttpRequest::ResponseError; // TODO how to get more detail error..
+			errorcode = HttpClient::ResponseError; // TODO how to get more detail error..
 		}
-		fire_onHttpRequest_Error(errorcode);
+		fire_onHttpClient_Error(errorcode);
 	}
 
-	void fire_onHttpRequest_Response() {
+	void fire_onHttpClient_Response() {
 		responseCode_ = req_->response_code;
 		if (responseCode_ == HTTP_OK) {
 			makeResultHeaders();
@@ -452,31 +452,31 @@ public:
 		}
 
 		cleanUp(false); // automatically freed in libevent after callback
-		owner_->eventHandler()->onHttpRequest_Response(responseCode_);
+		owner_->eventHandler()->onHttpClient_Response(responseCode_);
 	}
 
 private:
 	static void http_chuncked_cb(struct evhttp_request *req, void *arg) {
-		HttpRequestImpl *SELF = (HttpRequestImpl *)arg;
+		HttpClientImpl *SELF = (HttpClientImpl *)arg;
 
 		assert(req && "chunked callback called but req is NULL");
-		SELF->fire_onHttpRequest_ReceivedChunked();
+		SELF->fire_onHttpClient_ReceivedChunked();
 	}
 
 	static void http_done_cb(struct evhttp_request *req, void *arg) {
-		HttpRequestImpl *SELF = (HttpRequestImpl *)arg;
+		HttpClientImpl *SELF = (HttpClientImpl *)arg;
 
 		if(req)
-			SELF->fire_onHttpRequest_Response();
+			SELF->fire_onHttpClient_Response();
 		else
-			SELF->fire_onHttpRequest_Error();
+			SELF->fire_onHttpClient_Error();
 	}
 
 private:
 	void requestInternal() {
 		parseParameter();
 		makeUriContext();
-		makeHttpRequest();
+		makeHttpClient();
 		makeHeaderAndBody();
 		std::string requesturi(makeRequestUri());
 		makeHttpConnection();
@@ -485,9 +485,9 @@ private:
 	}
 
 private:
-	HttpRequest *owner_;
+	HttpClient *owner_;
 	boost::shared_ptr<IOService> ioService_;
-	HttpRequest::RequestState state_;
+	HttpClient::RequestState state_;
 	struct evhttp_connection *evcon_;
 	struct evdns_base *dnsbase_;
 	struct evhttp_request *req_;
@@ -508,51 +508,51 @@ private:
 
 //--------------------------------------------------------------------------------------------------------------
 
-HttpRequest::HttpRequest(boost::shared_ptr<IOService> ioService, 
+HttpClient::HttpClient(boost::shared_ptr<IOService> ioService, 
 						 HttpMethodType method, 
 						 const char *uri, 
 						 const HttpParameter *param, 
 						 int timeout) {
-	impl_ = new HttpRequestImpl(this, ioService, method, uri, param, timeout);
+	impl_ = new HttpClientImpl(this, ioService, method, uri, param, timeout);
 }
 
-HttpRequest::~HttpRequest() {
+HttpClient::~HttpClient() {
 	delete impl_;
 }
 
-boost::shared_ptr<IOService> HttpRequest::ioService() {
+boost::shared_ptr<IOService> HttpClient::ioService() {
 	return impl_->ioService();
 }
 
-void HttpRequest::cleanUp(bool deleteReqFlag) {
+void HttpClient::cleanUp(bool deleteReqFlag) {
 	impl_->cleanUp(deleteReqFlag);
 }
 
-void HttpRequest::cancelRequest() {
+void HttpClient::cancelRequest() {
 	impl_->cancelRequest();
 }
 
-const void* HttpRequest::responseBody() {
+const void* HttpClient::responseBody() {
 	return impl_->responseBody();
 }
 
-int HttpRequest::responseBodySize() {
+int HttpClient::responseBodySize() {
 	return impl_->responseBodySize();
 }
 
-int HttpRequest::responseCode() {
+int HttpClient::responseCode() {
 	return impl_->responseCode();
 }
 
-std::string HttpRequest::findHeader(const char *key) {
+std::string HttpClient::findHeader(const char *key) {
 	return impl_->findHeader(key);
 }
 
-void HttpRequest::request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) {
+void HttpClient::request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) {
 	impl_->request(method, uri, param, timeout);
 }
 
-void HttpRequest::request() {
+void HttpClient::request() {
 	impl_->request();
 }
 

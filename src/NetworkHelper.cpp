@@ -8,10 +8,10 @@
 #include "UdpSocket.h"
 #include "ConnectionListener.h"
 #include "RedisRequest.h"
-#include "HttpRequest.h"
+#include "HttpClient.h"
 #include "ClientController.h"
 #include "ServerController.h"
-#include "HttpRequestController.h"
+#include "HttpClientController.h"
 #include "RedisController.h"
 
 namespace coconut {
@@ -66,16 +66,16 @@ void NetworkHelper::bindUdp( BaseIOServiceContainer *ioServiceContainer,
 	udpSocket->bind();
 }
 
-void NetworkHelper::httpRequest( BaseIOServiceContainer *ioServiceContainer, 
+void NetworkHelper::httpClient( BaseIOServiceContainer *ioServiceContainer, 
                                  HttpMethodType method, 
                                  const char *uri, 
                                  int timeout, 
                                  const HttpParameter *param, 
-                                 boost::shared_ptr<HttpRequestController> controller) {
+                                 boost::shared_ptr<HttpClientController> controller) {
 
-	boost::shared_ptr<HttpRequest> request(new HttpRequest(ioServiceContainer->ioService(), method, uri, param, timeout));
+	boost::shared_ptr<HttpClient> request(new HttpClient(ioServiceContainer->ioService(), method, uri, param, timeout));
 	request->setEventHandler(controller.get());
-	controller->setHttpRequest(request);
+	controller->setHttpClient(request);
 	request->request();
 }
 

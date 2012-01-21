@@ -73,22 +73,22 @@ public:
 
 
 //==========================================================
-class MyHttpController : public coconut::HttpRequestController
+class MyHttpController : public coconut::HttpClientController
 {
 	virtual void onReceivedChucked(int receivedsize) { 
 		LOG_DEBUG( "MyHttpController received size : %d byte\n", receivedsize);
 	}
 
-	virtual void onError(coconut::HttpRequest::ErrorCode errorcode) {
+	virtual void onError(coconut::HttpClient::ErrorCode errorcode) {
 		LOG_DEBUG( "MyHttpController onError : %d\n", errorcode);
 	}
 
 	virtual void onResponse(int rescode) {
 		LOG_INFO("MyHttpController onResponse [this = %p]\n", this);
-		LOG_INFO("Header [%s]\n", httpRequest()->findHeader("profimg-name-base64").c_str());
+		LOG_INFO("Header [%s]\n", httpClient()->findHeader("profimg-name-base64").c_str());
 
 		int fd = ::open("result", O_CREAT | O_TRUNC | O_WRONLY, 00644);
-		int len = write(fd, httpRequest()->responseBody(), httpRequest()->responseBodySize());
+		int len = write(fd, httpClient()->responseBody(), httpClient()->responseBodySize());
 		LOG_INFO("HTTP RESULT SAVE FILE : %d bytes\n", len);
 		close(fd);
 
@@ -129,7 +129,7 @@ public:
 #ifdef TEST_HTTP
 		std::string uri = "http://119.205.238.162:8081/test.php?arg=0&arg2=2&userid='tester@hangame.com'";
 		boost::shared_ptr<MyHttpController> httpController(new MyHttpController);
-		coconut::NetworkHelper::httpRequest(ioServiceContainer(), coconut::HTTP_POST, uri.c_str(), 20, NULL, httpController);
+		coconut::NetworkHelper::httpClient(ioServiceContainer(), coconut::HTTP_POST, uri.c_str(), 20, NULL, httpController);
 
 		httpController_ = httpController;
 		httpController->eventGotResponse()->registerObserver(0, this);
@@ -144,7 +144,7 @@ public:
 #ifdef TEST_HTTP
 		if(httpController_.get() == controller.get()) {
 			boost::shared_ptr<MyHttpController> d = boost::static_pointer_cast<MyHttpController>(controller); 
-			LOG_DEBUG( "d.responseBody() ==>[this = %p]\n%s\n", controller.get(), (char *)d->httpRequest()->responseBody());
+			LOG_DEBUG( "d.responseBody() ==>[this = %p]\n%s\n", controller.get(), (char *)d->httpClient()->responseBody());
 		}
 			// for close test
 			//setTimer(1024, 1000, false);
@@ -383,8 +383,8 @@ int main(int argc, char **argv) {
 		//std::string uri = "http://119.205.238.162:8081/nphone/MyProfileImage.php";
 		//std::string uri = "http://was.gp.hangame.com:8081/nphone/OpenTalkProfile.php?arg=0&arg2=2&userid='tester@hangame.com'";
 		boost::shared_ptr<MyHttpController> httpController(new MyHttpController);
-		coconut::NetworkHelper::httpRequest(&ioServiceContainer, coconut::HTTP_POST, uri.c_str(), 20, &params, httpController);
-		//coconut::NetworkHelper::httpRequest(&ioServiceContainer, coconut::HTTP_GET, uri.c_str(), 20, &params, httpController);
+		coconut::NetworkHelper::httpClient(&ioServiceContainer, coconut::HTTP_POST, uri.c_str(), 20, &params, httpController);
+		//coconut::NetworkHelper::httpClient(&ioServiceContainer, coconut::HTTP_GET, uri.c_str(), 20, &params, httpController);
 		LOG_DEBUG( "HTTP REQUEST ASYNC!!!\n");
 #endif
 		// event loop start!

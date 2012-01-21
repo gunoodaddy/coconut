@@ -77,12 +77,12 @@ am_libcoconut_la_OBJECTS = kbuffer.lo Coconut.lo Logger.lo \
 	IOService.lo IOServiceContainer.lo DeferredCaller.lo Timer.lo \
 	DNSResolver.lo BufferedTransport.lo BaseSocket.lo TcpSocket.lo \
 	UdpSocket.lo ConnectionListener.lo RedisRequest.lo \
-	RedisResponse.lo HttpRequest.lo BaseProtocol.lo \
+	RedisResponse.lo HttpClient.lo HttpServer.lo BaseProtocol.lo \
 	FrameProtocol.lo LineProtocol.lo JSONProtocol.lo \
 	FileDescriptorProtocol.lo BaseController.lo \
 	BaseControllerEvent.lo ClientController.lo ServerController.lo \
 	LineController.lo JSONController.lo FrameController.lo \
-	FileDescriptorController.lo HttpRequestController.lo \
+	FileDescriptorController.lo HttpClientController.lo \
 	RedisController.lo NetworkHelper.lo
 libcoconut_la_OBJECTS = $(am_libcoconut_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
@@ -255,7 +255,8 @@ libcoconut_la_SOURCES = \
                        ConnectionListener.cpp \
                        RedisRequest.cpp \
                        RedisResponse.cpp \
-                       HttpRequest.cpp \
+                       HttpClient.cpp \
+                       HttpServer.cpp \
                        BaseProtocol.cpp \
                        FrameProtocol.cpp \
                        LineProtocol.cpp \
@@ -269,7 +270,7 @@ libcoconut_la_SOURCES = \
                        JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
-                       HttpRequestController.cpp \
+                       HttpClientController.cpp \
                        RedisController.cpp \
                        NetworkHelper.cpp
 
@@ -297,7 +298,8 @@ include_coconut_HEADERS = \
                          ConnectionListener.h \
                          RedisRequest.h \
                        	 RedisResponse.h \
-                         HttpRequest.h \
+                         HttpClient.h \
+                         HttpServer.h \
 						 JSONProtocol.h \
 						 LineProtocol.h \
 						 FrameProtocol.h \
@@ -309,7 +311,7 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          RedisController.h \
-                         HttpRequestController.h \
+                         HttpClientController.h \
                          NetworkHelper.h
 
 CLEANFILES = core* tag cscope.* .*.sw*
@@ -402,8 +404,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileDescriptorProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FrameController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FrameProtocol.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpRequest.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpRequestController.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpClient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpClientController.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpServer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOService.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOServiceContainer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONController.Plo@am__quote@

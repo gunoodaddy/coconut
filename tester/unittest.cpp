@@ -85,23 +85,23 @@ namespace TestUDPAndLineProtocol {
 }
 
 
-namespace TestHttpRequestGet
+namespace TestHttpClientGet
 {
-	class TestHttpController : public coconut::HttpRequestController
+	class TestHttpController : public coconut::HttpClientController
 	{
 		virtual void onReceivedChucked(int receivedsize) { 
 			LOG_INFO("TestHttpController received size : %d byte\n", receivedsize);
 		}
 
-		virtual void onError(coconut::HttpRequest::ErrorCode errorcode) {
+		virtual void onError(coconut::HttpClient::ErrorCode errorcode) {
 			LOG_INFO("TestHttpController onError : %d\n", errorcode);
 		}
 
 		virtual void onResponse(int rescode) {
 			LOG_INFO("TestHttpController onResponse [this = %p], rescode = %d, size = %d\n", 
-				this, rescode, httpRequest()->responseBodySize());
+				this, rescode, httpClient()->responseBodySize());
 
-			printf("%s\n", (char *)httpRequest()->responseBody());
+			printf("%s\n", (char *)httpClient()->responseBody());
 
 			LOG_INFO("************ Test Success ************");
 			ioServiceContainer()->stop();	// test success
@@ -122,7 +122,7 @@ namespace TestHttpRequestGet
 			std::string uri;
 			uri = "http://119.205.238.162:8081/test.php";
 			boost::shared_ptr<TestHttpController> controller(new TestHttpController);
-			coconut::NetworkHelper::httpRequest(ioServiceContainer.get(), coconut::HTTP_POST, uri.c_str(), 20, NULL, controller);
+			coconut::NetworkHelper::httpClient(ioServiceContainer.get(), coconut::HTTP_POST, uri.c_str(), 20, NULL, controller);
 
 			ioServiceContainer->run();
 			return true;
@@ -1226,7 +1226,7 @@ int main() {
 	LOG_INFO("Entering protocol test");
 
 	assert(TestUDPAndLineProtocol::doTest());
-	assert(TestHttpRequestGet::doTest());
+	assert(TestHttpClientGet::doTest());
 	assert(TestLineProtocol::doTest());
 	assert(TestJSONProtocol::doTest());
 	assert(TestFrameProtocol::doTest());
