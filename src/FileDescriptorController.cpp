@@ -21,7 +21,7 @@ void FileDescriptorController::onSocket_ReadEvent(int fd) {
 	if(protocolFactory_) {
 		do {
 			if(!protocol_ || protocol_->isReadComplete()) {
-				LOG_DEBUG("New Protocol make #1 in %p\n", this);
+				LOG_TRACE("New Protocol make #1 in %p\n", this);
 				protocol_ = protocolFactory_->makeProtocol();
 			}
 

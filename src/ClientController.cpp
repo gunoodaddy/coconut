@@ -67,7 +67,7 @@ void ClientController::onSocket_ReadEvent(int fd) {
 #ifdef PROTOCOL_READ_FROM_SOCKET
 		do {
 			if(!protocol_ || protocol_->isReadComplete()) {
-				LOG_DEBUG("New Protocol make #1 in %p\n", this);
+				LOG_TRACE("New Protocol make #1 in %p\n", this);
 				protocol_ = protocolFactory_->makeProtocol();
 			}
 
@@ -84,7 +84,7 @@ void ClientController::onSocket_ReadEvent(int fd) {
 			return;
 
 		if(!protocol_ || protocol_->isReadComplete()) {
-			LOG_DEBUG("New Protocol make #1 in %p\n", this);
+			LOG_TRACE("New Protocol make #1 in %p\n", this);
 			protocol_ = protocolFactory_->makeProtocol();
 		}
 
@@ -102,7 +102,7 @@ void ClientController::onSocket_ReadEvent(int fd) {
 
 				if(protocol_->remainingBufferSize() > 0) {
 					// new protocol
-					LOG_DEBUG("New Protocol make #2 in %p\n", this);
+					LOG_TRACE("New Protocol make #2 in %p\n", this);
 					boost::shared_ptr<protocol::BaseProtocol> protocolTemp = protocolFactory_->makeProtocol();
 					protocolTemp->addToReadingBuffer(protocol_->remainingBufferPtr(), protocol_->remainingBufferSize());
 					protocol_ = protocolTemp;
@@ -129,7 +129,7 @@ void ClientController::onSocket_ReadFrom(const void *data, int size, struct sock
 	if(protocolFactory_) {
 		if(!protocol_ || protocol_->isReadComplete()) {
 			protocol_ = protocolFactory_->makeProtocol();
-			LOG_DEBUG("New Protocol make\n");
+			LOG_TRACE("New Protocol make\n");
 		}
 
 		// already received from socket to "data" buffer..
