@@ -11,7 +11,6 @@
 #include "HttpClient.h"
 #include "ClientController.h"
 #include "ServerController.h"
-#include "HttpClientController.h"
 #include "RedisController.h"
 
 namespace coconut {

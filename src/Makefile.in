@@ -82,8 +82,8 @@ am_libcoconut_la_OBJECTS = kbuffer.lo Coconut.lo Logger.lo \
 	FileDescriptorProtocol.lo BaseController.lo \
 	BaseControllerEvent.lo ClientController.lo ServerController.lo \
 	LineController.lo JSONController.lo FrameController.lo \
-	FileDescriptorController.lo HttpClientController.lo \
-	RedisController.lo NetworkHelper.lo
+	FileDescriptorController.lo RedisController.lo \
+	NetworkHelper.lo
 libcoconut_la_OBJECTS = $(am_libcoconut_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -270,7 +270,6 @@ libcoconut_la_SOURCES = \
                        JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
-                       HttpClientController.cpp \
                        RedisController.cpp \
                        NetworkHelper.cpp
 
@@ -311,7 +310,6 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          RedisController.h \
-                         HttpClientController.h \
                          NetworkHelper.h
 
 CLEANFILES = core* tag cscope.* .*.sw*
@@ -405,7 +403,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FrameController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FrameProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpClient.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpClientController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpServer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOService.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOServiceContainer.Plo@am__quote@

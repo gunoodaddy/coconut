@@ -35,7 +35,6 @@ libcoconut_la_SOURCES = \
                        JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
-                       HttpClientController.cpp \
                        RedisController.cpp \
                        NetworkHelper.cpp
 
@@ -76,7 +75,6 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          RedisController.h \
-                         HttpClientController.h \
                          NetworkHelper.h
 
 CLEANFILES=core* tag cscope.* .*.sw*

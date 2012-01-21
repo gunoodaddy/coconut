@@ -11,6 +11,7 @@
 #include "JSONController.h"
 #include "FrameController.h"
 #include "JSONProtocol.h"
+#include "HttpClient.h"
 #include "FileDescriptorController.h"
 #include "Logger.h"
 

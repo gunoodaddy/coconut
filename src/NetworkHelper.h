@@ -6,7 +6,6 @@
 #include "BaseIOServiceContainer.h"
 #include "ServerController.h"
 #include "ClientController.h"
-#include "HttpClientController.h"
 #include "RedisController.h"
 
 namespace coconut {
