@@ -43,6 +43,7 @@ void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
 	clients_.insert(newController);
 
 	newController->setSocket(newTcpSocket);
+	newController->setReconnectable(false);
 	newTcpSocket->setEventHandler(newController.get());
 
 	// for client event..
@@ -67,18 +68,24 @@ void ServerController::onTimer_Timer(int id) {
 }
 
 void ServerController::_onPreControllerEvent_OccuredError(
-					boost::shared_ptr<coconut::BaseController> controller, 
-					int error) {
+		boost::shared_ptr<BaseController> controller, 
+		int error) {
 	LOG_DEBUG("[ServerController] _onPreControllerEvent_OccuredError emitted.. error = %d\n", error);
 	_onPreControllerEvent_ClosedConnection(controller, error);
 }
 
 void ServerController::_onPreControllerEvent_ClosedConnection(
-					boost::shared_ptr<coconut::BaseController> controller, 
-					int error) {
+		boost::shared_ptr<BaseController> controller, 
+		int error) {
 	LOG_DEBUG("[ServerController] _onPreControllerEvent_ClosedConnection emitted.. error = %d\n", error);
 	ScopedMutexLock(lockClients_);
 
+/*
+	boost::shared_ptr<ClientController> clientController = boost::static_pointer_cast<ClientController>(controller);
+	if(clientController && clientController->isReconnectable()) {
+		return;
+	}
+*/	
 	_makeTimer();
 	timerObj_->setTimer(TIMERID_DELAYED_REMOVE, 10 /*msec*/, false);
 

@@ -908,7 +908,6 @@ namespace TestRedisRequest {
 		}
 	};
 
-
 	bool doTest() {
 		LOG_INFO("=====================================================================");
 		LOG_INFO("Redis Request Test");
@@ -960,7 +959,8 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
 	static const int COMMAND_LOGIN = 813;
 	static const int COMMAND_SEND_MEMO = 923;
-	static const int LOGIN_USER_COUNT = 30;
+	static const int LOGIN_USER_COUNT = 120;
+	static const int WAIT_PATIENCE_MSEC = LOGIN_USER_COUNT * 50;
 	static const unsigned short TIMER_ID_CHECK_LOGIN_OK = 1;
 	static const unsigned short TIMER_ID_CHECK_LOGIN_WAIT_PATIENCE = 2;
 
@@ -969,13 +969,14 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	static Mutex gLockMutex;
 	static int gLoginUserCnt = 0;
 	static int gRecvMemoCnt = 0;
+	static int gErrorCnt = 0;
 
 	class TestLoginClientController : public FrameController {
 		public:
 			TestLoginClientController(const std::string &userId) : dummyLoginId(userId) { }
 
 			virtual void onConnected() {
-				LOG_DEBUG("onConnected emitted\n");
+				LOG_TRACE("[CLIENT] TestLoginClientController::onConnected emitted\n");
 
 				LineProtocol lprot;
 				lprot.setLine(dummyLoginId);
@@ -984,8 +985,19 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				writeFrame(header, &lprot);
 			}
 
+			void onError(int error, const char*strerror) {
+
+				gLockMutex.lock();
+				gErrorCnt++;
+				gLockMutex.unlock();
+
+				LOG_ERROR("[CLIENT] TestLoginClientController::onSocket_Error emitted : %s, total error cnt : %d\n", 
+							strerror, gErrorCnt);
+			}
+
 			virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-				LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+				LOG_DEBUG("[CLIENT] TestLoginClientController::onFrameReceived called : %d:%d, loginUser : %d", 
+						prot->header().command(), prot->payloadSize(), gLoginUserCnt);
 
 				// got response
 				switch(prot->header().command()) {
@@ -1028,7 +1040,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				LOG_DEBUG("onConnected emitted\n");
 
 				setTimer(TIMER_ID_CHECK_LOGIN_OK, 100, true);
-				setTimer(TIMER_ID_CHECK_LOGIN_WAIT_PATIENCE, 2000, false);
+				setTimer(TIMER_ID_CHECK_LOGIN_WAIT_PATIENCE, WAIT_PATIENCE_MSEC, false);
 			}
 
 			virtual void onTimer(unsigned short id) {
@@ -1043,7 +1055,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				}
 
 				if(gLoginUserCnt == LOGIN_USER_COUNT) {
-					LOG_INFO("--------------- All user login complete! (: -----------------");
+					LOG_INFO("######### All user login complete! (: #########");
 
 					// send memo packet
 					StringListProtocol slprot;
@@ -1064,7 +1076,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 
 			virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
-				LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+				LOG_DEBUG("[CLIENT] TestSendMemoClientController onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
 
 				// got response
 				switch(prot->header().command()) {
@@ -1140,8 +1152,8 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 
 			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
-				LOG_INFO("[SERVER] REDIS RESULT : %s, ticket %d, %d\n", 
-						response->resultData()->str.c_str(), response->ticket(), ticketLogin_);
+				LOG_DEBUG("[SERVER] REDIS RESULT : %s, ticket %d, %d, loginUser : %d\n", 
+						response->resultData()->str.c_str(), response->ticket(), ticketLogin_, loginOKCnt_);
 
 				if(response->ticket() == ticketLogin_) {
 					// doing login progress..
@@ -1149,6 +1161,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 					LineProtocol lprot;
 					lprot.setLine("LOGIN OK");
 					writeFrame(headerLogin_, &lprot);
+					gLockMutex.lock();
+					loginOKCnt_++;
+					gLockMutex.unlock();
 					return;
 				}
 
@@ -1178,11 +1193,13 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 		private:
 			boost::shared_ptr<RedisRequest> redisRequest_;
 			int recvedRedisResultCnt_;
+			static int loginOKCnt_;
 			int ticketLogin_;
 			FrameHeader headerLogin_;
 			FrameHeader headerSendMemo_;
 			std::string payloadSendMemo_;
 	};
+	int TestServerClientController::loginOKCnt_;
 
 
 	class TestServerController : public ServerController {
@@ -1246,7 +1263,7 @@ void coconutLog(logger::LogLevel level, const char *fileName, int fileLine, cons
 }
 
 int main(int argc, char **argv) {
-//#define SHOW_COCONUT_LOG
+#define SHOW_COCONUT_LOG
 #if defined(SHOW_COCONUT_LOG)
 	logger::LogHookCallback logCallback;
 	logCallback.trace = coconutLog;
@@ -1260,8 +1277,7 @@ int main(int argc, char **argv) {
 
 	logger::setLogLevel(logger::LEVEL_INFO);
 	if(argc > 1) {
-		if(strcmp(argv[1], "debug") == 0)
-			logger::setLogLevel(logger::LEVEL_TRACE);
+		logger::setLogLevel((logger::LogLevel)atoi(argv[1]));
 	}
 
 	LOG_INFO("Entering protocol test");

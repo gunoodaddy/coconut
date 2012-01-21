@@ -16,7 +16,7 @@ class COCONUT_API ClientController : public BaseController
 public:
 	static const int TIMERID_RECONNECT = (1|INTERNAL_TIMER_BIT);
 public:
-	ClientController() : ioServiceContainer_(NULL), reconnectable_(false), initFlag_(false), retryConnectCnt_(0) {
+	ClientController() : ioServiceContainer_(NULL), reconnectable_(true), initFlag_(false), retryConnectCnt_(0) {
 	}
 
 	virtual ~ClientController();
@@ -51,6 +51,9 @@ public:
 	BaseIOServiceContainer* ioServiceContainer();
 
 	void setReconnectable(bool enable);
+	bool isReconnectable() {
+		return reconnectable_;
+	}
 
 	void fireOnInitialized() {
 		if(false == initFlag_) {
