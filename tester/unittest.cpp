@@ -939,19 +939,19 @@ namespace TestRedisRequest {
 }
 
 // Flow 
-// #. 2 user login
+// #. {LOGIN_USER_COUNT} user login
 // #. server client receive login packet
 // #. set user location to "redis"
 // #. server client receive response from redis
 // #. send login result to user
 // #. increase login ok cnt
-// #. wait login ok cnt == 2
-// #. send memo to 2 user 
+// #. wait login ok cnt == {LOGIN_USER_COUNT}
+// #. send memo to {LOGIN_USER_COUNT} user 
 // #. server client receive send memo packet
 // #. get user location from "redis"
 // #. server client receive response from redis
 // #. relay send memo payload to user
-// #. stop if recv memo cnt == 2
+// #. stop if recv memo cnt == {LOGIN_USER_COUNT}
 
 namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
