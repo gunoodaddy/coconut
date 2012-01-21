@@ -12,6 +12,7 @@
 #include "FrameController.h"
 #include "JSONProtocol.h"
 #include "HttpClient.h"
+#include "RedisRequest.h"
 #include "FileDescriptorController.h"
 #include "Logger.h"
 
@@ -816,51 +817,88 @@ namespace TestFileDescriptorProtocol {
 
 
 namespace TestRedisRequest {
-	static const int GET_COUNT = 100;
-	//static const int GET_COUNT = 10;
+	static const int TEST_COUNT = 100;
 
-	boost::shared_ptr<RedisController> gRedisCtrl_;
+	boost::shared_ptr<RedisRequest> gRedisCtrl_;
 
-	class TestRedisController : public RedisController {
+	typedef struct testStruct {
+		int type;
+		int port;
+		char address[256];
+	} testStruct;
+
+	class TestClientController : public ClientController, public RedisRequest::EventHandler {
 		public:
 			virtual void onConnected() {
-				LOG_INFO("!! REDIS CONNECTED");
-			}
-			virtual void onResponse(boost::shared_ptr<RedisResponse> response) {
-				LOG_DEBUG("!! REDIS RESPONSE : Ticket %d", response->ticket());
-			}
-	};
-
-	class TestClientController : public ClientController {
-		public:
-			virtual void onConnected() {
-
 				recvedCnt_ = 0;
 
-				for(int i = 0; i < GET_COUNT; i++) {
-					char userId[1024] = {0, };
-					sprintf(userId, "userid_num%d@naver.com", i);
-					int ticket = gRedisCtrl_->get(userId, this);
-					(void)ticket;
-					//LOG_INFO("!! >>>>>>>>>>>>>>>>>>>>>>>>>> REQUSET REDIS GET COMMAND : %d = %s", ticket, userId);
-				}
+				setCommand();
+
+				// for reserved command test
+				gRedisCtrl_->connect();
 			}
 
+			void setCommand() {
+				testStruct data;
+				data.type = 1;
+				data.port = 6389;
+				strcpy(data.address, "localhost");
 
-			virtual void onControllerEvent_GotResponse(
-					boost::shared_ptr<BaseController> controller, 
-					int ticket) {
-				recvedCnt_ ++;
+				char userId[1024] = {0, };
+				sprintf(userId, "userid_num%d@naver.com", recvedCnt_);
 
-				LOG_DEBUG("onControllerEvent_GotResponse emitted.. ticket %d, recvCnt %d\n", ticket, recvedCnt_);
-				if(recvedCnt_ == GET_COUNT) {
-					LOG_INFO("************ Test Success ************");
-					ioServiceContainer()->stop();	// test success
+				std::string arg;
+				arg.assign((char *)&data, sizeof(data));
+
+				std::vector<std::string> args;
+				args.push_back(userId);
+				args.push_back(arg);
+
+				ticket_t ticket = gRedisCtrl_->command("SET", args, this);
+				(void)ticket;
+				expactedRecvSetCommand_ = true;
+			}
+
+			void getCommand() {
+				char userId[1024] = {0, };
+				sprintf(userId, "userid_num%d@naver.com", recvedCnt_);
+
+				std::vector<std::string> args;
+				args.push_back(userId);
+
+				ticket_t ticket = gRedisCtrl_->command("GET", args, this);
+				(void)ticket;
+				expactedRecvSetCommand_ = false;
+			}
+
+			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
+				LOG_DEBUG("onRedisRequest_Response emitted.. ticket %d, data %s, recvCnt %d\n", 
+					response->ticket(), response->resultData()->str.c_str(), recvedCnt_);
+
+				if(expactedRecvSetCommand_) {
+					getCommand();
+				} else {
+					testStruct getData;
+					memcpy(&getData, (void *)response->resultData()->str.c_str(), response->resultData()->str.size());
+
+					assert(getData.type == 1);
+					assert(getData.port == 6389);
+					assert(strcmp(getData.address, "localhost") == 0);
+
+					recvedCnt_++;
+
+					if(recvedCnt_ == TEST_COUNT) {
+						LOG_INFO("************ Test Success ************");
+						ioServiceContainer()->stop();	// test success
+					} else {
+						setCommand();
+					}
 				}
 			}
 
 		private:
 			int recvedCnt_;
+			bool expactedRecvSetCommand_; // toggled set <-> get command
 	};
 
 	class TestServerController : public ServerController {
@@ -884,12 +922,10 @@ namespace TestRedisRequest {
 			boost::shared_ptr<TestServerController> serverController(new TestServerController);
 			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
 
-			// from user.. this user send to below 2 users..
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
 			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
 
-			gRedisCtrl_ = boost::shared_ptr<TestRedisController>(new TestRedisController());
-			NetworkHelper::connectRedis(ioServiceContainer.get(), REDIS_ADDRESS, 6379, gRedisCtrl_);
+			gRedisCtrl_ = boost::shared_ptr<RedisRequest>(new RedisRequest(ioServiceContainer->ioService(), REDIS_ADDRESS, 6379));
 
 			gPortBase++;
 
@@ -933,13 +969,6 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	static Mutex gLockMutex;
 	static int gLoginUserCnt = 0;
 	static int gRecvMemoCnt = 0;
-
-	class TestRedisController : public RedisController {
-		public:
-			virtual void onResponse(boost::shared_ptr<RedisResponse> response) {
-				LOG_DEBUG("!! REDIS RESPONSE : Ticket %d => %s\n", response->ticket(), response->result()->str.c_str());
-			}
-	};
 
 	class TestLoginClientController : public FrameController {
 		public:
@@ -1048,10 +1077,10 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 	};
 
-	class TestServerClientController : public FrameController {
+	class TestServerClientController : public FrameController, public RedisRequest::EventHandler {
 		public:
-			TestServerClientController(boost::shared_ptr<TestRedisController> ctrl) 
-					: redisCtrl_(ctrl)
+			TestServerClientController(boost::shared_ptr<RedisRequest> request) 
+					: redisRequest_(request)
 					, recvedRedisResultCnt_(0)
 					, ticketLogin_(0) { }
 
@@ -1075,7 +1104,11 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 						// register location info.
 						char value[1024] = {0,};
 						sprintf(value, "127.0.0.1:8000, dummyid=%s", lprot.linePtr());// dummy location routing string.. (:
-						ticketLogin_ = redisCtrl_->set(lprot.linePtr(), value, this);
+
+						std::vector<std::string> args;
+						args.push_back(lprot.linePtr());
+						args.push_back(value);
+						ticketLogin_ = redisRequest_->command("SET", args, this);
 						break;
 					}
 					case COMMAND_SEND_MEMO:
@@ -1092,8 +1125,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 							payloadSendMemo_ = lprot.linePtr();
 
 							for(size_t i = 0; i < slprot.listSize(); i++) {
-								int ticket = redisCtrl_->redisRequest()->get(slprot.stringOf(i).c_str());
-								redisCtrl_->eventGotResponse()->registerObserver(ticket, this);
+								std::vector<std::string> args;
+								args.push_back(slprot.stringOf(i));
+								redisRequest_->command("GET", args, this);
 							}
 							break;
 						}
@@ -1105,16 +1139,11 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				}
 			}
 
-			virtual void onControllerEvent_GotResponse(
-					boost::shared_ptr<BaseController> controller, 
-					int ticket) {
-				LOG_DEBUG("[SERVER] onControllerEvent_GotResponse emitted.. ticket %d\n", ticket);
+			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
+				LOG_INFO("[SERVER] REDIS RESULT : %s, ticket %d, %d\n", 
+						response->resultData()->str.c_str(), response->ticket(), ticketLogin_);
 
-				boost::shared_ptr<RedisController> redis = REDIS_CTRL(controller); 
-				boost::shared_ptr<RedisResponse> res = redis->getAndDeleteResponseOfTicket(ticket);
-				LOG_INFO("REDIS RESULT : %s, ticket %d, %d\n", res->result()->str.c_str(), ticket, ticketLogin_);
-
-				if(ticket == ticketLogin_) {
+				if(response->ticket() == ticketLogin_) {
 					// doing login progress..
 					// send login result..
 					LineProtocol lprot;
@@ -1123,21 +1152,23 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 					return;
 				}
 
-				// send to memopacket to this user location!.... 
+				// send to memopacket to this user location!
 				// but here is not real world. stop dreaming! 
 #define TOKEN "dummyid="
-				const char *find = strstr(res->result()->str.c_str(), TOKEN);
+				const char *find = strstr(response->resultData()->str.c_str(), TOKEN);
 				assert(find);
 				const char *userId = find + strlen(TOKEN);
 
 				gLockMutex.lock();
 				mapUser_t::iterator it = gUserMap.find(userId);
 				if(it == gUserMap.end()) {
-					LOG_FATAL("gUserMap not found user session. %s, %s, %d\n", userId, res->result()->str.c_str(), gUserMap.size());
+					LOG_FATAL("gUserMap not found user session. %s, %s, %d\n", 
+							userId, response->resultData()->str.c_str(), gUserMap.size());
 					assert(false && "gUserMap not found user session");
 				}
 				gLockMutex.unlock();
 
+				// send memo to that user..
 				LineProtocol lprot;
 				lprot.setLine(payloadSendMemo_);
 				boost::shared_ptr<FrameController> frameCtrl = boost::static_pointer_cast<FrameController>(it->second);
@@ -1145,7 +1176,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 
 		private:
-			boost::shared_ptr<TestRedisController> redisCtrl_;
+			boost::shared_ptr<RedisRequest> redisRequest_;
 			int recvedRedisResultCnt_;
 			int ticketLogin_;
 			FrameHeader headerLogin_;
@@ -1153,17 +1184,20 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			std::string payloadSendMemo_;
 	};
 
+
 	class TestServerController : public ServerController {
 		virtual void onInitialized() {
-			redisCtrl_ = boost::shared_ptr<TestRedisController>(new TestRedisController());
-			NetworkHelper::connectRedis(ioServiceContainer(), REDIS_ADDRESS, 6379, redisCtrl_);
+			redisRequest_ = boost::shared_ptr<RedisRequest>(new RedisRequest(
+																ioServiceContainer()->ioService(), REDIS_ADDRESS, 6379
+                                                           ));
+			redisRequest_->connect();
 		}
 		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
-			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController(redisCtrl_)); 
+			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController(redisRequest_)); 
 			return newController;
 		}
 		private:
-			boost::shared_ptr<TestRedisController> redisCtrl_;
+			boost::shared_ptr<RedisRequest> redisRequest_;
 	};
 
 	bool doTest() {
@@ -1211,7 +1245,7 @@ void coconutLog(logger::LogLevel level, const char *fileName, int fileLine, cons
 	printf("[COCONUT] <%d> %s\n", level, logmsg);
 }
 
-int main() {
+int main(int argc, char **argv) {
 //#define SHOW_COCONUT_LOG
 #if defined(SHOW_COCONUT_LOG)
 	logger::LogHookCallback logCallback;
@@ -1223,11 +1257,15 @@ int main() {
 	logCallback.fatal = coconutLog;
 	logger::setLogHookFunctionCallback(logCallback);
 #endif
-	//logger::setLogLevel(logger::LEVEL_TRACE);
+
 	logger::setLogLevel(logger::LEVEL_INFO);
+	if(argc > 1) {
+		if(strcmp(argv[1], "debug") == 0)
+			logger::setLogLevel(logger::LEVEL_TRACE);
+	}
 
 	LOG_INFO("Entering protocol test");
-
+	assert(TestRedisRequest::doTest());
 	assert(TestUDPAndLineProtocol::doTest());
 	assert(TestHttpClientGet::doTest());
 	assert(TestLineProtocol::doTest());
@@ -1240,7 +1278,6 @@ int main() {
 	assert(TestFileDescriptorProtocol::doTest());
 #endif
 	assert(TestFrameAndStringListAndLineProtocolAndRedis::doTest());
-	assert(TestRedisRequest::doTest());
 
 	LOG_INFO("Leaving protocol test");
 

@@ -11,7 +11,6 @@
 #include "HttpClient.h"
 #include "ClientController.h"
 #include "ServerController.h"
-#include "RedisController.h"
 
 namespace coconut {
 
@@ -63,17 +62,6 @@ void NetworkHelper::bindUdp( BaseIOServiceContainer *ioServiceContainer,
 	udpSocket->setEventHandler(controller.get());
 	controller->setSocket(udpSocket);
 	udpSocket->bind();
-}
-
-void NetworkHelper::connectRedis( BaseIOServiceContainer *ioServiceContainer, 
-                                  const char* host, 
-                                  int port, 
-                                  boost::shared_ptr<RedisController> controller) {
-
-	boost::shared_ptr<RedisRequest> request(new RedisRequest(ioServiceContainer->ioService(), host, port));
-	request->setEventHandler(controller.get());
-	controller->setRedisRequest(request);
-	request->connect();
 }
 
 }

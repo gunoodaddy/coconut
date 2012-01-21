@@ -6,7 +6,6 @@
 #include "BaseIOServiceContainer.h"
 #include "ServerController.h"
 #include "ClientController.h"
-#include "RedisController.h"
 
 namespace coconut {
 
@@ -33,11 +32,6 @@ public:
 	static void bindUdp( BaseIOServiceContainer *ioServiceContainer, 
                          int port, 
                          boost::shared_ptr<ClientController> controller);
-
-	static void connectRedis( BaseIOServiceContainer *ioServiceContainer, 
-                              const char* host, 
-                              int port, 
-                              boost::shared_ptr<RedisController> controller);
 };
 
 }

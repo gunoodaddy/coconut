@@ -13,6 +13,10 @@
 #include <hiredis/adapters/libevent.h>
 #include <hiredis/async.h>
 #endif
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/interprocess/detail/atomic.hpp>
+#include <boost/function.hpp>
+#endif
 
 namespace coconut {
 
@@ -28,11 +32,23 @@ public:
 		, host_(host)
 		, port_(port)
 		, closing_(false)
+		, connected_(false)
 		, deferredCaller_(ioService) { }
 
 	~RedisRequestImpl() {
 		// TODO redis gracefully close test need..
 		close(false);
+	}
+
+	// command
+	static boost::uint32_t issueTicket() {
+		static volatile boost::uint32_t s_ticket = 1;
+#if defined(WIN32) 
+		boost::interprocess::ipcdetail::atomic_inc32(&s_ticket);
+#else
+		boost::interprocess::detail::atomic_inc32(&s_ticket);
+#endif
+		return s_ticket;
 	}
 
 	boost::shared_ptr<IOService> ioService() {
@@ -71,73 +87,125 @@ public:
 		redisAsyncSetDisconnectCallback(redisContext_, disconnectCallback);
 	}
 
-	ticket_t get(ticket_t ticket, const std::string &key) {
+	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, RedisRequest::EventHandler *handler) {
+		ticket_t ticket = issueTicket();
+
+		// for prevent from multithread race condition, must insert to map here..
+		mapCallback_.insert(MapCallback_t::value_type(ticket, handler));
+
 		if(ioService_->isCalledInMountedThread() == false) {
-			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::get, this, ticket, key));
+			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::_command, this, ticket, cmd, args));
 			return ticket;
 		}
+
+		// must lock here (or deadlock may occur by DeferredCaller..)
 		ScopedMutexLock(lockRedis_);
-		int ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "GET %s", key.c_str());
+		_command(ticket, cmd, args);
+		return ticket;
+	}
+
+	void cancel(ticket_t ticket) {
+		ScopedMutexLock(lockRedis_);
+		MapCallback_t::iterator it = mapCallback_.find(ticket);
+		if(it != mapCallback_.end()) {
+			mapCallback_.erase(it);
+		}
+	}
+
+	void cancel(RedisRequest::EventHandler *handler) {
+		ScopedMutexLock(lockRedis_);
+
+		MapCallback_t::iterator it = mapCallback_.begin();
+		for(; it != mapCallback_.end(); it++) {
+			if(it->second == handler) {
+				mapCallback_.erase(it);
+			}
+		}
+	}
+
+private:
+	void _command(ticket_t ticket, const std::string &cmd, const std::vector<std::string> &args) {
+		ScopedMutexLock(lockRedis_);
+
+		if(!connected_) {
+			reservedCommands_.push_back(boost::bind(&RedisRequestImpl::_command, this, ticket, cmd, args));
+			return;
+		}
+
+		int ret = 0;
+		if(args.size() == 1) {
+			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b", cmd.c_str(), 
+					args[0].c_str(), args[0].size());
+		} else if(args.size() == 2) {
+			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b %b", cmd.c_str(), 
+					args[0].c_str(), args[0].size(),
+					args[1].c_str(), args[1].size());
+		} else if(args.size() == 3) {
+			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b %b %b", cmd.c_str(), 
+					args[0].c_str(), args[0].size(),
+					args[1].c_str(), args[1].size(),
+					args[2].c_str(), args[2].size());
+		} else if(args.size() == 4) {
+			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b %b %b %b", cmd.c_str(), 
+					args[0].c_str(), args[0].size(),
+					args[1].c_str(), args[1].size(),
+					args[2].c_str(), args[2].size(),
+					args[3].c_str(), args[3].size());
+		} else {
+			cancel(ticket);
+			throw RedisException(ret, "Redis invalid argument count");
+		}
+
 		if(ret != REDIS_OK) {
+			cancel(ticket);
 			throw RedisException(ret, "Redis get command failed");
 		}
-		return ticket;
 	}
 
-	ticket_t get(const std::string &key) {
-		ticket_t ticket = RedisRequest::issueTicket();
-		if(ioService_->isCalledInMountedThread() == false) {
-			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::get, this, ticket, key));
-			return ticket;
+	RedisRequest::EventHandler* _findEventHandler(ticket_t ticket) {
+		MapCallback_t::iterator it = mapCallback_.find(ticket);
+		if(it != mapCallback_.end()) {
+			return it->second;
 		}
-		return get(ticket, key);
-	}
-
-	ticket_t set(ticket_t ticket, const std::string &key, const std::string &value) {
-		if(ioService_->isCalledInMountedThread() == false) {
-			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::set, this, ticket, key, value));
-			return ticket;
-		}
-		ScopedMutexLock(lockRedis_);
-		int ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "SET %s %b", key.c_str(), value.c_str(), value.size());
-		if(ret != REDIS_OK) {
-			throw RedisException(ret, "Redis set command failed");
-		}
-		return ticket;
-	}
-
-	ticket_t set(const std::string &key, const std::string &value) {
-		ticket_t ticket = RedisRequest::issueTicket();
-		if(ioService_->isCalledInMountedThread() == false) {
-			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::set, this, ticket, key, value));
-			return ticket;
-		}
-
-		return set(ticket, key, value);
+		return NULL;
 	}
 
 	void fire_onRedisRequest_Connected() {
-		owner_->eventHandler()->onRedisRequest_Connected();
-	}
+		ScopedMutexLock(lockRedis_);
+		connected_ = true;
 
-	void fire_onRedisRequest_Error(int error, const char *strerror) {
-		if(false == closing_)
-			owner_->eventHandler()->onRedisRequest_Error(error, strerror);
+		for(size_t i = 0; i < reservedCommands_.size(); i++) {
+			reservedCommands_[i]();	// call
+		}
 	}
 
 	void fire_onRedisRequest_Closed() {
-		owner_->eventHandler()->onRedisRequest_Closed();
+		ScopedMutexLock(lockRedis_);
+		connected_ = false;
+	}
+
+	void fire_onRedisRequest_Error(int error, const char *strerror) {
+		if(false == closing_) {
+			// TODO redis connect error callback
+		}
 	}
 
 	void fire_onRedisRequest_Response(redisReply *reply, void *privdata) {
+		ScopedMutexLock(lockRedis_);
+
 		//redisAsyncDisconnect(c); // TODO when disconnect??
-		int ticket = (int)privdata;
+		ticket_t ticket = (ticket_t)privdata;
 		std::string str;
 		str.assign(reply->str, reply->len);
 		boost::shared_ptr<RedisResponse> res(new RedisResponse(reply, ticket));
-		owner_->eventHandler()->onRedisRequest_Response(res);
+		RedisRequest::EventHandler *handler = _findEventHandler(ticket);
+
+		if(handler) {
+			handler->onRedisRequest_Response(res);
+		}
 	}
 
+	// redis callback
 private:
 #if defined(WIN32) 
 	static void connectCallback(const redisAsyncContext *c) {
@@ -176,11 +244,14 @@ private:
 	std::string host_;
 	int port_;
 	Mutex lockRedis_;
-	//Mutex lockRedis_;
-	bool closing_;
+	volatile bool closing_;
+	volatile bool connected_;
+	typedef std::map<ticket_t, RedisRequest::EventHandler *> MapCallback_t;
+	MapCallback_t mapCallback_;
 	
 	// thread sync call method
 	DeferredCaller deferredCaller_;
+	std::vector<deferedMethod_t> reservedCommands_;
 };
 
 //---------------------------------------------------------------------------------------------------------------
@@ -205,20 +276,16 @@ void RedisRequest::close(bool callback) {
 	impl_->close(callback);
 }
 
-ticket_t RedisRequest::get(const std::string &key) {
-	return impl_->get(key);
+void RedisRequest::cancel(ticket_t ticket) {
+	impl_->cancel(ticket);
 }
 
-ticket_t RedisRequest::get(int ticket, const std::string &key) {
-	return impl_->get(ticket, key);
+void RedisRequest::cancel(EventHandler *handler) {
+	impl_->cancel(handler);
 }
 
-int RedisRequest::set(const std::string &key, const std::string &value) {
-	return impl_->set(key, value);
-}
-
-int RedisRequest::set(int ticket, const std::string &key, const std::string &value) {
-	return impl_->set(ticket, key, value);
+ticket_t RedisRequest::command(const std::string &cmd, const std::vector<std::string> &args, EventHandler *handler) {
+	return impl_->command(cmd, args, handler);
 }
 
 }

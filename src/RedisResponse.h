@@ -9,6 +9,7 @@ class RedisResponseImpl;
 class COCONUT_API RedisResponse {
 public:
 	RedisResponse(void *reply, int ticket);
+	RedisResponse(int err, const char *errmsg);
 	~RedisResponse();
 
 	typedef struct RedisReplyData {
@@ -21,8 +22,10 @@ private:
 	void _load();
 
 public:
-	const RedisReplyData * result() const;
-	const RedisReplyData * resultOf(size_t index) const;
+	int resultErrorCode() const;
+	const char* resultErrorMsg() const;
+	const RedisReplyData * resultData() const;
+	const RedisReplyData * resultDataOf(size_t index) const;
 	ticket_t ticket() const;
 
 private:

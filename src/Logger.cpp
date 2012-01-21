@@ -1,5 +1,6 @@
 #include "Coconut.h"
 #include "Logger.h"
+#include "ThreadUtil.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <sys/time.h>
@@ -8,6 +9,7 @@ namespace coconut { namespace logger {
 
 static LogLevel gCurrentLogLevel_ = LEVEL_TRACE;
 static LogHookCallback gLogHookCallback;
+static Mutex gLogLock;
 
 void hexdump(const unsigned char *data, const int len, FILE * fp) {           
 	const unsigned char *p;
@@ -105,30 +107,31 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 	if(hook) {
 		hook(level, file, line, function, log); 
 	} else {
-	   va_list args;
-	   struct tm * ptm;
-	   time_t now = time(NULL);
-	   ptm = localtime(&now);
+		ScopedMutexLock(gLogLock);
+		va_list args;
+		struct tm * ptm;
+		time_t now = time(NULL);
+		ptm = localtime(&now);
 
-	   struct timeval rv;
-	   gettimeofday(&rv, NULL);
+		struct timeval rv;
+		gettimeofday(&rv, NULL);
 
-	   FILE *fp = stdout;
+		FILE *fp = stdout;
 
-	   va_start(args, format);
+		va_start(args, format);
 
-	   fprintf(fp, "[%p]> %02d%02d%02d%02d%02d%02d:%03u ",
-	   (void*)pthread_self(),
-	   ptm->tm_year - 100, ptm->tm_mon + 1, ptm->tm_mday,
-	   ptm->tm_hour, ptm->tm_min, ptm->tm_sec, (int)rv.tv_usec);
-	   vfprintf(fp, format, args);
+		fprintf(fp, "[%p]> %02d%02d%02d%02d%02d%02d:%03u ",
+				(void*)pthread_self(),
+				ptm->tm_year - 100, ptm->tm_mon + 1, ptm->tm_mday,
+				ptm->tm_hour, ptm->tm_min, ptm->tm_sec, (int)rv.tv_usec);
+		vfprintf(fp, format, args);
 
-	   int len_format = strlen(format);
-	   if(format[len_format - 1] != '\n')
-	   fprintf(fp, "\n");
-	   fflush(fp);
+		int len_format = strlen(format);
+		if(format[len_format - 1] != '\n')
+			fprintf(fp, "\n");
+		fflush(fp);
 
-	   va_end(args);
+		va_end(args);
 	}
 }
 

@@ -17,30 +17,6 @@ using namespace coconut::protocol;
 //#define TEST_UDP
 //#define TEST_UDP_CLIENT
 #define TEST_UDS
-#define TEST_REDIS
-
-//==========================================================
-class MyRedisController : public coconut::RedisController {
-public:
-	virtual void onConnected() {
-	}
-
-	static boost::shared_ptr<coconut::RedisController> instanceOfSingleton(coconut::BaseIOServiceContainer *ioServiceContainer = NULL) {
-		static bool s_init = false;
-		static boost::shared_ptr<coconut::RedisController> s_instance;
-		if(false == s_init) {
-			s_instance = boost::shared_ptr<coconut::RedisController>(new MyRedisController());
-			coconut::NetworkHelper::connectRedis(ioServiceContainer, "localhost", 6379, s_instance);
-			s_init = true;
-		}
-		return s_instance;
-	}
-
-	virtual void onResponse(boost::shared_ptr<coconut::RedisResponse> response) {
-		LOG_INFO("!! REDIS RESPONSE : Ticket %d => %s\n", response->ticket(), response->result()->str.c_str());
-	}
-};
-
 
 //==========================================================
 class MyUdpClientController : public coconut::LineController {
@@ -94,35 +70,12 @@ public:
 	virtual void onConnected() {
 		LOG_DEBUG( "[%d] MyClientController onConnected emitted.. thread = %p\n", id_, (void *)pthread_self());
 		socket()->write((const void *)"HELLO\r\n", 7);
-
-#ifdef TEST_REDIS
-		ticket_ = MyRedisController::instanceOfSingleton(ioServiceContainer())->redisRequest()->get("keh");
-		MyRedisController::instanceOfSingleton(ioServiceContainer())->eventGotResponse()->registerObserver(ticket_, this);
-#endif
 	}
 
 	virtual void onControllerEvent_GotResponse(
 						boost::shared_ptr<coconut::BaseController> controller, 
 						int ticket) {
 		LOG_INFO("[%d] MyClientController onControllerEvent_GotResponse emitted.. ticket %d\n", id_, ticket);
-
-#ifdef TEST_REDIS
-		if(MyRedisController::instanceOfSingleton().get() == controller.get()) {
-			try {
-				boost::shared_ptr<coconut::RedisController> d = boost::static_pointer_cast<coconut::RedisController>(controller); 
-				boost::shared_ptr<coconut::RedisResponse> res = d->getAndDeleteResponseOfTicket(ticket);
-				LOG_INFO( "REDIS RESULT : %s\n", res->result()->str.c_str());
-
-				// redis close test
-				d->redisRequest()->close();
-				d->redisRequest()->connect();
-
-				socket()->close();
-			} catch (coconut::Exception &e) {
-				printf("REDIS RESULT ERROR\n");
-			}
-		}
-#endif
 	}
 	
 	virtual void onTimer(unsigned short id) {
@@ -140,7 +93,6 @@ public:
 
 private:
 	int id_;
-	coconut::ticket_t ticket_;
 };
 
 
