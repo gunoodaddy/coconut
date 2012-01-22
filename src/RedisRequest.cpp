@@ -40,7 +40,6 @@ public:
 		close(false);
 	}
 
-	// command
 	static boost::uint32_t issueTicket() {
 		static volatile boost::uint32_t s_ticket = 1;
 #if defined(WIN32) 
@@ -90,7 +89,7 @@ public:
 	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, RedisRequest::EventHandler *handler) {
 		ticket_t ticket = issueTicket();
 
-		// for prevent from multithread race condition, must insert to map here..
+		// for preventing from multithread race condition, must insert to map here..
 		mapCallback_.insert(MapCallback_t::value_type(ticket, handler));
 
 		if(ioService_->isCalledInMountedThread() == false) {
@@ -98,7 +97,7 @@ public:
 			return ticket;
 		}
 
-		// must lock here (or deadlock may occur by DeferredCaller..)
+		// must lock here (or deadlock may occur by DeferredCaller's mutex..)
 		ScopedMutexLock(lockRedis_);
 		_command(ticket, cmd, args);
 		return ticket;
