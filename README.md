@@ -47,12 +47,15 @@ C++ Simple & High Performance Network Framework Using libevent2
 ### hiredis
 https://github.com/antirez/hiredis
 
-* on Win32, you must use 3rdParty/hiredis instead upper link so that the build is successful.
+* On Win32, you must use 3rdParty/hiredis instead upper link so that the build is successful.
 * The hiredis in upper git link is not compiled on Win32.
 * or use this git repository https://github.com/koenvandesande/hiredis.git
 	
 ### libevent 2.0.15 
 https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
+
+* If you use Win32 IOCP, you must use 3rdParty/libevent.tgz.
+  Original libevent >= 2.0.15 has a bug in evutil_tv_to_msec function. (need to include tv pointer null check code) 
 
 ### boost 1.33.0 
 http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
