@@ -86,7 +86,7 @@ public:
 		redisAsyncSetDisconnectCallback(redisContext_, disconnectCallback);
 	}
 
-	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, RedisRequest::EventHandler *handler) {
+	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
 		ticket_t ticket = issueTicket();
 
 		// for preventing from multithread race condition, must insert to map here..
@@ -108,17 +108,6 @@ public:
 		MapCallback_t::iterator it = mapCallback_.find(ticket);
 		if(it != mapCallback_.end()) {
 			mapCallback_.erase(it);
-		}
-	}
-
-	void cancel(RedisRequest::EventHandler *handler) {
-		ScopedMutexLock(lockRedis_);
-
-		MapCallback_t::iterator it = mapCallback_.begin();
-		for(; it != mapCallback_.end(); it++) {
-			if(it->second == handler) {
-				mapCallback_.erase(it);
-			}
 		}
 	}
 
@@ -161,7 +150,7 @@ private:
 		}
 	}
 
-	RedisRequest::EventHandler* _findEventHandler(ticket_t ticket) {
+	RedisRequest::ResponseHandler _findEventHandler(ticket_t ticket) {
 		MapCallback_t::iterator it = mapCallback_.find(ticket);
 		if(it != mapCallback_.end()) {
 			return it->second;
@@ -197,10 +186,10 @@ private:
 		std::string str;
 		str.assign(reply->str, reply->len);
 		boost::shared_ptr<RedisResponse> res(new RedisResponse(reply, ticket));
-		RedisRequest::EventHandler *handler = _findEventHandler(ticket);
+		RedisRequest::ResponseHandler handler = _findEventHandler(ticket);
 
 		if(handler) {
-			handler->onRedisRequest_Response(res);
+			handler(res);
 		}
 	}
 
@@ -245,7 +234,7 @@ private:
 	Mutex lockRedis_;
 	volatile bool closing_;
 	volatile bool connected_;
-	typedef std::map<ticket_t, RedisRequest::EventHandler *> MapCallback_t;
+	typedef std::map<ticket_t, RedisRequest::ResponseHandler> MapCallback_t;
 	MapCallback_t mapCallback_;
 	
 	// thread sync call method
@@ -279,11 +268,7 @@ void RedisRequest::cancel(ticket_t ticket) {
 	impl_->cancel(ticket);
 }
 
-void RedisRequest::cancel(EventHandler *handler) {
-	impl_->cancel(handler);
-}
-
-ticket_t RedisRequest::command(const std::string &cmd, const std::vector<std::string> &args, EventHandler *handler) {
+ticket_t RedisRequest::command(const std::string &cmd, const std::vector<std::string> &args, ResponseHandler handler) {
 	return impl_->command(cmd, args, handler);
 }
 
