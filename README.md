@@ -52,6 +52,11 @@ https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 * If you use Win32 IOCP, you must use 3rdParty/libevent.tgz.
   Original libevent >= 2.0.15 has a bug in evutil_tv_to_msec function. (need to add *tv* pointer null check code) 
 * Or you should fix this bug in your own libevent source.
+	
+### boost 1.33.0 
+http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
+
+* You must build boost library (run b2), we need boost stage library for using boost::thread
 
 ### hiredis
 https://github.com/antirez/hiredis
@@ -59,11 +64,6 @@ https://github.com/antirez/hiredis
 * On Win32, you must use *3rdParty/hiredis* instead upper link so that the build is successful.
   The hiredis in upper git link is not compiled on Win32.
 * Or use this git repository https://github.com/koenvandesande/hiredis.git
-	
-### boost 1.33.0 
-http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
-
-* You must build boost library (run b2), we need boost stage library for using boost::thread
 
 ### libjson 7.4.1
 http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
