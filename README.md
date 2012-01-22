@@ -58,11 +58,11 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
 
 ## Installing/Configuring
 
-export BOOST_ROOT=<BOOST ROOT DIR>
-export LD_LIBRARY_PATH=<BOOST STAGE LIB DIR>:$LD_LIBRARY_PATH
+    export BOOST_ROOT=<BOOST ROOT DIR>
+    export LD_LIBRARY_PATH=<BOOST STAGE LIB DIR>:$LD_LIBRARY_PATH
 
-configure
-make
-cd tester
-unittest
+    configure
+    make
+    cd tester
+    unittest
 
