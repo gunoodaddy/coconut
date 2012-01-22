@@ -1,8 +1,7 @@
 # Coconut
 C++ Simple & High Performance Network Opensource Framework Using libevent2
 
-available using cross platform linux, win32
-
+* Available cross platform linux, win32
 * TcpSocket
 * UdpSocket
 * Redis Request
@@ -51,7 +50,7 @@ total 30 lines.
 ### hiredis
 https://github.com/antirez/hiredis
 
-* On Win32, you must use +3rdParty/hiredis+ instead upper link so that the build is successful.
+* On Win32, you must use *3rdParty/hiredis* instead upper link so that the build is successful.
 * The hiredis in upper git link is not compiled on Win32.
   or use this git repository https://github.com/koenvandesande/hiredis.git
 	
