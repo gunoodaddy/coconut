@@ -44,13 +44,13 @@ https://github.com/antirez/hiredis
     the hiredis in upper git link is not compiled on Win32.
 	
 ### libevent 2.0.15 
-    link : https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
+https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 
 ### boost 1.33.0 
-    link : http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
+http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
 
 ### libjson 7.4.1
-    link : http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
+http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
     in order to build successful on this frame work, you must use 3rdParty/libjson instead upper link's libjson.
     We modified JSONStream class to parse correctly. (7.4.1 libjson has a few bug in JSONStream)
 
