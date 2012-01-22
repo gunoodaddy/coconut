@@ -50,8 +50,8 @@ total 30 lines.
 ### libevent 2.0.15 
 https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 
-* If you use Win32 IOCP, you must use 3rdParty/src/libevent.tgz.
-  Original libevent >= 2.0.15 has a bug in evutil_tv_to_msec function. (need to add *tv* pointer null check code) 
+* If you use Win32 IOCP, you must use `3rdParty/src/libevent.tgz`.
+  Original libevent >= 2.0.15 has a bug in `evutil_tv_to_msec` function. (need to add *tv* pointer null check code) 
 * Or you should fix this bug in your own libevent source.
 	
 ### boost 1.33.0 
@@ -62,7 +62,7 @@ http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/dow
 ### hiredis
 https://github.com/antirez/hiredis
 
-* On Win32, you must use *3rdParty/src/hiredis* instead upper link so that the build is successful.
+* On Win32, you must use `3rdParty/src/hiredis` instead upper link so that the build is successful.
   The hiredis in upper git link is not compiled on Win32.
 * Or use this git repository https://github.com/koenvandesande/hiredis.git
 
@@ -71,7 +71,7 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
     
 * In order to build successful on this frame work, you must use 3rdParty/libjson instead upper link's libjson.
 * We modified JSONStream class to parse correctly. (7.4.1 libjson has a few bug in JSONStream)
-* You can find 'gunoodaddy' comment in 3rdParty/src/libjson modified codes.
+* You can find 'gunoodaddy' comment in `3rdParty/src/libjson` modified codes.
 
 ## Installing/Configuring
 
