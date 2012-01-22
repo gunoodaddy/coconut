@@ -2,8 +2,9 @@
 C++ Simple & High Performance Network Opensource Framework Using libevent2
 
 * Available cross platform linux, win32
-* TcpSocket
-* UdpSocket
+* Tcp Socket
+* Unix Domain Socket(only tcp)
+* Udp Socket
 * Redis Request
 * Http Client (GET, POST)
 * Simple Http Server
