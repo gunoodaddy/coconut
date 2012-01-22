@@ -23,20 +23,20 @@ total 30 lines.
         virtual void onReceivedData( const void *data, int size ) {
             socket()->write(data, size);
         }
-    };
+    };t
     class FooServer : public ServerController {
         virtual boost::shared_ptr<ClientController> onAccept( boost::shared_ptr<TcpSocket> socket ) {
-            boost::shared_ptr<FooClient> newController(new FooClient);
-            return newController;
+            boost::shared_ptr<FooClient> newClient( new FooClient );
+            return newClient;
         }
     };
-    int main(int argc, char **argv) {
-        IOServiceContainer container(threadCount);
+    int main( int argc, char **argv ) {
+        IOServiceContainer container( threadCount );
         container.initialize();
 
         try {
-            boost::shared_ptr<FooServer> fooServer(new FooServer);
-            NetworkHelper::listenTcp(&container, 8000, fooServer);
+            boost::shared_ptr<FooServer> fooServer( new FooServer );
+            NetworkHelper::listenTcp( &container, 8000, fooServer );
             container.run();
         } catch(Exception &e) {
             // Error
