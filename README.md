@@ -31,13 +31,13 @@ total 30 lines.
         }
     };
     int main(int argc, char **argv) {
-        IOServiceContainer ioServiceContainer(threadCount);
-        ioServiceContainer.initialize();
+        IOServiceContainer container(threadCount);
+        container.initialize();
 
         try {
             boost::shared_ptr<MyServerController> serverController(new MyServerController);
-            NetworkHelper::listenTcp(&ioServiceContainer, 8000, serverController);
-            ioServiceContainer.run();
+            NetworkHelper::listenTcp(&container, 8000, serverController);
+            container.run();
         } catch(Exception &e) {
             // Error
         }
