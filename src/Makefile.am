@@ -73,7 +73,8 @@ include_coconut_HEADERS = \
                          FrameController.h \
                          FileDescriptorController.h \
                          ServerController.h \
-                         NetworkHelper.h
+                         NetworkHelper.h \
+						 ../config.h
 
 CLEANFILES=core* tag cscope.* .*.sw*
 DISTCLEANFILES=$(CLEANFILES)

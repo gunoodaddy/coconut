@@ -34,8 +34,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = tester$(EXEEXT) boosttest$(EXEEXT) jsontest$(EXEEXT) \
-	unittest$(EXEEXT)
+noinst_PROGRAMS = unittest$(EXEEXT) boosttest$(EXEEXT) \
+	jsontest$(EXEEXT)
 subdir = tester
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -57,10 +57,6 @@ am_jsontest_OBJECTS = jsontest.$(OBJEXT)
 jsontest_OBJECTS = $(am_jsontest_OBJECTS)
 jsontest_LDADD = $(LDADD)
 jsontest_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
-am_tester_OBJECTS = tester.$(OBJEXT)
-tester_OBJECTS = $(am_tester_OBJECTS)
-tester_LDADD = $(LDADD)
-tester_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_unittest_OBJECTS = unittest.$(OBJEXT)
 unittest_OBJECTS = $(am_unittest_OBJECTS)
 unittest_LDADD = $(LDADD)
@@ -77,10 +73,9 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(boosttest_SOURCES) $(jsontest_SOURCES) $(tester_SOURCES) \
-	$(unittest_SOURCES)
+SOURCES = $(boosttest_SOURCES) $(jsontest_SOURCES) $(unittest_SOURCES)
 DIST_SOURCES = $(boosttest_SOURCES) $(jsontest_SOURCES) \
-	$(tester_SOURCES) $(unittest_SOURCES)
+	$(unittest_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -208,13 +203,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 DEFAULT_INCLUDES = -I.. -I. -I$(top_builddir)/src
-LDADD = $(top_builddir)/src/libcoconut.la $(log4cxx_LIBS) -lboost_thread -ljson
+LDADD = $(top_builddir)/src/libcoconut.la -lboost_thread -ljson
 AM_CPPFLAGS = $(BOOST_CPPFLAGS)
 AM_CXXFLAGS = -Wall
 AM_LDFLAGS = $(BOOST_LDFLAGS) -static
-tester_SOURCES = \
-	tester.cpp
-
 boosttest_SOURCES = \
 	boosttest.cpp
 
@@ -275,9 +267,6 @@ boosttest$(EXEEXT): $(boosttest_OBJECTS) $(boosttest_DEPENDENCIES)
 jsontest$(EXEEXT): $(jsontest_OBJECTS) $(jsontest_DEPENDENCIES) 
 	@rm -f jsontest$(EXEEXT)
 	$(CXXLINK) $(jsontest_OBJECTS) $(jsontest_LDADD) $(LIBS)
-tester$(EXEEXT): $(tester_OBJECTS) $(tester_DEPENDENCIES) 
-	@rm -f tester$(EXEEXT)
-	$(CXXLINK) $(tester_OBJECTS) $(tester_LDADD) $(LIBS)
 unittest$(EXEEXT): $(unittest_OBJECTS) $(unittest_DEPENDENCIES) 
 	@rm -f unittest$(EXEEXT)
 	$(CXXLINK) $(unittest_OBJECTS) $(unittest_LDADD) $(LIBS)
@@ -290,7 +279,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/boosttest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jsontest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tester.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittest.Po@am__quote@
 
 .cpp.o:

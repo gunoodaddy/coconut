@@ -52,6 +52,7 @@ public:
 	int read(void *data, size_t size);
 	int read(std::string &data, size_t size);
 	int write(const void *data, size_t size);
+	int writeString(const std::string &data);
 	void close();
 	void checkResponseSocket(int res);
 	void install();

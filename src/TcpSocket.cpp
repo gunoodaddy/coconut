@@ -687,6 +687,10 @@ int TcpSocket::write(const void *data, size_t size) {
 	return impl_->write(data, size);
 }
 
+int TcpSocket::writeString(const std::string &data) {
+	return write((const void *)data.c_str(), data.size());
+}
+
 void TcpSocket::close() {
 	return impl_->close();
 }
