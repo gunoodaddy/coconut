@@ -71,7 +71,7 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
 * We modified JSONStream class to parse correctly. (7.4.1 libjson has a few bug in JSONStream)
 * You can find 'gunoodaddy' comment in `3rdParty/src/libjson` modified codes.
 
-## Installation/Configuration
+## Configuration / Installation 
 
     export BOOST_ROOT=<BOOST ROOT DIR>
     export LD_LIBRARY_PATH=<BOOST STAGE LIB DIR>:$LD_LIBRARY_PATH
