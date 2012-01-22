@@ -56,7 +56,7 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 					boost::int32_t checksum;
 					payload_pos_ += VirtualTransportHelper::readInt32(transport, checksum);
 					// TODO check checksum..
-					if(0) 
+					if(0 /* need check logic codes */) 
 						break;
 					header_.setChecksum(checksum);
 					state_ = Length;
@@ -133,16 +133,24 @@ bool FrameProtocol::processSerialize(size_t bufferSize) {
 	header_.makeChecksum(payloadPtr(), payloadSize());
 
 	if(payload_.size() > 0) {
+
 		header_.serialize(writebuffer_, bufferSize + payload_.size());
 		writebuffer_->write(payload_.c_str(), payload_.size());
+
 	} else if(payload_protocol_) {
+
 		payload_protocol_->processSerialize();
 		header_.serialize(writebuffer_, bufferSize + payload_protocol_->writingBufferSize());
+
 	} else if(payload_protocol_shared_ptr_) {
+
 		payload_protocol_shared_ptr_->processSerialize();
 		header_.serialize(writebuffer_, bufferSize + payload_protocol_shared_ptr_->writingBufferSize());
+
 	} else {
+
 		header_.serialize(writebuffer_, bufferSize);
+
 	}
 
 	return true;
