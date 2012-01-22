@@ -13,6 +13,7 @@
 #include "JSONProtocol.h"
 #include "HttpClient.h"
 #include "RedisRequest.h"
+#include "PlaceHolders.h"
 #include "FileDescriptorController.h"
 #include "Logger.h"
 
@@ -827,7 +828,7 @@ namespace TestRedisRequest {
 		char address[256];
 	} testStruct;
 
-	class TestClientController : public ClientController, public RedisRequest::EventHandler {
+	class TestClientController : public ClientController {
 		public:
 			virtual void onConnected() {
 				recvedCnt_ = 0;
@@ -853,9 +854,11 @@ namespace TestRedisRequest {
 				std::vector<std::string> args;
 				args.push_back(userId);
 				args.push_back(arg);
-
-				ticket_t ticket = gRedisCtrl_->command("SET", args, this);
-				(void)ticket;
+				gRedisCtrl_->command("SET", args, 
+											boost::bind(&TestClientController::onRedisRequest_Response, 
+												this, 
+												coconut::placeholders::redisResponse)
+										);
 				expactedRecvSetCommand_ = true;
 			}
 
@@ -866,8 +869,12 @@ namespace TestRedisRequest {
 				std::vector<std::string> args;
 				args.push_back(userId);
 
-				ticket_t ticket = gRedisCtrl_->command("GET", args, this);
-				(void)ticket;
+				gRedisCtrl_->command("GET", args, 
+											boost::bind(&TestClientController::onRedisRequest_Response, 
+												this, 
+												coconut::placeholders::redisResponse)
+										);
+	
 				expactedRecvSetCommand_ = false;
 			}
 
@@ -1089,7 +1096,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			}
 	};
 
-	class TestServerClientController : public FrameController, public RedisRequest::EventHandler {
+	class TestServerClientController : public FrameController {
 		public:
 			TestServerClientController(boost::shared_ptr<RedisRequest> request) 
 					: redisRequest_(request)
@@ -1120,7 +1127,11 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 						std::vector<std::string> args;
 						args.push_back(lprot.linePtr());
 						args.push_back(value);
-						ticketLogin_ = redisRequest_->command("SET", args, this);
+						ticketLogin_ = redisRequest_->command("SET", args, 
+													boost::bind(&TestServerClientController::onRedisRequest_Response, 
+														this, 
+														coconut::placeholders::redisResponse)
+												);
 						break;
 					}
 					case COMMAND_SEND_MEMO:
@@ -1139,7 +1150,12 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 							for(size_t i = 0; i < slprot.listSize(); i++) {
 								std::vector<std::string> args;
 								args.push_back(slprot.stringOf(i));
-								redisRequest_->command("GET", args, this);
+
+								redisRequest_->command("GET", args, 
+													boost::bind(&TestServerClientController::onRedisRequest_Response, 
+														this, 
+														coconut::placeholders::redisResponse)
+												);
 							}
 							break;
 						}

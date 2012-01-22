@@ -9,7 +9,8 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <vector>
 
-typedef boost::function< void () > preControllerEventFunc_t;
+typedef boost::function< void () > func_t;
+typedef boost::function< void (int) > argfunc_t;
 
 class Test : public boost::enable_shared_from_this<Test> {
 	public:
@@ -23,21 +24,32 @@ class Test : public boost::enable_shared_from_this<Test> {
 		void testBoostBind() {
 			printf("TEST CALL\n");
 		}
+
+		void testArg1(int a) {
+			printf("TEST CALL %d\n", a);
+		}
+
 		void call() {
 			for(size_t i = 0; i < funcs_.size(); i++) {
 				funcs_[i]();
 			}
 			funcs_.clear();
+
+			argfunc_(10);
 		}
 		void testMain() {
 			{
 				func_t func_ = boost::bind(&Test::testBoostBind, shared_from_this());
 				funcs_.push_back(func_);
+
+				argfunc_ = boost::bind(&Test::testArg1, shared_from_this(), boost::arg<1>());
+
 			}
 			printf("-------------------------Test::testMain\n");
 		}
-		typedef boost::function< void () > func_t;
 		std::vector<func_t> funcs_;
+
+		argfunc_t argfunc_;
 };
 
 class UpperTest
@@ -56,6 +68,7 @@ class UpperTest
 	private:
 		boost::shared_ptr<Test> test_;
 };
+
 
 namespace ThreadTest {
 
@@ -118,13 +131,13 @@ int main() {
 			printf("shared_ptr null\n");
 		}
 
-		ThreadTest::doTest();
-
 		boost::shared_ptr<UpperTest> upperTest(new UpperTest);
 		boost::shared_ptr<Test> test(new Test);
 		upperTest->setTest(test);
 		test->testMain();
 		test->call();
+
+		ThreadTest::doTest();
 	}
 	printf("Program Exit..\n");
 }
