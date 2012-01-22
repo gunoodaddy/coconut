@@ -128,6 +128,7 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 				ptm->tm_hour, ptm->tm_min, ptm->tm_sec, (int)rv.tv_usec);	
 #endif
 		fprintf(fp, log);
+		fprintf(fp, "\n");
 		fflush(fp);
 	}
 }
