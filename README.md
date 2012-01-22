@@ -1,6 +1,7 @@
 # Coconut
 C++ Simple & High Performance Network Opensource Framework Using libevent2
 
+available using cross platform linux, win32
 
 * TcpSocket
 * UdpSocket
@@ -59,7 +60,7 @@ https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 
 * If you use Win32 IOCP, you must use 3rdParty/libevent.tgz.
   Original libevent >= 2.0.15 has a bug in evutil_tv_to_msec function. (need to include tv pointer null check code) 
-* Or you fix this bug in your own libevent source.
+* Or you should fix this bug in your own libevent source.
  
 ### boost 1.33.0 
 http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
