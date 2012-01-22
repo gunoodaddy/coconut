@@ -8,13 +8,9 @@ AM_CXXFLAGS = -Wall
 AM_LDFLAGS = $(BOOST_LDFLAGS) -static
 
 noinst_PROGRAMS = \
-	tester \
+	unittest \
 	boosttest \
-	jsontest \
-	unittest
-
-tester_SOURCES = \
-	tester.cpp
+	jsontest
 
 boosttest_SOURCES = \
 	boosttest.cpp
