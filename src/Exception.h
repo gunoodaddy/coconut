@@ -6,11 +6,23 @@ class COCONUT_API Exception : public std::exception {
 public:
 	Exception(): code_(0) {}
 	Exception(const char *message) : code_(0) {
-		memcpy(message_, message, strlen(message));
+                size_t len = strlen(message);
+                if(len > sizeof(message_) - 1)
+                        len = sizeof(message_) - 1;
+                memset(message_, 0, sizeof(message_));
+		memcpy(message_, message, len);
 	}
 	Exception(int code, const char * message) : code_(code) {
-		memcpy(message_, message, strlen(message));
-	}
+                setMessage(message);
+
+        void setMessage(const char* msg) {
+                size_t len = strlen(message);
+                if(len > sizeof(message_) - 1)
+                        len = sizeof(message_) - 1;
+                memset(message_, 0, sizeof(message_));
+		memcpy(message_, message, len);    
+        }
+
 
 	virtual ~Exception() throw() {}
 
