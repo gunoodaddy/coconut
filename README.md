@@ -38,7 +38,8 @@ C++ Simple & High Performance Network Framework Using libevent2
 ## Requirement
 
 ### hiredis
-https://github.com/antirez/hiredis
+Linux => https://github.com/antirez/hiredis
+Win32 => https://github.com/koenvandesande/hiredis.git
 
 * on Win32, you must use 3rdParty/hiredis instead upper link so that the build is successful.
 * The hiredis in upper git link is not compiled on Win32.
