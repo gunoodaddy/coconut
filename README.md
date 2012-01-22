@@ -12,7 +12,7 @@ C++ Simple & High Performance Network Opensource Framework Using libevent2
 
 ## TCP Echo Server Example
 
-total 30 lines.
+total 28 lines.
 
     #include "Coconut.h"
     #include "NetworkHelper.h"
@@ -33,7 +33,6 @@ total 30 lines.
     int main( int argc, char **argv ) {
         IOServiceContainer container( threadCount );
         container.initialize();
-
         try {
             boost::shared_ptr<FooServer> fooServer( new FooServer );
             NetworkHelper::listenTcp( &container, 8000, fooServer );
