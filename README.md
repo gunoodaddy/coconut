@@ -57,6 +57,8 @@ https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 ### boost 1.33.0 
 http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
 
+* You must build boost library (run b2), we need boost stage library.
+
 ### libjson 7.4.1
 http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
     
