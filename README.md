@@ -17,29 +17,28 @@ total 30 lines.
     #include "Coconut.h"
     #include "NetworkHelper.h"
     #include "IOServiceContainer.h"
+    using namespace coconut;
 
-    class MyClientController : public coconut::BinaryController {
+    class MyClientController : public BinaryController {
         virtual void onReceivedData(const void *data, int size) {
             socket()->write(data, size);
         }
     };
-
-    class MyServerController : public coconut::ServerController {
-        virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
+    class MyServerController : public ServerController {
+        virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
             boost::shared_ptr<MyClientController> newController(new MyClientController);
             return newController;
         }
     };
-
     int main(int argc, char **argv) {
-        coconut::IOServiceContainer ioServiceContainer(threadCount);
+        IOServiceContainer ioServiceContainer(threadCount);
         ioServiceContainer.initialize();
 
         try {
             boost::shared_ptr<MyServerController> serverController(new MyServerController);
-            coconut::NetworkHelper::listenTcp(&ioServiceContainer, 8000, serverController);
+            NetworkHelper::listenTcp(&ioServiceContainer, 8000, serverController);
             ioServiceContainer.run();
-        } catch(coconut::Exception &e) {
+        } catch(Exception &e) {
             // Error
         }
         return 0;
