@@ -1,6 +1,6 @@
 # Coconut
-C++ Simple & High Performance Network Framework Using libevent2
-Opensource 
+C++ Simple & High Performance Network Opensource Framework Using libevent2
+
 
 * TcpSocket
 * UdpSocket
