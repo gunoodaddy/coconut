@@ -122,8 +122,8 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 		struct timeval rv;
 		gettimeofday(&rv, NULL);
 
-		fprintf(fp, "[%p]> %02d%02d%02d%02d%02d%02d:%03u ",
-				(void*)pthread_self(),
+		fprintf(fp, "[%d:%p]>%02d%02d%02d%02d%02d%02d:%04u ",
+				(int)level, (void*)pthread_self(),
 				ptm->tm_year - 100, ptm->tm_mon + 1, ptm->tm_mday,
 				ptm->tm_hour, ptm->tm_min, ptm->tm_sec, (int)rv.tv_usec);	
 #endif
