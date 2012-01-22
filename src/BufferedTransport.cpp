@@ -80,7 +80,7 @@ void BufferedTransport::rewind(size_t size) {
 	ScopedMutexLock(lock_);
 	int temp = readPos_ - size;
 	if(temp < 0) {
-		throw ProtocolException("readpos less than 0 by rewind");
+		throw Exception("readpos less than 0 by rewind");
 	}
 	readPos_ = temp;
 }
@@ -89,7 +89,7 @@ void BufferedTransport::fastforward(size_t size) {
 	ScopedMutexLock(lock_);
 	int temp = readPos_ + size;
 	if(temp > (int)buffer_.size())
-		throw ProtocolException("readpos exceed buffer size by fastforward");
+		throw Exception("readpos exceed buffer size by fastforward");
 	readPos_ = temp;
 }
 
