@@ -188,7 +188,7 @@ public:
 		return responseCode_;
 	}
 
-	std::string findHeader(const char *key) {
+	const std::string& findHeader(const char *key) {
 		ScopedIOServiceLock(ioService_);
 		std::map<std::string, std::string>::iterator it = inputHeaders_.find(key);
 		if(it != inputHeaders_.end())
@@ -573,7 +573,7 @@ int HttpClient::responseCode() {
 	return impl_->responseCode();
 }
 
-std::string HttpClient::findHeader(const char *key) {
+const std::string& HttpClient::findHeader(const char *key) {
 	return impl_->findHeader(key);
 }
 
