@@ -141,7 +141,7 @@ public:
 	int responseBodySize();
 	int responseCode();
 
-	std::string findHeader(const char *key);
+	const std::string& findHeader(const char *key);
 
 	void request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout);
 	void request();
