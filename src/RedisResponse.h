@@ -43,8 +43,9 @@ public:
 
 	typedef struct RedisReplyData {
 		int type;
-		long long integer;
-		std::string str;
+		long long bigIntValue;
+		int intValue;
+		std::string strValue;
 	}RedisReplyData;
 
 private:
