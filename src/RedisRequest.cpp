@@ -143,7 +143,7 @@ private:
 			return;
 		}
 
-		_LOG_DEBUG("redis request : %s", cmd.c_str());
+		_LOG_DEBUG("redis request start : cmd = %s, argsize = %d", cmd.c_str(), args.size());
 
 		int ret = 0;
 		if(args.size() == 1) {
