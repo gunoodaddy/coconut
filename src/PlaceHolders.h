@@ -29,6 +29,10 @@
 
 #pragma once
 
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/bind.hpp>
+#endif
+
 namespace coconut { namespace placeholders {
 
 inline boost::arg<1> redisResponse()
