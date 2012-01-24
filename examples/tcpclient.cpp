@@ -32,12 +32,15 @@
 #include "IOServiceContainer.h"
 #include "LineController.h"
 #include "Logger.h"
+#include "ThreadUtil.h"
 
 #define BIND_PORT	8765
 
 size_t MAX_CLIENT_COUNT = 0;
 size_t MAX_SEND_COUNT = 0;
 int TOTAL_RECV_COUNT = 0;
+double gNextProg = 0;
+coconut::Mutex gLock;
 
 std::vector<double> g_resultList;
 boost::uint32_t gRecvedCount = 0;
@@ -72,7 +75,19 @@ public:
 
 		LOG_DEBUG("LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
 
-		printf("\r%.2f%%", gRecvedCount * 100 / (double)TOTAL_RECV_COUNT);
+		double curProg = gRecvedCount * 100 / (double)TOTAL_RECV_COUNT;
+		if(curProg >= gNextProg) {
+			struct timeval tvEnd;
+			gettimeofday(&tvEnd, NULL);
+			double diffSec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
+			int tps = (int)(gRecvedCount / diffSec);
+
+			printf("\r%.2f%%, %d tps", curProg, tps);
+			fflush(stdout);
+			gNextProg += 0.1f;
+			if(gNextProg > 100)
+				gNextProg = 100.0f;
+		}
 
 		sendMessage();
 
@@ -83,7 +98,10 @@ public:
 			double diffSec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
 			LOG_DEBUG("[%d:%p] Test OK! %f msec\n", id_, (void *)pthread_self(), diffSec);
 
+			gLock.lock();
 			g_resultList.push_back(diffSec);
+			gLock.unlock();
+
 			if(g_resultList.size() == MAX_CLIENT_COUNT) {
 				showResult();
 				ioServiceContainer()->stop();
