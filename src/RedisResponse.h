@@ -31,7 +31,7 @@
 
 namespace coconut {
 
-typedef int ticket_t;
+typedef long ticket_t;
 
 class RedisResponseImpl;
 
