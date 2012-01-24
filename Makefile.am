@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I ./aclocal
 
-SUBDIRS = coconut tester examples
+SUBDIRS = src tester examples
 
 dist-hook:
 	find $(distdir) -type f \( -iname ".deps" -or -iname ".libs" -or -iname ".gitignore" \

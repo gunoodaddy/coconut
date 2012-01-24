@@ -29,7 +29,7 @@
 
 #include "Coconut.h"
 #include "InternalLogger.h"
-#include <BaseProtocol.h>
+#include "BaseProtocol.h"
 #include <VirtualTransportHelper.h>
 
 namespace coconut { namespace protocol {

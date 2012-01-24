@@ -1206,9 +1206,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 					LineProtocol lprot;
 					lprot.setLine("LOGIN OK");
 					writeFrame(headerLogin_, &lprot);
-					gLockMutex.lock();
-					loginOKCnt_++;
-					gLockMutex.unlock();
+					coconut::atomicIncreaseInt32(&loginOKCnt_);
 					return;
 				}
 
@@ -1238,13 +1236,13 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 		private:
 			boost::shared_ptr<RedisRequest> redisRequest_;
 			int recvedRedisResultCnt_;
-			static int loginOKCnt_;
+			static volatile boost::uint32_t loginOKCnt_;
 			int ticketLogin_;
 			FrameHeader headerLogin_;
 			FrameHeader headerSendMemo_;
 			std::string payloadSendMemo_;
 	};
-	int TestServerClientController::loginOKCnt_;
+	 volatile boost::uint32_t TestServerClientController::loginOKCnt_;
 
 
 	class TestServerController : public ServerController {
