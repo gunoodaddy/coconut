@@ -32,6 +32,7 @@
 #include "RedisRequest.h"
 #include "DeferredCaller.h"
 #include "Exception.h"
+#include "ThreadUtil.h"
 #include <event2/event.h>
 #include <event2/event_compat.h>
 #include <event2/event_struct.h>
@@ -41,10 +42,6 @@
 #else
 #include <hiredis/adapters/libevent.h>
 #include <hiredis/async.h>
-#endif
-#if ! defined(COCONUT_USE_PRECOMPILE)
-#include <boost/interprocess/detail/atomic.hpp>
-#include <boost/function.hpp>
 #endif
 
 namespace coconut {
@@ -71,12 +68,7 @@ public:
 
 	static boost::uint32_t issueTicket() {
 		static volatile boost::uint32_t s_ticket = 1;
-#if defined(WIN32) 
-		boost::interprocess::ipcdetail::atomic_inc32(&s_ticket);
-#else
-		boost::interprocess::detail::atomic_inc32(&s_ticket);
-#endif
-		return s_ticket;
+		return atomicIncreaseInt32(&s_ticket);
 	}
 
 	boost::shared_ptr<IOService> ioService() {
