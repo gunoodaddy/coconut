@@ -33,6 +33,7 @@
 #include "DeferredCaller.h"
 #include "Exception.h"
 #include "ThreadUtil.h"
+#include "InternalLogger.h"
 #include <event2/event.h>
 #include <event2/event_compat.h>
 #include <event2/event_struct.h>
@@ -105,6 +106,7 @@ public:
 		redisLibeventAttach(redisContext_, ioService_->coreHandle());
 		redisAsyncSetConnectCallback(redisContext_, connectCallback);
 		redisAsyncSetDisconnectCallback(redisContext_, disconnectCallback);
+		_LOG_DEBUG("redis connect start : %s:%d", host_.c_str(), port_);
 	}
 
 	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
@@ -140,6 +142,8 @@ private:
 			reservedCommands_.push_back(boost::bind(&RedisRequestImpl::_command, this, ticket, cmd, args));
 			return;
 		}
+
+		_LOG_DEBUG("redis request : %s", cmd.c_str());
 
 		int ret = 0;
 		if(args.size() == 1) {
@@ -182,6 +186,8 @@ private:
 	void fire_onRedisRequest_Connected() {
 		ScopedMutexLock(lockRedis_);
 		connected_ = true;
+
+		_LOG_DEBUG("redis connected..\n");
 
 		for(size_t i = 0; i < reservedCommands_.size(); i++) {
 			reservedCommands_[i]();	// call
@@ -287,6 +293,39 @@ void RedisRequest::close(bool callback) {
 
 void RedisRequest::cancel(ticket_t ticket) {
 	impl_->cancel(ticket);
+}
+
+ticket_t RedisRequest::command(const std::string &cmds, ResponseHandler handler) {
+	int cnt = 0;
+	size_t pos = 0;
+	size_t pos2 = 0;
+	std::string cmd;
+	std::string str;
+	std::vector<std::string> args;
+	printf("TODO DELETE ME : start : [%s]\n", cmds.c_str());
+	do {
+		pos2 = cmds.find(" ", pos);
+		str = cmds.substr(pos, (pos2 - pos));
+
+#define TRIM_SPACE " \t\r\n\v"
+		str.erase(str.find_last_not_of(TRIM_SPACE)+1);
+		str.erase(0,str.find_first_not_of(TRIM_SPACE));
+
+		if(!str.empty()) {
+
+			if(cnt == 0) {
+				cmd = str;
+			} else {
+				args.push_back(str);
+			}
+		}
+		pos = cmds.find_first_not_of(" ", pos2);
+		if(pos == std::string::npos)
+			break;
+		cnt++;
+	} while(true);
+
+	return command(cmd, args, handler);
 }
 
 ticket_t RedisRequest::command(const std::string &cmd, const std::vector<std::string> &args, ResponseHandler handler) {

@@ -49,6 +49,7 @@ public:
 	void connect();
 	void close(bool callback = true);
 
+	ticket_t command(const std::string &cmd, ResponseHandler handler);
 	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, ResponseHandler handler);
 	void cancel(ticket_t ticket);
 
