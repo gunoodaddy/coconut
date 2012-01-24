@@ -134,7 +134,7 @@ OS=$(shell uname)
 ifeq ($(OS), Darwin)
 	cxxflags_default = -c -fast -ffast-math -fexpensive-optimizations -DNDEBUG
 else
-	cxxflags_default = -c -O3 -ffast-math -fexpensive-optimizations -DNDEBUG
+	cxxflags_default = -c -O3 -ffast-math -fexpensive-optimizations -DNDEBUG -fPIC
 endif
 cxxflags_small   = -c -Os -ffast-math -DJSON_LESS_MEMORY -DNDEBUG
 cxxflags_debug   = -c -g -DJSON_SAFE -DJSON_DEBUG
