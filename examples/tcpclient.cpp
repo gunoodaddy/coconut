@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
 		std::vector<boost::shared_ptr<coconut::ClientController> > clients;
 		for(size_t i = 0; i < MAX_CLIENT_COUNT; i++) {
 			boost::shared_ptr<MyClientController> controller(new MyClientController(i, MAX_SEND_COUNT));
-			coconut::NetworkHelper::connectTcp(&ioServiceContainer, "localhost", port, controller);
+			coconut::NetworkHelper::connectTcp(&ioServiceContainer, address.c_str(), port, controller);
 
 			clients.push_back(controller);
 		}

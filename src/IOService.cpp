@@ -313,7 +313,7 @@ public:
 #else
 			thread_.join();
 			joinedThreadFlag_ = true;
-			_LOG_INFO("joined thread.. this = %p", this);
+			_LOG_DEBUG("joined thread.. this = %p", this);
 #endif
 			return ret;
 		}
@@ -323,7 +323,7 @@ public:
 	void dispatchEvent() {
 		event_base_dispatch(base_);
 
-		_LOG_INFO("finished dispatch event.. this = %p", this);
+		_LOG_DEBUG("finished dispatch event.. this = %p", this);
 		// TODO gracefully program exit logic need...
 		//assert(false && "event loop exit???? why?");
 	}

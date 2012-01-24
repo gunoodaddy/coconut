@@ -125,6 +125,8 @@ void IOServiceContainer::run() {
 		}
 		ioservices_[0]->run();
 	}
+
+	_LOG_INFO("All IOService finished..");
 }
 
 void IOServiceContainer::stop() {
