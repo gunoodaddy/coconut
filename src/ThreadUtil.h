@@ -42,6 +42,7 @@
 
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/interprocess/detail/atomic.hpp>
+#include <boost/version.hpp>
 #endif
 
 #if defined(_MSC_VER)
@@ -53,7 +54,7 @@ namespace coconut {
 extern bool _activateMultithreadMode_on;
 
 inline boost::uint32_t atomicIncreaseInt32(volatile boost::uint32_t *value) {
-#if defined(WIN32) 
+#if BOOST_VERSION >= 104800 
 	boost::interprocess::ipcdetail::atomic_inc32(value);
 #else
 	boost::interprocess::detail::atomic_inc32(value);
