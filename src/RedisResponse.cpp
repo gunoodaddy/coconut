@@ -59,18 +59,20 @@ public:
 		if(reply_->type != REDIS_REPLY_ARRAY) {
 			struct RedisResponse::RedisReplyData result;
 			result.type = reply_->type;
-			result.integer = reply_->integer;
+			result.bigIntValue = reply_->integer;
+			result.intValue = (int)reply_->integer;
 			if(reply_->len > 0)
-				result.str.assign(reply_->str, reply_->len);
+				result.strValue.assign(reply_->str, reply_->len);
 			results_.push_back(result);
 		} else {
 			for(size_t i = 0; i < reply_->elements; i++) {
 				struct RedisResponse::RedisReplyData result;
 				redisReply *element = reply_->element[i];
 				result.type = element->type;
-				result.integer = element->integer;
+				result.bigIntValue = reply_->integer;
+				result.intValue = (int)element->integer;
 				if(element->len > 0)
-					result.str.assign(element->str, element->len);
+					result.strValue.assign(element->str, element->len);
 				results_.push_back(result);
 			}
 		}
