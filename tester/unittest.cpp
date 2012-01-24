@@ -909,13 +909,13 @@ namespace TestRedisRequest {
 
 			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
 				LOG_DEBUG("onRedisRequest_Response emitted.. ticket %d, data %s, recvCnt %d\n", 
-					response->ticket(), response->resultData()->str.c_str(), recvedCnt_);
+					response->ticket(), response->resultData()->strValue.c_str(), recvedCnt_);
 
 				if(expactedRecvSetCommand_) {
 					getCommand();
 				} else {
 					testStruct getData;
-					memcpy(&getData, (void *)response->resultData()->str.c_str(), response->resultData()->str.size());
+					memcpy(&getData, (void *)response->resultData()->strValue.c_str(), response->resultData()->strValue.size());
 
 					assert(getData.type == 1);
 					assert(getData.port == 6389);
@@ -1198,7 +1198,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
 			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
 				LOG_DEBUG("[SERVER] REDIS RESULT : %s, ticket %d, %d, loginUser : %d\n", 
-						response->resultData()->str.c_str(), response->ticket(), ticketLogin_, loginOKCnt_);
+						response->resultData()->strValue.c_str(), response->ticket(), ticketLogin_, loginOKCnt_);
 
 				if(response->ticket() == ticketLogin_) {
 					// doing login progress..
@@ -1213,7 +1213,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				// send to memopacket to this user location!
 				// but here is not real world. stop dreaming! 
 #define TOKEN "dummyid="
-				const char *find = strstr(response->resultData()->str.c_str(), TOKEN);
+				const char *find = strstr(response->resultData()->strValue.c_str(), TOKEN);
 				assert(find);
 				const char *userId = find + strlen(TOKEN);
 
@@ -1221,7 +1221,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				mapUser_t::iterator it = gUserMap.find(userId);
 				if(it == gUserMap.end()) {
 					LOG_FATAL("gUserMap not found user session. %s, %s, %d\n", 
-							userId, response->resultData()->str.c_str(), gUserMap.size());
+							userId, response->resultData()->strValue.c_str(), gUserMap.size());
 					assert(false && "gUserMap not found user session");
 				}
 				gLockMutex.unlock();
