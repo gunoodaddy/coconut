@@ -30,7 +30,7 @@
 #include "Coconut.h"
 #include "IOService.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "config.h"
 #include "BaseIOServiceContainer.h"
 #include "ThreadUtil.h"
@@ -132,7 +132,7 @@ public:
 
 	~IOServiceImpl() {
 		finalize();
-		LOG_TRACE("~IOServiceImpl() this = %p", this);
+		_LOG_TRACE("~IOServiceImpl() this = %p", this);
 	}
 
 public:
@@ -253,7 +253,7 @@ public:
 
 	void stop() {
 		if(false == loopExitFlag_) {
-			LOG_DEBUG("IOService stop eventloop..");
+			_LOG_DEBUG("IOService stop eventloop..");
 			struct timeval tv = MAKE_TIMEVAL_MSEC(10);
 			event_base_loopexit(base_, &tv);
 			loopExitFlag_ = true;
@@ -313,7 +313,7 @@ public:
 #else
 			thread_.join();
 			joinedThreadFlag_ = true;
-			LOG_INFO("joined thread.. this = %p", this);
+			_LOG_INFO("joined thread.. this = %p", this);
 #endif
 			return ret;
 		}
@@ -323,7 +323,7 @@ public:
 	void dispatchEvent() {
 		event_base_dispatch(base_);
 
-		LOG_INFO("finished dispatch event.. this = %p", this);
+		_LOG_INFO("finished dispatch event.. this = %p", this);
 		// TODO gracefully program exit logic need...
 		//assert(false && "event loop exit???? why?");
 	}

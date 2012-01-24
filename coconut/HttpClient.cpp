@@ -31,7 +31,7 @@
 #include "HttpClient.h"
 #include "IOService.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include <event2/dns.h>
 #include <event2/http.h>
 #include <event2/http_struct.h>
@@ -64,6 +64,8 @@
 			(var) = TAILQ_NEXT(var, field))
 #endif
 
+static std::string gNullStr("");
+
 namespace coconut {
 
 class HttpClientImpl {
@@ -94,7 +96,7 @@ public:
 	}
 
 	~HttpClientImpl() {
-		LOG_TRACE("~HttpClientImpl : %p", this);
+		_LOG_TRACE("~HttpClientImpl : %p", this);
 		cleanUp(true);
 	}
 
@@ -165,7 +167,7 @@ public:
 	void cancelRequest() {
 		ScopedIOServiceLock(ioService_);
 		if(req_) {
-			LOG_DEBUG("Http Request Cancel!!\n");
+			_LOG_DEBUG("Http Request Cancel!!\n");
 			assert(req_ && "now state is Requesting but req_ is NULL");
 
 			evhttp_cancel_request(req_);	
@@ -193,7 +195,7 @@ public:
 		std::map<std::string, std::string>::iterator it = inputHeaders_.find(key);
 		if(it != inputHeaders_.end())
 			return it->second;
-		return "";
+		return gNullStr;
 	}
 
 	void request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) {
@@ -222,7 +224,7 @@ public:
 	void parseParameter() {
 		struct evkeyvalq args;
 		struct evkeyval *get;
-		LOG_DEBUG("REQUEST URL = %s\n", uri_.c_str());
+		_LOG_DEBUG("REQUEST URL = %s\n", uri_.c_str());
 		evhttp_parse_query(uri_.c_str(), &args);
 
 		// from user parameter 
@@ -238,7 +240,7 @@ public:
 	void makeUriContext() {
 		evuri_ = evhttp_uri_parse_with_flags (uri_.c_str(), 0);
 		assert(evuri_ && "evhttp_uri can not be allocated");
-		LOG_DEBUG("REQUEST URI INFORMATION => %s:%d, %s, %s\n", 
+		_LOG_DEBUG("REQUEST URI INFORMATION => %s:%d, %s, %s\n", 
 			evhttp_uri_get_host(evuri_), 
 			evhttp_uri_get_port(evuri_), 
 			evhttp_uri_get_path(evuri_),
@@ -354,7 +356,7 @@ public:
 			evbuffer_add(req_->output_buffer, s.c_str(), s.size());
 		}
 
-		LOG_DEBUG("BODY SIZE %d\n", evbuffer_get_length(req_->output_buffer));
+		_LOG_DEBUG("BODY SIZE %d\n", evbuffer_get_length(req_->output_buffer));
 		return evbuffer_get_length(req_->output_buffer);
 	}
 
@@ -364,7 +366,7 @@ public:
 		char *buffer = new char[buffer_len+1];
 		memset(buffer, 0, buffer_len+1);
 		memcpy(buffer, data, buffer_len);
-		LOG_DEBUG("BODY\n%s\n", buffer);
+		_LOG_DEBUG("BODY\n%s\n", buffer);
 		delete [] buffer;
 	}
 
@@ -376,7 +378,7 @@ public:
 			result += _makeGetMethodBody();
 		}
 
-		LOG_DEBUG("QUERY %s\n", result.c_str());
+		_LOG_DEBUG("QUERY %s\n", result.c_str());
 		return result;
 	}
 
@@ -403,7 +405,7 @@ public:
 		int port = evhttp_uri_get_port(evuri_);
 		if(port < 0)
 			port = 80;
-		LOG_TRACE("Http Connection Making.. : %s:%d", evhttp_uri_get_host(evuri_), port);
+		_LOG_TRACE("Http Connection Making.. : %s:%d", evhttp_uri_get_host(evuri_), port);
 		evcon_ = evhttp_connection_base_new(ioService_->coreHandle(), dnsbase_, evhttp_uri_get_host(evuri_), port);
 		assert(evcon_ && "evhttp_connection can not be allocated");
 		
@@ -451,7 +453,7 @@ public:
 	// TODO reading progress feature supported,
 	// but "writing" progress feature NOT supported
 	void fire_onHttpClient_Error(HttpClient::ErrorCode errorcode) {
-		LOG_DEBUG("HttpClient Got error");
+		_LOG_DEBUG("HttpClient Got error");
 
 		cleanUp(false); // automatically freed in libevent after callback
 

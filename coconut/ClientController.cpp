@@ -28,7 +28,7 @@
 */
 
 #include "Coconut.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "ClientController.h"
 #include "BufferedTransport.h"
 #include "IOService.h"
@@ -36,7 +36,7 @@
 namespace coconut {
 
 ClientController::~ClientController() {
-	LOG_TRACE("~ClientController() : %p\n", this);
+	_LOG_TRACE("~ClientController() : %p\n", this);
 }
 
 boost::shared_ptr<IOService> ClientController::ioService() {
@@ -96,7 +96,7 @@ void ClientController::onSocket_ReadEvent(int fd) {
 #ifdef PROTOCOL_READ_FROM_SOCKET
 		do {
 			if(!protocol_ || protocol_->isReadComplete()) {
-				LOG_TRACE("New Protocol make #1 in %p\n", this);
+				_LOG_TRACE("New Protocol make #1 in %p\n", this);
 				protocol_ = protocolFactory_->makeProtocol();
 			}
 
@@ -113,11 +113,11 @@ void ClientController::onSocket_ReadEvent(int fd) {
 			return;
 
 		if(!protocol_ || protocol_->isReadComplete()) {
-			LOG_TRACE("New Protocol make #1 in %p\n", this);
+			_LOG_TRACE("New Protocol make #1 in %p\n", this);
 			protocol_ = protocolFactory_->makeProtocol();
 		}
 
-		LOG_DEBUG("ClientController read socket fd = %d, readSize = %d in %p\n", socket()->socketFD(), nread, this); 
+		_LOG_DEBUG("ClientController read socket fd = %d, readSize = %d in %p\n", socket()->socketFD(), nread, this); 
 		protocol_->addToReadingBuffer(chunk, nread);
 		do{
 			if(protocol_->processReadFromReadingBuffer() == true) {
@@ -126,12 +126,12 @@ void ClientController::onSocket_ReadEvent(int fd) {
 
 #define ALWAS_MAKE_PROTOCOL
 #ifdef ALWAS_MAKE_PROTOCOL
-				LOG_TRACE("ClientController read socket readSize = %d, remainBufferSize = %d in %p\n", 
+				_LOG_TRACE("ClientController read socket readSize = %d, remainBufferSize = %d in %p\n", 
 							nread, protocol_->remainingBufferSize(), this);
 
 				if(protocol_->remainingBufferSize() > 0) {
 					// new protocol
-					LOG_TRACE("New Protocol make #2 in %p\n", this);
+					_LOG_TRACE("New Protocol make #2 in %p\n", this);
 					boost::shared_ptr<protocol::BaseProtocol> protocolTemp = protocolFactory_->makeProtocol();
 					protocolTemp->addToReadingBuffer(protocol_->remainingBufferPtr(), protocol_->remainingBufferSize());
 					protocol_ = protocolTemp;
@@ -158,7 +158,7 @@ void ClientController::onSocket_ReadFrom(const void *data, int size, struct sock
 	if(protocolFactory_) {
 		if(!protocol_ || protocol_->isReadComplete()) {
 			protocol_ = protocolFactory_->makeProtocol();
-			LOG_TRACE("New Protocol make\n");
+			_LOG_TRACE("New Protocol make\n");
 		}
 
 		// already received from socket to "data" buffer..

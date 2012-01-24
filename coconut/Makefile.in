@@ -35,7 +35,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src
+subdir = coconut
 DIST_COMMON = $(include_coconut_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -72,7 +72,7 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(include_coconutdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libcoconut_la_LIBADD =
+libcoconut_la_DEPENDENCIES =
 am_libcoconut_la_OBJECTS = kbuffer.lo Coconut.lo Logger.lo \
 	IOService.lo IOServiceContainer.lo DeferredCaller.lo Timer.lo \
 	DNSResolver.lo BufferedTransport.lo BaseSocket.lo TcpSocket.lo \
@@ -236,8 +236,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcoconut.la
-AM_CXXFLAGS = -Wall
+AM_CXXFLAGS = -g -Wall
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) -I$(srcdir)/
+AM_LDFLAGS = $(BOOST_LDFLAGS)
+libcoconut_la_LIBADD = -lboost_thread -ljson
 libcoconut_la_SOURCES = \
                        dep/kbuffer.c \
                        Coconut.cpp \
@@ -325,9 +327,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu coconut/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/Makefile
+	  $(AUTOMAKE) --gnu coconut/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

@@ -29,6 +29,7 @@
 
 #include "Coconut.h"
 #include "JSONController.h"
+#include "InternalLogger.h"
 
 using namespace coconut::protocol;
 
@@ -47,7 +48,7 @@ void JSONController::writeJSON(const std::string &json) {
 
 void JSONController::onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol) {
 	boost::shared_ptr<JSONProtocol> json = boost::static_pointer_cast<JSONProtocol>(protocol);
-	LOG_TRACE("JSONController json received : %s", json->jsonPtr());
+	_LOG_TRACE("JSONController json received : %s", json->jsonPtr());
 	onJSONReceived(json->jsonPtr());
 }
 

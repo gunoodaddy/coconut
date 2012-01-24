@@ -31,10 +31,30 @@
 #include "NetworkHelper.h"
 #include "IOServiceContainer.h"
 #include "LineController.h"
+#include "Logger.h"
 
 #define BIND_PORT	8765
 
-int g_maxSendCount = 0;
+size_t MAX_CLIENT_COUNT = 0;
+size_t MAX_SEND_COUNT = 0;
+int TOTAL_RECV_COUNT = 0;
+
+std::vector<double> g_resultList;
+boost::uint32_t gRecvedCount = 0;
+
+static void showResult() {
+	double avgSec = 0.0f;
+	double tps = 0.0f;
+	for(size_t i = 0; i < g_resultList.size(); i++) {
+		avgSec += g_resultList[i];	
+	}
+	avgSec /= MAX_CLIENT_COUNT;
+
+	tps = TOTAL_RECV_COUNT / (avgSec);
+
+	printf("\n");
+	LOG_INFO("All clients completed : avg = %.2f sec, server tps = %.2f\n", avgSec, tps);
+}
 
 class MyClientController : public coconut::LineController {
 public:
@@ -48,7 +68,11 @@ public:
 	}
 	virtual void onLineReceived(const char *line) {
 		recvLineCount_++;
+		coconut::atomicIncreaseInt32(&gRecvedCount);
+
 		LOG_DEBUG("LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
+
+		printf("\r%.2f%%", gRecvedCount * 100 / (double)TOTAL_RECV_COUNT);
 
 		sendMessage();
 
@@ -56,25 +80,31 @@ public:
 			struct timeval tvEnd;
 			gettimeofday(&tvEnd, NULL);
 
-			double diffMsec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
-			LOG_INFO("[%d:%p] Test OK! %f msec\n", id_, (void *)pthread_self(), diffMsec);
+			double diffSec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
+			LOG_DEBUG("[%d:%p] Test OK! %f msec\n", id_, (void *)pthread_self(), diffSec);
+
+			g_resultList.push_back(diffSec);
+			if(g_resultList.size() == MAX_CLIENT_COUNT) {
+				showResult();
+				ioServiceContainer()->stop();
+			}
 		}
 	}
 
 	virtual void onError(int error, const char *strerror) {
-		LOG_INFO("onError emitted..\n");
+		LOG_ERROR("onError emitted..\n");
 		setTimer(1, 2000, false);
 	}
 
 	virtual void onClosed() { 
-		LOG_INFO("onClose emitted..\n");
+		LOG_ERROR("onClose emitted..\n");
 		setTimer(1, 2000, false);
 		socket()->write((const void *)"PENDING1\n", 9);
 		socket()->write((const void *)"PENDING2\n", 9);
 	}
 
 	virtual void onConnected() {
-		LOG_INFO("onConnected emitted..\n");
+		LOG_DEBUG("onConnected emitted..\n");
 
 		gettimeofday(&tvStart_, NULL);
 		sendMessage();
@@ -97,24 +127,54 @@ private:
 };
 
 
+void coconutLog(coconut::logger::LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg, bool internalLog) {
+	printf("[COCONUT] <%d> %s\n", level, logmsg);
+}
+
+
 int main(int argc, char **argv) {
 
 	if(argc < 4) {
-		printf("usage : %s [port] [client-count] [send-count]\n", argv[0]);
+		printf("usage : %s [address] [port] [client-count] [send-count] [log-level]\n", argv[0]);
 		return -1;
 	}
-	int port = atoi(argv[1]);
-	int clientCount = atoi(argv[2]);
-	g_maxSendCount = atoi(argv[3]);
+	std::string address = "localhost";
+	int port = 8000;
+	coconut::logger::LogLevel logLevel = coconut::logger::LEVEL_INFO;
+	if(argc > 1)
+		address = argv[1];
+	if(argc > 2)
+		port = atoi(argv[2]);
+	if(argc > 3)
+		MAX_CLIENT_COUNT = atoi(argv[3]);
+	if(argc > 4)
+		MAX_SEND_COUNT = atoi(argv[4]);
+	if(argc > 5)
+		logLevel = (coconut::logger::LogLevel)atoi(argv[5]);
 
-	coconut::IOServiceContainer ioServiceContainer(clientCount);
+	TOTAL_RECV_COUNT = MAX_CLIENT_COUNT * MAX_SEND_COUNT;
+
+	// logger setting
+	{
+		coconut::logger::LogHookCallback logCallback;
+		logCallback.trace = coconutLog;
+		logCallback.debug = coconutLog;
+		logCallback.info = coconutLog;
+		logCallback.warning = coconutLog;
+		logCallback.error = coconutLog;
+		logCallback.fatal = coconutLog;
+		coconut::logger::setLogHookFunctionCallback(logCallback);
+		coconut::logger::setLogLevel(logLevel);
+	}
+
+	coconut::IOServiceContainer ioServiceContainer(MAX_CLIENT_COUNT);
 	ioServiceContainer.initialize();
 
 	try {
 
 		std::vector<boost::shared_ptr<coconut::ClientController> > clients;
-		for(int i = 0; i < clientCount; i++) {
-			boost::shared_ptr<MyClientController> controller(new MyClientController(i, g_maxSendCount));
+		for(size_t i = 0; i < MAX_CLIENT_COUNT; i++) {
+			boost::shared_ptr<MyClientController> controller(new MyClientController(i, MAX_SEND_COUNT));
 			coconut::NetworkHelper::connectTcp(&ioServiceContainer, "localhost", port, controller);
 
 			clients.push_back(controller);

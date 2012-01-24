@@ -1303,7 +1303,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	}
 }
 
-void coconutLog(logger::LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg) {
+void coconutLog(logger::LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg, bool internalLog) {
 	printf("[COCONUT] <%d> %s\n", level, logmsg);
 }
 

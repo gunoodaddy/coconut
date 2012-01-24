@@ -28,7 +28,7 @@
 */
 
 #include "Coconut.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include <BaseProtocol.h>
 #include <VirtualTransportHelper.h>
 
@@ -44,7 +44,7 @@ bool BaseProtocol::processWrite(boost::shared_ptr<BaseVirtualTransport> transpor
 			return false;
 	}
 
-	LOG_TRACE("BaseProtocol::processWrite %d %s : %d\n", turnOnWrite_, className(), writebuffer_->remainingSize());
+	_LOG_TRACE("BaseProtocol::processWrite %d %s : %d\n", turnOnWrite_, className(), writebuffer_->remainingSize());
 
 	if(turnOnWrite_ && writebuffer_->remainingSize() > 0) {
 		boost::int32_t pos = transport->write(writebuffer_->currentPtr(), writebuffer_->remainingSize());

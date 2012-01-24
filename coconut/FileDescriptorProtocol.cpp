@@ -28,7 +28,7 @@
 */
 
 #include "Coconut.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "FileDescriptorProtocol.h"
 #include "BaseSocket.h"
 #if ! defined(WIN32)
@@ -76,7 +76,7 @@ bool FileDescriptorProtocol::processWrite(boost::shared_ptr<BaseVirtualTransport
 
 	::sendmsg(socket->socketFD(), &msg, 0);
 
-	LOG_DEBUG("write descritor : %d -> %d", socket->socketFD(), fd_);
+	_LOG_DEBUG("write descritor : %d -> %d", socket->socketFD(), fd_);
 	return true;
 #endif
 }

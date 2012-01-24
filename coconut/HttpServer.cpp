@@ -31,7 +31,7 @@
 #include "HttpServer.h"
 #include "IOService.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include <event2/dns.h>
 #include <event2/http.h>
 #include <event2/http_struct.h>
@@ -54,11 +54,11 @@ public:
 		, handle_(NULL)
 		, port_(port)
 	{
-		LOG_TRACE("HttpServerImpl() : %p", this);
+		_LOG_TRACE("HttpServerImpl() : %p", this);
 	}
 
 	~HttpServerImpl() {
-		LOG_TRACE("~HttpServerImpl() : %p", this);
+		_LOG_TRACE("~HttpServerImpl() : %p", this);
 
 		if(http_) {
 			evhttp_free(http_);	

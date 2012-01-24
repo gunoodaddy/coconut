@@ -30,8 +30,27 @@
 #include "Coconut.h"
 #include "LineProtocol.h"
 #include "VirtualTransportHelper.h"
+#include "InternalLogger.h"
 
 namespace coconut { namespace protocol {
+
+LineProtocol::LineProtocol() : readComplete_(false) {
+	_LOG_TRACE("LineProtocol : %p", this);
+}
+
+LineProtocol::LineProtocol(BaseProtocol *protocol) : readComplete_(false) {
+	_LOG_TRACE("LineProtocol with parent_protocol : %p", this);
+	parent_protocol_ = protocol;
+}
+
+LineProtocol::LineProtocol(boost::shared_ptr<BaseProtocol> protocol) : readComplete_(false) {
+	_LOG_TRACE("LineProtocol with parent_protocol_shared_ptr : %p", this);
+	parent_protocol_shared_ptr_ = protocol;
+}
+
+LineProtocol::~LineProtocol() {
+	_LOG_TRACE("~LineProtocol : %p", this);
+}
 
 bool LineProtocol::processSerialize(size_t bufferSize) {
 	resetWritingBuffer();
@@ -56,7 +75,7 @@ bool LineProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transport
 					if(byte != '\r')
 						line_.append(1, (char)byte);
 				} else {
-					LOG_DEBUG("LineProtocol line received : [%s]", line_.c_str()); 
+					_LOG_DEBUG("LineProtocol line received : [%s]", line_.c_str()); 
 					readComplete_ = true;
 					return true;
 				}

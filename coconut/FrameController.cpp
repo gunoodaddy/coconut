@@ -28,7 +28,7 @@
 */
 
 #include "Coconut.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "FrameController.h"
 
 using namespace coconut::protocol;
@@ -117,7 +117,7 @@ void FrameController::writeFrame(const FrameHeader &header, const void *payload,
 
 void FrameController::onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol) {
 	boost::shared_ptr<FrameProtocol> frame = boost::static_pointer_cast<FrameProtocol>(protocol);
-	LOG_TRACE("FrameController received : %d", frame->header().command());
+	_LOG_TRACE("FrameController received : %d", frame->header().command());
 	onFrameReceived(frame);
 }
 

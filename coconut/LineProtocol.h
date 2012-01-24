@@ -34,32 +34,15 @@
 #include <boost/shared_ptr.hpp>
 #endif
 #include "BaseProtocol.h"
-#include "BaseVirtualTransport.h"
-#include "BufferedTransport.h"
-#include "Exception.h"
-#include "Logger.h"
 
 namespace coconut { namespace protocol {
 
 class COCONUT_API LineProtocol : public ProtocolDecorator {
 public:
-	LineProtocol() : readComplete_(false) {
-		LOG_TRACE("LineProtocol : %p", this);
-	}
-
-	LineProtocol(BaseProtocol *protocol) : readComplete_(false) {
-		LOG_TRACE("LineProtocol with parent_protocol : %p", this);
-		parent_protocol_ = protocol;
-	}
-	LineProtocol(boost::shared_ptr<BaseProtocol> protocol) : readComplete_(false) {
-		LOG_TRACE("LineProtocol with parent_protocol_shared_ptr : %p", this);
-		parent_protocol_shared_ptr_ = protocol;
-	}
-
-
-	~LineProtocol() {
-		LOG_TRACE("~LineProtocol : %p", this);
-	}
+	LineProtocol();
+	LineProtocol(BaseProtocol *protocol);
+	LineProtocol(boost::shared_ptr<BaseProtocol> protocol);
+	~LineProtocol();
 
 	const char* className() {
 		return "LineProtocol";

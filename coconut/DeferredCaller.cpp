@@ -31,7 +31,7 @@
 #include "DeferredCaller.h"
 #include "IOService.h"
 #include "ThreadUtil.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -52,7 +52,7 @@ public:
 	}
 
 	~DeferredCallerImpl() { 
-		LOG_TRACE("~DeferredCallerImpl %p %p\n", this, eventDeferred_);
+		_LOG_TRACE("~DeferredCallerImpl %p %p\n", this, eventDeferred_);
 		if(eventDeferred_)
 			event_free(eventDeferred_);
 	}

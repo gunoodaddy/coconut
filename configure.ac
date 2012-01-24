@@ -38,7 +38,7 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([gettimeofday inet_ntoa memset socket strdup])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
+                 coconut/Makefile
                  tester/Makefile
 				 examples/Makefile])
 AC_OUTPUT

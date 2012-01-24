@@ -37,7 +37,7 @@
 #include "IOService.h"
 #include "ConnectionListener.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 
 namespace coconut {
 
@@ -118,7 +118,7 @@ public:
 			throw SocketException("Couldn't create listener");
 		}
 		evconnlistener_set_error_cb(listener_, accept_error_cb);
-		LOG_DEBUG("Connection Listener started.. port : %d", port_);
+		_LOG_DEBUG("Connection Listener started.. port : %d", port_);
 	}
 
 	void fire_onConnectionListener_Accept(coconut_socket_t newSocket) {

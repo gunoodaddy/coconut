@@ -30,7 +30,7 @@
 #include "Coconut.h"
 #include "IOService.h"
 #include "Timer.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "ThreadUtil.h"
 #include <event2/event.h>
 #include <map>
@@ -70,11 +70,11 @@ public:
 		struct timer_context_t *context = NULL;
 		std::map<int, struct timer_context_t *>::iterator it = mapTimers_.find(id);
 		if(it != mapTimers_.end()) {
-			LOG_DEBUG("OLD TIMER : ioService = %p id = %d sec = %d.%d\n", owner_->ioService().get(), id, msec/1000, msec % 1000);
+			_LOG_DEBUG("OLD TIMER : ioService = %p id = %d sec = %d.%d\n", owner_->ioService().get(), id, msec/1000, msec % 1000);
 			context = it->second;
 			evtimer_del(context->timer);
 		} else {
-			LOG_DEBUG("NEW TIMER : ioService = %p id = %d sec = %d.%d\n", owner_->ioService().get(), id, msec/1000, msec % 1000);
+			_LOG_DEBUG("NEW TIMER : ioService = %p id = %d sec = %d.%d\n", owner_->ioService().get(), id, msec/1000, msec % 1000);
 			context = (struct timer_context_t *)malloc(sizeof(struct timer_context_t)); 
 			context->timer = evtimer_new(owner_->ioService()->coreHandle(), timer_cb, context);
 
@@ -96,7 +96,7 @@ public:
 		std::map<int, struct timer_context_t *>::iterator it = mapTimers_.find(id);
 
 		if(it != mapTimers_.end()) {
-			LOG_DEBUG("KILL TIMER : ioService = %p id = %d\n", owner_->ioService().get(), id);
+			_LOG_DEBUG("KILL TIMER : ioService = %p id = %d\n", owner_->ioService().get(), id);
 			event_free(it->second->timer);
 			free(it->second);
 			mapTimers_.erase(it);

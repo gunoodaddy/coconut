@@ -1,8 +1,10 @@
 lib_LTLIBRARIES = libcoconut.la
 
-AM_CXXFLAGS = -Wall
-
+AM_CXXFLAGS = -g -Wall
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) -I$(srcdir)/
+AM_LDFLAGS = $(BOOST_LDFLAGS)
+
+libcoconut_la_LIBADD = -lboost_thread -ljson
 
 libcoconut_la_SOURCES = \
                        dep/kbuffer.c \

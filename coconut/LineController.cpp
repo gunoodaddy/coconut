@@ -1,5 +1,6 @@
 #include "Coconut.h"
 #include "LineController.h"
+#include "InternalLogger.h"
 
 using namespace coconut::protocol;
 
@@ -18,7 +19,7 @@ void LineController::writeLine(const std::string &line) {
 
 void LineController::onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol) {
 	boost::shared_ptr<LineProtocol> line = boost::static_pointer_cast<LineProtocol>(protocol);
-	LOG_TRACE("LineController line received : %s", line->linePtr());
+	_LOG_TRACE("LineController line received : %s", line->linePtr());
 	onLineReceived(line->linePtr());
 }
 

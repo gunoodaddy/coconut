@@ -34,7 +34,7 @@
 #include "BaseSocket.h"
 #include "Timer.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include <string>
 #include <event2/dns.h>
 #include <event2/buffer.h>
@@ -70,11 +70,11 @@ public:
 
 		write_kbuffer_ = NULL;
 		
-		LOG_TRACE("TcpSocketImpl() %p\n", this);
+		_LOG_TRACE("TcpSocketImpl() %p\n", this);
 	}
 
 	~TcpSocketImpl() {
-		LOG_TRACE("~TcpSocketImpl : %p\n", this);
+		_LOG_TRACE("~TcpSocketImpl : %p\n", this);
 
 		_deleteTimer();
 
@@ -100,7 +100,7 @@ public:
 		} else if (events & BEV_EVENT_ERROR) {
 			SELF->fire_onSocket_Error(EVUTIL_SOCKET_ERROR());
 		} else if (events & BEV_EVENT_EOF) {
-			LOG_INFO("got BEV_EVENT_EOF flag(0x%x), socket close = error %d\n", events, EVUTIL_SOCKET_ERROR());
+			_LOG_INFO("got BEV_EVENT_EOF flag(0x%x), socket close = error %d\n", events, EVUTIL_SOCKET_ERROR());
 			SELF->fire_onSocket_Close();
 		}
 	}
@@ -258,7 +258,7 @@ public:
 	}
 
 	void _connectTcp() {
-		LOG_DEBUG("TCP CONNECT START: host = %s, port = %d\n", host_.c_str(), port_);
+		_LOG_DEBUG("TCP CONNECT START: host = %s, port = %d\n", host_.c_str(), port_);
 
 		_createBufferEvent(-1);
 
@@ -273,7 +273,7 @@ public:
 
 	void _connectUnix() {
 #if ! defined(WIN32)
-		LOG_DEBUG("UNIX CONNECT START: path = %s\n", path_.c_str());
+		_LOG_DEBUG("UNIX CONNECT START: path = %s\n", path_.c_str());
 
 		coconut_socket_t sock;
 		if((sock = ::socket(AF_LOCAL, SOCK_STREAM, 0)) < 0)
@@ -369,7 +369,7 @@ public:
 			}
 		} else if (res == 0) {
 			/* eof case */
-			LOG_INFO("checkResponseSocket res is 0, socket close = error %d\n", EVUTIL_SOCKET_ERROR());
+			_LOG_INFO("checkResponseSocket res is 0, socket close = error %d\n", EVUTIL_SOCKET_ERROR());
 			fire_onSocket_Close();
 			close();
 		}
@@ -470,7 +470,7 @@ public:
 	void close() {
 		ScopedIOServiceLock(owner_->ioService());
 
-		LOG_DEBUG("close() this=%p threadid=%p >> %d %p %p %p\n", 
+		_LOG_DEBUG("close() this=%p threadid=%p >> %d %p %p %p\n", 
 				this, owner_->ioService()->nativeThreadHandle(), socketFD(),
 				bev_, ev_read_, ev_write_);
 
@@ -533,7 +533,7 @@ public:
 			} while(false);
 
 			if(destroy) {
-				LOG_FATAL("write error  size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
+				_LOG_FATAL("write error  size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
 				close();
 			}
 #else
@@ -564,7 +564,7 @@ private:	// fire event callback
 	*/
 
 	void fire_onSocket_Close() {
-		LOG_DEBUG("fire_onSocket_Close : this = %p, fd = %d, handler = %p, errno = %d", 
+		_LOG_DEBUG("fire_onSocket_Close : this = %p, fd = %d, handler = %p, errno = %d", 
 				this, socketFD(), owner_->eventHandler(), EVUTIL_SOCKET_ERROR());
 		_deleteTimer();
 		owner_->setState(BaseSocket::Disconnected);
@@ -573,7 +573,7 @@ private:	// fire event callback
 	}
 
 	void fire_onSocket_Error(int error) {
-		LOG_DEBUG("fire_onSocket_Error : this = %p, fd = %d, error = %d, %s, handler = %p\n", 
+		_LOG_DEBUG("fire_onSocket_Error : this = %p, fd = %d, error = %d, %s, handler = %p\n", 
 					this, socketFD(), EVUTIL_SOCKET_ERROR(), evutil_socket_error_to_string(error), owner_->eventHandler());
 
 		errorDetected_ = true;

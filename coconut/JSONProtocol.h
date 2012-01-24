@@ -27,51 +27,42 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
-#include "Logger.h"
-#include "FileDescriptorController.h"
+#pragma once
 
-using namespace coconut::protocol;
+#include <string>
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/shared_ptr.hpp>
+#endif
+#include "BaseProtocol.h"
 
-namespace coconut {
+namespace coconut { namespace protocol {
 
-void FileDescriptorController::writeDescriptor(int fd) {
-	if(protocolFactory_) {
-		boost::shared_ptr<FileDescriptorProtocol> fdProtocol 
-			= boost::static_pointer_cast<FileDescriptorProtocol>(protocolFactory_->makeProtocol());
+class JSONProtocolImpl;
 
-		fdProtocol->setFileDescriptor(fd);
-		fdProtocol->processSerialize();
-		fdProtocol->processWrite(socket());
+class COCONUT_API JSONProtocol : public ProtocolDecorator {
+public:
+	JSONProtocol();
+	JSONProtocol(BaseProtocol *protocol);
+	JSONProtocol(boost::shared_ptr<BaseProtocol> protocol);
+	~JSONProtocol();
+
+	const char* className() {
+		return "JSONProtocol";
 	}
-}
 
-void FileDescriptorController::onSocket_ReadEvent(int fd) { 
-	if(protocolFactory_) {
-		do {
-			if(!protocol_ || protocol_->isReadComplete()) {
-				LOG_TRACE("New Protocol make #1 in %p\n", this);
-				protocol_ = protocolFactory_->makeProtocol();
-			}
+	bool isReadComplete();
+	bool processRead(boost::shared_ptr<BaseVirtualTransport> transport);
+	bool processSerialize(size_t bufferSize = 0);
+	const void * remainingBufferPtr();
+	size_t remainingBufferSize();
 
-			if(protocol_->processRead(socket()) == true) {
-				onReceivedProtocol(protocol_);
-			} else {
-				break;
-			}
-		} while(1);
-	} else {
-		char buffer[IOBUF_LEN];
-		int res = socket()->read(buffer, IOBUF_LEN);
-		if(res > 0)
-			onReceivedData(buffer, res);
-	}
-}
+public:
+	void setJSON(const std::string &jsonString);
+	const char* jsonPtr();
 
+private:
+	JSONProtocolImpl *impl_;
+};
 
-void FileDescriptorController::onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol) {
-	boost::shared_ptr<FileDescriptorProtocol> fdProtocol = boost::static_pointer_cast<FileDescriptorProtocol>(protocol);
-	onDescriptorReceived(fdProtocol->fileDescriptor());
-}
+} }
 
-} // end of namespace coconut

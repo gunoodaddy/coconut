@@ -28,7 +28,7 @@
 */
 
 #include "Coconut.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "ServerController.h"
 #include "ClientController.h"
 #include "IOService.h"
@@ -36,7 +36,7 @@
 namespace coconut {
 
 ServerController::~ServerController() {
-	LOG_TRACE("~ServerController() : %p\n", this);
+	_LOG_TRACE("~ServerController() : %p\n", this);
 }
 
 boost::shared_ptr<IOService> ServerController::ioService() {
@@ -54,7 +54,7 @@ void ServerController::processDelayedRemoveClientFromSet() {
 		clientset_t::iterator itReal = clients_.find(*it);
 		if(itReal != clients_.end()) {
 			clients_.erase(itReal);
-			LOG_DEBUG("remove delaying client from set\n");
+			_LOG_DEBUG("remove delaying client from set\n");
 		}
 	}
 
@@ -99,14 +99,14 @@ void ServerController::onTimer_Timer(int id) {
 void ServerController::_onPreControllerEvent_OccuredError(
 		boost::shared_ptr<BaseController> controller, 
 		int error) {
-	LOG_DEBUG("[ServerController] _onPreControllerEvent_OccuredError emitted.. error = %d\n", error);
+	_LOG_DEBUG("[ServerController] _onPreControllerEvent_OccuredError emitted.. error = %d\n", error);
 	_onPreControllerEvent_ClosedConnection(controller, error);
 }
 
 void ServerController::_onPreControllerEvent_ClosedConnection(
 		boost::shared_ptr<BaseController> controller, 
 		int error) {
-	LOG_DEBUG("[ServerController] _onPreControllerEvent_ClosedConnection emitted.. error = %d\n", error);
+	_LOG_DEBUG("[ServerController] _onPreControllerEvent_ClosedConnection emitted.. error = %d\n", error);
 	ScopedMutexLock(lockClients_);
 
 /*

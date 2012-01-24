@@ -28,13 +28,15 @@
 */
 
 #include "Coconut.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "ThreadUtil.h"
 #include <stdio.h>
 #include <stdarg.h>
 #if ! defined(WIN32)
 #include <sys/time.h>
 #endif
+
+volatile bool gEngineLogEnable_ = true;	// extern
 
 namespace coconut { namespace logger {
 
@@ -89,6 +91,10 @@ void hexdump(const unsigned char *data, const int len, FILE * fp) {
 }
 
 
+void setEngineLogEnable(bool enable) {
+	gEngineLogEnable_ = enable;
+}
+
 void setLogLevel(LogLevel level) {
 	gCurrentLogLevel_ = level;
 }
@@ -101,7 +107,7 @@ LogLevel currentLogLevel() {
 	return gCurrentLogLevel_; 
 }
 
-void logprintf(const char *file, const char *function, int line, LogLevel level, const char * format, ...) {
+void logprintf(bool internalLog, const char *file, const char *function, int line, LogLevel level, const char * format, ...) {
 	char log[1024] = {0, };
 	va_list args;
 	va_start(args, format);
@@ -112,7 +118,7 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 	if(log[len_format - 1] == '\n')
 		log[len_format - 1] = '\0';
 	
-	void (*hook)(LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg) = NULL;
+	logCallbackFunc_t hook = NULL;
 
 	switch(level) {
 		case LEVEL_TRACE:
@@ -133,10 +139,12 @@ void logprintf(const char *file, const char *function, int line, LogLevel level,
 		case LEVEL_FATAL:
 			hook = gLogHookCallback.fatal;
 			break;
+		case LEVEL_NONE:
+			return;
 	}
 
 	if(hook) {
-		hook(level, file, line, function, log); 
+		hook(level, file, line, function, log, internalLog); 
 	} else {
 		ScopedMutexLock(gLogLock);
 		FILE *fp = stdout;

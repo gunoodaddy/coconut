@@ -30,6 +30,11 @@
 #include "Coconut.h"
 #include "JSONProtocol.h"
 #include "VirtualTransportHelper.h"
+#include "BaseVirtualTransport.h"
+#include "BufferedTransport.h"
+#include "Exception.h"
+#include "InternalLogger.h"
+
 #define NDEBUG
 #include <libjson/libjson.h>
 
@@ -136,27 +141,27 @@ private:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 JSONProtocol::JSONProtocol() {
-	LOG_TRACE("JSONProtocol : %p", this);
+	_LOG_TRACE("JSONProtocol : %p", this);
 
 	impl_ = new JSONProtocolImpl(this);
 }
 
 JSONProtocol::JSONProtocol(BaseProtocol *protocol) {
-	LOG_TRACE("JSONProtocol with parent_protocol : %p", this);
+	_LOG_TRACE("JSONProtocol with parent_protocol : %p", this);
 	parent_protocol_ = protocol;
 	
 	impl_ = new JSONProtocolImpl(this);
 }
 
 JSONProtocol::JSONProtocol(boost::shared_ptr<BaseProtocol> protocol) {
-	LOG_TRACE("JSONProtocol with parent_protocol_shared_ptr : %p", this);
+	_LOG_TRACE("JSONProtocol with parent_protocol_shared_ptr : %p", this);
 	parent_protocol_shared_ptr_ = protocol;
 	
 	impl_ = new JSONProtocolImpl(this);
 }
 
 JSONProtocol::~JSONProtocol() {
-	LOG_TRACE("~JSONProtocol : %p", this);
+	_LOG_TRACE("~JSONProtocol : %p", this);
 
 	delete impl_;
 }

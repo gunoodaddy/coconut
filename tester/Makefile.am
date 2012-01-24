@@ -1,7 +1,7 @@
 
-DEFAULT_INCLUDES = -I.. -I. -I$(top_builddir)/src
+DEFAULT_INCLUDES = -I.. -I. -I$(top_builddir)/coconut
 
-LDADD = $(top_builddir)/src/libcoconut.la -lboost_thread -ljson
+LDADD = $(top_builddir)/coconut/libcoconut.la -lboost_thread -ljson
 
 AM_CPPFLAGS = $(BOOST_CPPFLAGS)
 AM_CXXFLAGS = -Wall

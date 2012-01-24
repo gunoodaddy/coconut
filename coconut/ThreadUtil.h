@@ -40,6 +40,10 @@
   #define ScopedMutexLock(mutex)	boost::recursive_mutex::scoped_lock autolock(mutex.handle());
 #endif
 
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/interprocess/detail/atomic.hpp>
+#endif
+
 #if defined(_MSC_VER)
 #pragma warning ( disable: 4231 4251 4275 4786 )
 #endif
@@ -47,6 +51,15 @@
 namespace coconut {
 
 extern bool _activateMultithreadMode_on;
+
+inline boost::uint32_t atomicIncreaseInt32(volatile boost::uint32_t *value) {
+#if defined(WIN32) 
+	boost::interprocess::ipcdetail::atomic_inc32(value);
+#else
+	boost::interprocess::detail::atomic_inc32(value);
+#endif
+	return *value;
+}
 
 class COCONUT_API Mutex {
 public:

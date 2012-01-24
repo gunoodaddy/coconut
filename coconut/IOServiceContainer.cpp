@@ -31,7 +31,7 @@
 #include "IOService.h"
 #include "IOServiceContainer.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 
 namespace coconut {
 
@@ -41,7 +41,7 @@ extern void activateMultithreadMode();
 //##################################################################################
 
 IOServiceContainer::~IOServiceContainer() {
-	LOG_TRACE("~IOServiceContainer() : %p", this);
+	_LOG_TRACE("~IOServiceContainer() : %p", this);
 }
 
 #if defined(WIN32)
@@ -94,7 +94,7 @@ void IOServiceContainer::initialize() {
 boost::shared_ptr<IOService> IOServiceContainer::ioService() {
 	static int s_index = 0;
 	int id = s_index++ % ioservices_.size();
-	LOG_DEBUG("################## EVENT BASE %02d DEPLOYMENT ##################", id);
+	_LOG_DEBUG("################## EVENT BASE %02d DEPLOYMENT ##################", id);
 	return ioservices_[id];
 }
 

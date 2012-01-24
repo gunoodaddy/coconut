@@ -29,16 +29,16 @@
 
 #include "Coconut.h"
 #include "Exception.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 #include "BufferedTransport.h"
 
 namespace coconut { 
 BufferedTransport::BufferedTransport() : readPos_(0) { 
-	LOG_TRACE("BufferedTransport : %p", this);
+	_LOG_TRACE("BufferedTransport : %p", this);
 }
 
 BufferedTransport::~BufferedTransport() {
-	LOG_TRACE("~BufferedTransport : %p", this);
+	_LOG_TRACE("~BufferedTransport : %p", this);
 }
 
 int BufferedTransport::write(const void* ptr, size_t size) {

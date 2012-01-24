@@ -39,7 +39,7 @@
 #endif
 #include <event2/event.h>
 #include "DNSResolver.h"
-#include "Logger.h"
+#include "InternalLogger.h"
 
 namespace coconut {
 
@@ -51,7 +51,7 @@ public:
 		, port_(port)
 		, dnsReolver_(NULL) {
 
-		LOG_TRACE("UdpSocketImpl() : %p", this);
+		_LOG_TRACE("UdpSocketImpl() : %p", this);
 	}
 
 	~UdpSocketImpl() {
@@ -60,7 +60,7 @@ public:
 		if(dnsReolver_)
 			delete dnsReolver_;
 
-		LOG_TRACE("~UdpSocketImpl() : %p", this);
+		_LOG_TRACE("~UdpSocketImpl() : %p", this);
 	}
 
 private:
@@ -124,7 +124,7 @@ public:
 			throw SocketException("Error setting datagram socket option");
 
 		if(0 != port_) {
-			LOG_INFO("UDP BIND START : port = %d\n", port_);
+			_LOG_INFO("UDP BIND START : port = %d\n", port_);
 			if (::bind(sock, (struct sockaddr*)&sin_, sizeof(struct sockaddr)) < 0) {
 				throw SocketException("Error binding datagram socket");
 			}
@@ -164,7 +164,7 @@ public:
 		struct write_context_t *context = (struct write_context_t *)ptr;	
 
 		if (errcode) {
-			LOG_DEBUG("DNS Resolve Error : %s -> %s\n", host, evutil_gai_strerror(errcode));
+			_LOG_DEBUG("DNS Resolve Error : %s -> %s\n", host, evutil_gai_strerror(errcode));
 		} else {
 			struct addrinfo *ai;
 			int resCnt = 0;
@@ -197,7 +197,7 @@ public:
 
 	int writeTo(const void *data, size_t size, const struct sockaddr_in *sin) {
 		assert(ev_ && "socket is not initailized");
-		LOG_INFO("WRITETO : %s:%d => [%d]\n", inet_ntoa(sin->sin_addr), ntohs(sin->sin_port), size);
+		_LOG_INFO("WRITETO : %s:%d => [%d]\n", inet_ntoa(sin->sin_addr), ntohs(sin->sin_port), size);
 		int len = sendto(event_get_fd(ev_), (const char *)data, size, 0, (struct sockaddr *)sin, sizeof(struct sockaddr_in));
 		return len;
 	}
