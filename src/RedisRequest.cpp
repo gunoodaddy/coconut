@@ -302,7 +302,7 @@ ticket_t RedisRequest::command(const std::string &cmds, ResponseHandler handler)
 	std::string cmd;
 	std::string str;
 	std::vector<std::string> args;
-	printf("TODO DELETE ME : start : [%s]\n", cmds.c_str());
+
 	do {
 		pos2 = cmds.find(" ", pos);
 		str = cmds.substr(pos, (pos2 - pos));
@@ -324,6 +324,8 @@ ticket_t RedisRequest::command(const std::string &cmds, ResponseHandler handler)
 			break;
 		cnt++;
 	} while(true);
+
+	_LOG_DEBUG("redis command %s split to [%s], argument size = %d\n", cmds.c_str(), cmd.c_str(), args.size());
 
 	return command(cmd, args, handler);
 }
