@@ -72,7 +72,7 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
 * In order to build successful on this frame work, you must use `3rdParty/src/libjson` instead upper link's libjson.
 * We modified JSONStream class to parse correctly. (7.4.1 libjson has a few bug in JSONStream)
 * You can find 'gunoodaddy' comment in `3rdParty/src/libjson` modified codes.
-* And if you use linux 64bit os, must edit <lib_json_root>/makefile to add `-fPIC` to cxxflags_default.
+* And if you use linux 64bit os, must edit \<lib_json_root\>/makefile to add `-fPIC` to cxxflags_default.
 
 ## Build / Installation 
 
