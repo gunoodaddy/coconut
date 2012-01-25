@@ -47,6 +47,9 @@ BaseIOServiceContainer* ClientController::ioServiceContainer() {
 	return socket_->ioService()->ioServiceContainer();
 }
 
+boost::shared_ptr<ClientController> ClientController::sharedMyself() {
+	return boost::static_pointer_cast<ClientController>(shared_from_this());
+}
 
 void ClientController::setReconnectable(bool enable) {
 	ScopedIOServiceLock(ioService());
