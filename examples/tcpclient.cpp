@@ -130,10 +130,6 @@ public:
 
 	virtual void onTimer(unsigned short id) {
 		LOG_DEBUG("onTimer emitted.. %d\n", id);
-
-		// reconnect!
-		if(id == 1)
-			tcpSocket()->connect();
 	}
 	
 private:
@@ -194,16 +190,16 @@ int main(int argc, char **argv) {
 		"\n"
 		"* Server Address : %s:%d\n"
 		"* Thread Count : %d\n"
-		"* Client Count : %u\n"
-		"* Send Count per Client : %u\n"
+		"* Client Count : %d\n"
+		"* Send Count per Client : %d\n"
 		"* Log level : %d\n"
 		"\n"
 		"Progress..\n"
 		, __DATE__, __TIME__
 		, address.c_str(), port
 		, threadCount	
-		, MAX_CLIENT_COUNT	
-		, MAX_SEND_COUNT	
+		, (int)MAX_CLIENT_COUNT	
+		, (int)MAX_SEND_COUNT	
 		, (int)logLevel
 	);
 
