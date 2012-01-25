@@ -53,14 +53,24 @@ namespace coconut {
 
 extern bool _activateMultithreadMode_on;
 
-inline boost::uint32_t atomicIncreaseInt32(volatile boost::uint32_t *value) {
+inline boost::uint32_t atomicIncreaseInt32(volatile boost::uint32_t *mem) {
 #if BOOST_VERSION >= 104800 
-	boost::interprocess::ipcdetail::atomic_inc32(value);
+	boost::interprocess::ipcdetail::atomic_inc32(mem);
 #else
-	boost::interprocess::detail::atomic_inc32(value);
+	boost::interprocess::detail::atomic_inc32(mem);
 #endif
-	return *value;
+	return *mem;
 }
+
+inline void atomicWriteInt32(volatile boost::uint32_t *mem, boost::uint32_t val) {
+#if BOOST_VERSION >= 104800 
+	boost::interprocess::ipcdetail::atomic_write32(mem, val);
+#else
+	boost::interprocess::detail::atomic_write32(mem, val);
+#endif
+}
+
+
 
 class COCONUT_API Mutex {
 public:
