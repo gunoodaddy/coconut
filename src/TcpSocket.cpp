@@ -368,7 +368,7 @@ public:
 			}
 		} else if (res == 0) {
 			/* eof case */
-			_LOG_INFO("checkResponseSocket res is 0, socket close = error %d\n", EVUTIL_SOCKET_ERROR());
+			_LOG_DEBUG("checkResponseSocket res is 0, socket close = error %d\n", EVUTIL_SOCKET_ERROR());
 			fire_onSocket_Close();
 		}
 	}
