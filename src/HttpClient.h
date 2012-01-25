@@ -38,7 +38,7 @@ namespace coconut {
 class IOService;
 class HttpClientImpl;
 
-class COCONUT_API HttpParameter {
+class HttpParameter {
 public:
 	enum parameterType {
 		HEADER_TYPE,
