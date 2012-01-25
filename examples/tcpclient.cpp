@@ -153,22 +153,25 @@ void coconutLog(coconut::logger::LogLevel level, const char *fileName, int fileL
 int main(int argc, char **argv) {
 
 	if(argc < 4) {
-		printf("usage : %s [address] [port] [client-count] [send-count] [log-level]\n", argv[0]);
+		printf("usage : %s [address] [port] [thread-count] [client-count] [send-count] [log-level]\n", argv[0]);
 		return -1;
 	}
 	std::string address = "localhost";
 	int port = 8000;
 	coconut::logger::LogLevel logLevel = coconut::logger::LEVEL_INFO;
+	int threadCount = 0;
 	if(argc > 1)
 		address = argv[1];
 	if(argc > 2)
 		port = atoi(argv[2]);
 	if(argc > 3)
-		MAX_CLIENT_COUNT = atoi(argv[3]);
+		threadCount = atoi(argv[3]);
 	if(argc > 4)
-		MAX_SEND_COUNT = atoi(argv[4]);
+		MAX_CLIENT_COUNT = atoi(argv[4]);
 	if(argc > 5)
-		logLevel = (coconut::logger::LogLevel)atoi(argv[5]);
+		MAX_SEND_COUNT = atoi(argv[5]);
+	if(argc > 6)
+		logLevel = (coconut::logger::LogLevel)atoi(argv[6]);
 
 	TOTAL_RECV_COUNT = MAX_CLIENT_COUNT * MAX_SEND_COUNT;
 
@@ -183,9 +186,28 @@ int main(int argc, char **argv) {
 		logCallback.fatal = coconutLog;
 		coconut::logger::setLogHookFunctionCallback(logCallback);
 		coconut::logger::setLogLevel(logLevel);
+
 	}
 
-	coconut::IOServiceContainer ioServiceContainer(MAX_CLIENT_COUNT);
+	printf( "\n"
+		"TCP Echo Performance Client, build %s:%s by gunoodaddy\n"
+		"\n"
+		"* Server Address : %s:%d\n"
+		"* Thread Count : %d\n"
+		"* Client Count : %ld\n"
+		"* Send Count per Client : %ld\n"
+		"* Log level : %d\n"
+		"\n"
+		"Progress..\n"
+		, __DATE__, __TIME__
+		, address.c_str(), port
+		, threadCount	
+		, MAX_CLIENT_COUNT	
+		, MAX_SEND_COUNT	
+		, (int)logLevel
+	);
+
+	coconut::IOServiceContainer ioServiceContainer(threadCount);
 	ioServiceContainer.initialize();
 
 	try {
