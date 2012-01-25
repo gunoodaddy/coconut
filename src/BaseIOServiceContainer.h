@@ -52,7 +52,10 @@ public:
 	virtual void run() = 0;
 	virtual void stop() = 0;
 
-	virtual boost::shared_ptr<IOService> ioService() = 0;
+	virtual size_t ioServiceCount() = 0;
+	virtual boost::shared_ptr<IOService> ioServiceByRoundRobin() = 0;
+	virtual boost::shared_ptr<IOService> ioServiceByIndex(size_t index) = 0;
+	
 };
 
 }
