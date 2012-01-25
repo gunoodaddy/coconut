@@ -94,5 +94,6 @@ COCONUT_API void logprintf( bool internalLog,
 							const char * format, ...);
 
 COCONUT_API void hexdump(const unsigned char *data, const int len, FILE * fp);
+COCONUT_API void backtrace(FILE * fp);
 
 } }  // end of namespace coconut / logger

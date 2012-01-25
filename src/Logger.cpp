@@ -31,9 +31,11 @@
 #include "InternalLogger.h"
 #include "ThreadUtil.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #if ! defined(WIN32)
 #include <sys/time.h>
+#include <execinfo.h>
 #endif
 
 volatile bool gEngineLogEnable_ = true;	// extern
@@ -90,6 +92,25 @@ void hexdump(const unsigned char *data, const int len, FILE * fp) {
 	fprintf(fp, "\n");
 }
 
+void backtrace(FILE * fp) {
+#if ! defined(WIN32)
+	const size_t max_depth = 100;
+	size_t stack_depth;
+	void *stack_addrs[max_depth];
+	char **stack_strings;
+
+	stack_depth = ::backtrace(stack_addrs, max_depth);
+	stack_strings = ::backtrace_symbols(stack_addrs, stack_depth);
+
+	fprintf(fp, "Call stack\n");
+
+	for (size_t i = 1; i < stack_depth; i++) {
+		fprintf(fp, "    %s\n", stack_strings[i]);
+	}
+	free(stack_strings); // malloc()ed by backtrace_symbols
+	fflush(fp);
+#endif
+}
 
 void setEngineLogEnable(bool enable) {
 	gEngineLogEnable_ = enable;
