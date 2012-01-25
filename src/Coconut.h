@@ -42,7 +42,6 @@
 #include <boost/interprocess/detail/atomic.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
-#include <boost/function.hpp>
 #endif
 
 
