@@ -83,7 +83,7 @@ public:
 		eventDeferred_ = event_new(ioService->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
 	}
 
-	void deferredCall(deferedMethod_t func) {
+	void deferredCall(DeferredCaller::deferedMethod_t func) {
 		assert(eventDeferred_ && "event is not installed..");
 
 		lock_.lock();
@@ -97,7 +97,7 @@ public:
 private:
 	boost::shared_ptr<IOService> ioService_;
 	struct event *eventDeferred_;
-	std::vector<deferedMethod_t> deferredMethods_;
+	std::vector<DeferredCaller::deferedMethod_t> deferredMethods_;
 	Mutex lock_;
 };
 

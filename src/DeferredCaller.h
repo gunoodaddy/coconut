@@ -38,13 +38,13 @@ namespace coconut {
 class IOService;
 class DeferredCallerImpl;
 
-typedef boost::function< void () > deferedMethod_t;
-
 class COCONUT_API DeferredCaller {
 public:
 	DeferredCaller();
 	DeferredCaller(boost::shared_ptr<IOService> ioService); 
 	~DeferredCaller();
+
+	typedef boost::function< void () > deferedMethod_t;
 
 public:
 	void setIOService(boost::shared_ptr<IOService> ioService);
