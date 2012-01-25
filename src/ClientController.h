@@ -60,6 +60,8 @@ public:
 		protocolFactory_ = factory;
 	}
 
+	boost::shared_ptr<ClientController> sharedMyself();
+
 	boost::shared_ptr<BaseSocket> socket() {
 		return socket_;
 	}
