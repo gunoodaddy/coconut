@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 	
 	try {
 		boost::shared_ptr<HttpServerHandler> handler(new HttpServerHandler);
-		coconut::HttpServer server(ioServiceContainer.ioService(), port);
+		coconut::HttpServer server(ioServiceContainer.ioServiceByRoundRobin(), port);
 		server.setEventHandler(handler.get());
 		server.start();
 

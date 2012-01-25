@@ -48,7 +48,7 @@ void NetworkHelper::connectTcp( BaseIOServiceContainer *ioServiceContainer,
                                 int port, boost::shared_ptr<ClientController> controller, 
                                 int timeout) {
 
-	boost::shared_ptr<TcpSocket> tcpSocket(new TcpSocket(ioServiceContainer->ioService()));
+	boost::shared_ptr<TcpSocket> tcpSocket(new TcpSocket(ioServiceContainer->ioServiceByRoundRobin()));
 	tcpSocket->setEventHandler(controller.get());
 	controller->setSocket(tcpSocket);
 	tcpSocket->connect(host, port, timeout);
@@ -59,7 +59,7 @@ void NetworkHelper::connectUnix( BaseIOServiceContainer *ioServiceContainer,
                                  boost::shared_ptr<ClientController> controller, 
                                  int timeout) {
 
-	boost::shared_ptr<TcpSocket> tcpSocket(new TcpSocket(ioServiceContainer->ioService()));
+	boost::shared_ptr<TcpSocket> tcpSocket(new TcpSocket(ioServiceContainer->ioServiceByRoundRobin()));
 	tcpSocket->setEventHandler(controller.get());
 	controller->setSocket(tcpSocket);
 	tcpSocket->connectUnix(path, timeout);
@@ -69,7 +69,7 @@ void NetworkHelper::listenTcp( BaseIOServiceContainer *ioServiceContainer,
                                int port, 
                                boost::shared_ptr<ServerController> controller) {
 
-	boost::shared_ptr<ConnectionListener> connListener(new ConnectionListener(ioServiceContainer->ioService(), port));
+	boost::shared_ptr<ConnectionListener> connListener(new ConnectionListener(ioServiceContainer->ioServiceByRoundRobin(), port));
 	controller->setConnectionListener(connListener);
 	connListener->listen();
 }
@@ -78,7 +78,7 @@ void NetworkHelper::listenUnix( BaseIOServiceContainer *ioServiceContainer,
                                 const char *path, 
                                 boost::shared_ptr<ServerController> controller) {
 
-	boost::shared_ptr<ConnectionListener> connListener(new ConnectionListener(ioServiceContainer->ioService(), path));
+	boost::shared_ptr<ConnectionListener> connListener(new ConnectionListener(ioServiceContainer->ioServiceByRoundRobin(), path));
 	controller->setConnectionListener(connListener);
 	connListener->listen();
 }
@@ -87,7 +87,7 @@ void NetworkHelper::bindUdp( BaseIOServiceContainer *ioServiceContainer,
                              int port, 
                              boost::shared_ptr<ClientController> controller) {
 
-	boost::shared_ptr<UdpSocket> udpSocket(new UdpSocket(ioServiceContainer->ioService(), port));
+	boost::shared_ptr<UdpSocket> udpSocket(new UdpSocket(ioServiceContainer->ioServiceByRoundRobin(), port));
 	udpSocket->setEventHandler(controller.get());
 	controller->setSocket(udpSocket);
 	udpSocket->bind();

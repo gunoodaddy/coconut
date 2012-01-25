@@ -154,7 +154,7 @@ namespace TestHttpClientGet
 			uri = "http://119.205.238.162:8081/test.php";
 			TestHttpController controller;
 
-			HttpClient client(ioServiceContainer.ioService(), coconut::HTTP_POST, uri.c_str(), NULL, 20);
+			HttpClient client(ioServiceContainer.ioServiceByRoundRobin(), coconut::HTTP_POST, uri.c_str(), NULL, 20);
 			client.setEventHandler(&controller);
 			client.request();
 
@@ -960,7 +960,8 @@ namespace TestRedisRequest {
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
 			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
 
-			gRedisCtrl_ = boost::shared_ptr<RedisRequest>(new RedisRequest(ioServiceContainer->ioService(), REDIS_ADDRESS, 6379));
+			gRedisCtrl_ = boost::shared_ptr<RedisRequest>(new RedisRequest(ioServiceContainer->ioServiceByRoundRobin(), 
+																	REDIS_ADDRESS, 6379));
 
 			gPortBase++;
 
@@ -1248,7 +1249,8 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	class TestServerController : public ServerController {
 		virtual void onInitialized() {
 			redisRequest_ = boost::shared_ptr<RedisRequest>(new RedisRequest(
-																ioServiceContainer()->ioService(), REDIS_ADDRESS, 6379
+																ioServiceContainer()->ioServiceByRoundRobin(), 
+																REDIS_ADDRESS, 6379
                                                            ));
 			redisRequest_->connect();
 		}

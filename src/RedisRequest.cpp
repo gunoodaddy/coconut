@@ -113,7 +113,9 @@ public:
 		ticket_t ticket = issueTicket();
 
 		// for preventing from multithread race condition, must insert to map here..
+		lockRedis_.lock();
 		mapCallback_.insert(MapCallback_t::value_type(ticket, handler));
+		lockRedis_.unlock();
 
 		if(ioService_->isCalledInMountedThread() == false) {
 			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::_command, this, ticket, cmd, args));
@@ -121,8 +123,9 @@ public:
 		}
 
 		// must lock here (or deadlock may occur by DeferredCaller's mutex..)
-		ScopedMutexLock(lockRedis_);
+		lockRedis_.lock();
 		_command(ticket, cmd, args);
+		lockRedis_.unlock();
 		return ticket;
 	}
 
@@ -266,7 +269,7 @@ private:
 	
 	// thread sync call method
 	DeferredCaller deferredCaller_;
-	std::vector<deferedMethod_t> reservedCommands_;
+	std::vector<DeferredCaller::deferedMethod_t> reservedCommands_;
 };
 
 //---------------------------------------------------------------------------------------------------------------

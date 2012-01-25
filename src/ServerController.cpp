@@ -64,7 +64,7 @@ void ServerController::processDelayedRemoveClientFromSet() {
 void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
 
 	// Caution! *MUST* call Reactor::ioService()
-	boost::shared_ptr<IOService> ioService = ioServiceContainer()->ioService();
+	boost::shared_ptr<IOService> ioService = ioServiceContainer()->ioServiceByRoundRobin();
 	boost::shared_ptr<TcpSocket> newTcpSocket(new TcpSocket(ioService));
 
 	// onAccept emitted..
