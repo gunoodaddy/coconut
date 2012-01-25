@@ -33,6 +33,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread.hpp>
+#include <boost/function.hpp>
 #endif
 
 #ifdef __USE_PTHREAD__
@@ -61,6 +62,8 @@ private:
 	IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode = false);
 
 public:
+	typedef boost::function< void () > deferedMethod_t;
+
 #ifdef __USE_PTHREAD__
 	pthread_t threadHandle();
 #else
@@ -73,12 +76,15 @@ public:
 	boost::thread::native_handle_type nativeThreadHandle();
 #endif
 
+	int id();
 	void initialize();
 	void run();
 	void stop();
 
 	bool isCalledInMountedThread();
 	bool isStopped();
+
+	void deferredCall(deferedMethod_t func);
 
 	BaseIOServiceContainer *ioServiceContainer();
 	struct event_base * coreHandle();

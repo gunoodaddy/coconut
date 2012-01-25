@@ -47,28 +47,27 @@ static bool gStartUpWinSock = false;
 
 extern void activateMultithreadMode();
 
-class DefaultIOServiceContainer;
-boost::shared_ptr<DefaultIOServiceContainer> globalDefaultIOServiceContainer_;
+class UniqueIntKeyMaker {
+public:
+	UniqueIntKeyMaker() { }
 
-#ifdef __USE_PTHREAD__
-static int set_thread_priority(pthread_attr_t *thread_attr, ThreadPriority priority) {
-	int pthread_policy = SCHED_RR;
-	int min_priority = 0;
-	int max_priority = 0;
-	min_priority = sched_get_priority_min(pthread_policy);
-	max_priority = sched_get_priority_max(pthread_policy);
-	int quanta = (HIGHEST - LOWEST) + 1;
-	float stepsperquanta = (max_priority - min_priority) / quanta;
+	int makeKey() {
+		ScopedMutexLock(lock_);
+		int i = 0;
+		while(true) {
+			std::list<int>::iterator it = std::find(keys_.begin(), keys_.end(), i);
+			if(it == keys_.end())
+				return i;
+			i++;
+		}
+	}
 
-	int pthreadPriority = (int)(min_priority + stepsperquanta * priority);
-
-	struct sched_param sched_param;
-	sched_param.sched_priority = pthreadPriority;
-
-	return pthread_attr_setschedparam(thread_attr, &sched_param);
-}
-#endif
-
+private:
+	std::list<int> keys_;
+	Mutex lock_;
+};
+UniqueIntKeyMaker gKeyMaker_;
+//---------------------------------------------------------------------------------------------------
 
 class DefaultIOServiceContainer: public BaseIOServiceContainer {
 public:
@@ -86,7 +85,10 @@ public:
 		return selfInstance_.get();
 	}
 
-	boost::shared_ptr<IOService> ioService() { return ioService_; }
+	virtual size_t ioServiceCount() { return 0; }
+	virtual boost::shared_ptr<IOService> ioServiceByRoundRobin() { return ioService_; }
+	virtual boost::shared_ptr<IOService> ioServiceByIndex(size_t index) { return ioService_; }
+	
 	void initialize() {
 		assert(false && "never call this function : initialize()");
 	}
@@ -107,11 +109,14 @@ private:
 };
 Mutex DefaultIOServiceContainer::lock_;
 boost::shared_ptr<DefaultIOServiceContainer> DefaultIOServiceContainer::selfInstance_;
+boost::shared_ptr<DefaultIOServiceContainer> globalDefaultIOServiceContainer_;
 
+//---------------------------------------------------------------------------------------------------
 
 class IOServiceImpl {
 public:
-	IOServiceImpl(BaseIOServiceContainer *ioServiceContainer, bool threadMode) : ioServiceContainer_(ioServiceContainer)
+	IOServiceImpl(int id, BaseIOServiceContainer *ioServiceContainer, bool threadMode) : ioServiceContainer_(ioServiceContainer)
+		, id_(id)
 		, multithread_(threadMode)
 		, finalizedFlag_(false)
 		, loopExitFlag_(false)
@@ -143,6 +148,8 @@ public:
 
 #else
 	boost::thread::id threadHandle() {
+		if(!multithread_)
+			return boost::this_thread::get_id();
 		return thread_.get_id();
 	}
 #endif
@@ -158,11 +165,27 @@ public:
 #endif
 
 	bool isCalledInMountedThread() {
+		if(!multithread_) {
+			return true;	// always true
+		}
 #ifdef __USE_PTHREAD__
 		return threadHandle() == pthread_self();
 #else
 		return threadHandle() == boost::this_thread::get_id();
 #endif
+	}
+
+	void deferredCall(IOService::deferedMethod_t func) {
+		lockDeferredCaller_.lock();
+		deferredCallbacks_.push_back(func);
+		lockDeferredCaller_.unlock();
+
+		// this function must be called last in this function for preventing from race-condition.
+		event_active(event_, EV_READ, 1);
+	}
+
+	int id() {
+		return id_;
 	}
 
 	bool isStopped() {
@@ -203,7 +226,7 @@ public:
 			base_ = event_base_new();
 		}
 
-		event_ = event_new(base_, -1, EV_READ|EV_PERSIST, null_event_cb, this);
+		event_ = event_new(base_, -1, EV_READ|EV_PERSIST, deferred_event_cb, this);
 		event_add(event_, NULL);
 	}
 
@@ -265,6 +288,25 @@ public:
 		dispatchEvent();
 	}
 
+#ifdef __USE_PTHREAD__
+	static int setThreadPriority(pthread_attr_t *thread_attr, ThreadPriority priority) {
+		int pthread_policy = SCHED_RR;
+		int min_priority = 0;
+		int max_priority = 0;
+		min_priority = sched_get_priority_min(pthread_policy);
+		max_priority = sched_get_priority_max(pthread_policy);
+		int quanta = (HIGHEST - LOWEST) + 1;
+		float stepsperquanta = (max_priority - min_priority) / quanta;
+
+		int pthreadPriority = (int)(min_priority + stepsperquanta * priority);
+
+		struct sched_param sched_param;
+		sched_param.sched_priority = pthreadPriority;
+
+		return pthread_attr_setschedparam(thread_attr, &sched_param);
+	}
+#endif
+
 	void _startEventLoopInThread() {
 #ifdef __USE_PTHREAD__
 		pthread_attr_t thread_attr;
@@ -291,7 +333,7 @@ public:
 		}
 
 		// Set thread priority
-		if(set_thread_priority(&thread_attr, priority_) != 0) {
+		if(setThreadPriority(&thread_attr, priority_) != 0) {
 			throw ThreadException("pthread_attr_setschedparam failed");
 		}
 
@@ -337,13 +379,23 @@ private:
 	}
 #endif
 
-	static void null_event_cb(coconut_socket_t fd, short what, void *arg) {
-		// NOTHING TO DO.. FOR MULTITHREAD NULL-EVENT..
+	static void deferred_event_cb(coconut_socket_t fd, short what, void *arg) {
+		IOServiceImpl *SELF = (IOServiceImpl *)arg;
+		SELF->fireDeferredEvent();
 	}
 
+	void fireDeferredEvent() {
+		lockDeferredCaller_.lock();
+		for(size_t i = 0; i < deferredCallbacks_.size(); i++) {
+			deferredCallbacks_[i]();
+		}
+		deferredCallbacks_.clear();
+		lockDeferredCaller_.unlock();
+	}
 
 private:
 	BaseIOServiceContainer *ioServiceContainer_;
+	int id_;
 	volatile bool multithread_;
 	volatile bool finalizedFlag_;
 	volatile bool loopExitFlag_;
@@ -362,7 +414,9 @@ private:
 #endif
 	
 	Mutex lock_;
+	Mutex lockDeferredCaller_;
 	struct event *event_;
+	std::vector<IOService::deferedMethod_t> deferredCallbacks_;
 };
 
 
@@ -370,15 +424,18 @@ private:
 //--------------------------------------------------------------------------------------------------
 
 IOService::IOService() {
+	int key = gKeyMaker_.makeKey();
+
 	BaseIOServiceContainer *ioServiceContainer = DefaultIOServiceContainer::instance(shared_from_this());
-	impl_ = new IOServiceImpl(ioServiceContainer, false);
+	impl_ = new IOServiceImpl(key, ioServiceContainer, false);
 }
 
 IOService::IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode) {
 	if(NULL == ioServiceContainer)
 		ioServiceContainer = DefaultIOServiceContainer::instance(shared_from_this());
 		
-	impl_ = new IOServiceImpl(ioServiceContainer, threadMode);
+	int key = gKeyMaker_.makeKey();
+	impl_ = new IOServiceImpl(key, ioServiceContainer, threadMode);
 }
 
 IOService::~IOService() {
@@ -409,6 +466,10 @@ bool IOService::isCalledInMountedThread() {
 	return impl_->isCalledInMountedThread();
 }
 
+void IOService::deferredCall(deferedMethod_t func) {
+	return impl_->deferredCall(func);
+}
+
 bool IOService::isStopped() {
 	return impl_->isStopped();
 }
@@ -423,6 +484,10 @@ struct event_base * IOService::coreHandle() {
 
 Mutex & IOService::mutex() {
 	return impl_->mutex();
+}
+
+int IOService::id() {
+	return impl_->id();
 }
 
 void IOService::initialize() {

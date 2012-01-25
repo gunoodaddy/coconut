@@ -32,6 +32,7 @@
 #include <vector>
 #include <signal.h>
 #include "BaseIOServiceContainer.h"
+#include "IOService.h"
 
 namespace coconut {
 
@@ -48,7 +49,11 @@ public:
 	~IOServiceContainer();
 
 public:
-	boost::shared_ptr<IOService> ioService();
+	size_t ioServiceCount() {
+		return ioservices_.size();
+	}
+	boost::shared_ptr<IOService> ioServiceByRoundRobin();
+	boost::shared_ptr<IOService> ioServiceByIndex(size_t index);
 	void initialize();
 	void run();
 	void stop();

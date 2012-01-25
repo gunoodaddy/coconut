@@ -38,8 +38,6 @@ namespace coconut {
 extern bool _activateMultithreadMode_on;
 extern void activateMultithreadMode();
 
-//##################################################################################
-
 IOServiceContainer::~IOServiceContainer() {
 	_LOG_TRACE("~IOServiceContainer() : %p", this);
 }
@@ -91,12 +89,21 @@ void IOServiceContainer::initialize() {
 	}
 }
 
-boost::shared_ptr<IOService> IOServiceContainer::ioService() {
-	static int s_index = 0;
-	int id = s_index++ % ioservices_.size();
+boost::shared_ptr<IOService> IOServiceContainer::ioServiceByRoundRobin() {
+	static volatile boost::uint32_t s_index = 0;
+	int id = atomicIncreaseInt32(&s_index) % ioservices_.size();
 	_LOG_DEBUG("################## EVENT BASE %02d DEPLOYMENT ##################", id);
 	return ioservices_[id];
 }
+
+
+boost::shared_ptr<IOService> IOServiceContainer::ioServiceByIndex(size_t index) {
+	if(index >= ioservices_.size())
+		throw IllegalArgumentException();
+
+	return ioservices_[index];
+}
+
 
 void IOServiceContainer::run() {
 	
