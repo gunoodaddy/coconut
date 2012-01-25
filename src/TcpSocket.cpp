@@ -87,7 +87,7 @@ public:
 			kbuffer_free(write_kbuffer_);
 			write_kbuffer_ = NULL;
 		}
-		close();
+		_close();
 	}
 
 	static void bufevent_cb(struct bufferevent *bev, short events, void *ptr) {
@@ -242,7 +242,7 @@ public:
 
 		errorDetected_ = false;
 		owner_->setState(BaseSocket::Connecting);
-		close();
+		_close();
 
 		_connect();
 
@@ -266,7 +266,7 @@ public:
 		int ret = bufferevent_socket_connect_hostname(bev_, dnsbase_, AF_UNSPEC, host_.c_str(), port_);
 
 		if(0 != ret) {
-			close();
+			_close();
 			throw SocketException("Error starting connection");
 		}
 	}
@@ -289,7 +289,7 @@ public:
 		evutil_make_socket_nonblocking(sock);
 
 		if(::connect(sock, (struct sockaddr *)&sun, sizeof(sun)) < 0) {
-			close();
+			_close();
 			throw SocketException("Error starting connection");
 		}
 #else
@@ -365,13 +365,11 @@ public:
 			int err = evutil_socket_geterror(socketFD());
 			if (!SOCKET_ERR_RW_RETRIABLE(err)) {
 				fire_onSocket_Error(err);
-				close();
 			}
 		} else if (res == 0) {
 			/* eof case */
 			_LOG_INFO("checkResponseSocket res is 0, socket close = error %d\n", EVUTIL_SOCKET_ERROR());
 			fire_onSocket_Close();
-			close();
 		}
 	}
 
@@ -428,7 +426,7 @@ public:
 	int write(const void *data, size_t size) {
 		ScopedIOServiceLock(owner_->ioService());
 
-		int ret;
+		int ret = -1;
 		if(BaseSocket::Connected != owner_->state()) {
 			if(pendingWriteSupported_) {
 #if defined(_KBUFFER_)
@@ -444,6 +442,7 @@ public:
 				return -1;
 			}
 		}
+
 		if(bev_) {
 			// DO NOT USE write_evbuffer_, just use bufferevent
 			struct evbuffer *output = bufferevent_get_output(bev_);
@@ -452,7 +451,7 @@ public:
 				//bufferevent_enable(bev_, EV_WRITE);
 				ret = size;
 			}
-		} else {
+		} else if(ev_write_) {
 #if defined(_KBUFFER_)
 			ret = kbuffer_add(write_kbuffer_, data, size);
 #else
@@ -468,6 +467,11 @@ public:
 	}
 
 	void close() {
+		_close();
+		fire_onSocket_Close();
+	}
+
+	void _close() {
 		ScopedIOServiceLock(owner_->ioService());
 
 		_LOG_DEBUG("close() this=%p threadid=%p >> %d %p %p %p\n", 
@@ -568,7 +572,7 @@ private:	// fire event callback
 				this, socketFD(), owner_->eventHandler(), EVUTIL_SOCKET_ERROR());
 		_deleteTimer();
 		owner_->setState(BaseSocket::Disconnected);
-		close();
+		_close();
 		owner_->fire_onSocket_Close();
 	}
 
@@ -586,7 +590,7 @@ private:	// fire event callback
 			}
 		}
 		owner_->setState(BaseSocket::Disconnected);
-		close();
+		_close();
 		owner_->fire_onSocket_Error(error, owner_->lastErrorString());
 	}
 
