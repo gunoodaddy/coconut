@@ -66,7 +66,7 @@ public:
 
 	void sendMessage() {
 		if(++currSentCount_ <= sendCount_) {
-			writeLine("HELLO");
+			writeLine("get keh");
 		}
 	}
 	virtual void onLineReceived(const char *line) {
