@@ -13,7 +13,7 @@ C++ Simple & High Performance Network Opensource Framework Using libevent2
 
 ## TCP Echo Server Example
 
-total 29 lines.
+total 28 lines.
 
     #include "Coconut.h"
     #include "NetworkHelper.h"
