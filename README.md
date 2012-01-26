@@ -32,7 +32,7 @@ total 28 lines.
         }
     };
     int main( int argc, char **argv ) {
-        IOServiceContainer container( threadCount );
+        IOServiceContainer container( 16 /* thread count */ );
         container.initialize();
         try {
             boost::shared_ptr<FooServer> fooServer( new FooServer );
