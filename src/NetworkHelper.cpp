@@ -36,8 +36,6 @@
 #include "TcpSocket.h"
 #include "UdpSocket.h"
 #include "ConnectionListener.h"
-#include "RedisRequest.h"
-#include "HttpClient.h"
 #include "ClientController.h"
 #include "ServerController.h"
 

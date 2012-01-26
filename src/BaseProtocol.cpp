@@ -95,7 +95,7 @@ bool StringListProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> tra
 				do {
 					if(listSize_ > (int)list_.size()) {
 						std::string string;
-						payload_pos_ += VirtualTransportHelper::readStringFast(transport, string);
+						payload_pos_ += VirtualTransportHelper::readString32(transport, string);
 						list_.push_back(string);
 						if(listSize_ == (int)list_.size()) {
 							state_ = End;
@@ -119,7 +119,7 @@ bool StringListProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> tra
 
 bool StringListProtocol::processSerialize(size_t bufferSize) {
 	resetWritingBuffer();
-	VirtualTransportHelper::writeStringList(writebuffer_, list_);
+	VirtualTransportHelper::writeString32List(writebuffer_, list_);
 
 	return callParentProcessSerialize(writebuffer_->totalSize() + bufferSize);
 }

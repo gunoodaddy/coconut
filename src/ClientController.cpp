@@ -124,12 +124,13 @@ void ClientController::onSocket_ReadEvent(int fd) {
 		protocol_->addToReadingBuffer(chunk, nread);
 		do{
 			if(protocol_->processReadFromReadingBuffer() == true) {
+				// fire!
 				onReceivedProtocol(protocol_);
 				eventGotProtocol()->fireObservers(shared_from_this(), protocol_);
 
 #define ALWAS_MAKE_PROTOCOL
 #ifdef ALWAS_MAKE_PROTOCOL
-				_LOG_TRACE("ClientController read socket readSize = %d, remainBufferSize = %d in %p\n", 
+				_LOG_TRACE("ClientController Protocol receved completed. readSize = %d, remainBufferSize = %d in %p\n", 
 							nread, protocol_->remainingBufferSize(), this);
 
 				if(protocol_->remainingBufferSize() > 0) {
@@ -141,9 +142,19 @@ void ClientController::onSocket_ReadEvent(int fd) {
 #else
 					protocol_->resetReadingBufferToRemainingBuffer();
 #endif
+					continue;
 				} else {
 					break;
 				}
+			} 
+
+			// parsing failed..
+			
+			if(protocol_->isInvalidPacketReceived()) {
+				// this session close!
+				_LOG_ERROR("Invalid Packet Recved.. this = %p, size = \n", this, protocol_->payloadBuffer()->totalSize());
+				socket()->close();
+				break;
 			} else {
 				break;
 			}

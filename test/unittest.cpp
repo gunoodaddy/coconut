@@ -154,9 +154,9 @@ namespace TestHttpClientGet
 			uri = "http://119.205.238.162:8081/test.php";
 			TestHttpController controller;
 
-			HttpClient client(ioServiceContainer.ioServiceByRoundRobin(), coconut::HTTP_POST, uri.c_str(), NULL, 20);
+			HttpClient client(ioServiceContainer.ioServiceByRoundRobin());
 			client.setEventHandler(&controller);
-			client.request();
+			client.request(coconut::HTTP_POST, uri.c_str(), NULL, 20);
 
 			ioServiceContainer.run();
 			return true;
@@ -198,7 +198,6 @@ namespace TestLineProtocol {
 	class TestServerClientController : public LineController {
 		virtual void onInitialized() {
 			LOG_DEBUG("onInitialized called : %d", socket()->socketFD());
-			//socket()->write("HELLO\r\n", 7);
 		}
 		virtual void onLineReceived(const char *line) {
 			LOG_DEBUG("[SERVER] onLineReceived called : %s", line);
@@ -480,7 +479,7 @@ namespace TestFrameAndJSONProtocol {
 
 	bool doTest() {
 		LOG_INFO("=====================================================================");
-		LOG_INFO("Frame And String List Protocol Test");
+		LOG_INFO("Frame And JSON Protocol Test");
 		LOG_INFO("=====================================================================");
 
 		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;

@@ -71,6 +71,24 @@ namespace coconut {
 class HttpClientImpl {
 public:
 	HttpClientImpl(HttpClient *owner, 
+					boost::shared_ptr<IOService> ioService) 
+		: owner_(owner)
+		, ioService_(ioService)
+		, state_(HttpClient::Prepare)
+		, evcon_(NULL)
+		, dnsbase_(NULL)
+		, req_(NULL)
+		, evuri_(NULL)
+		, responsebuffer_(NULL)
+		, uri_()
+		, paramTemp_(NULL)
+		, timeout_(0)
+		, chunkmode_(true)
+		, multipart_(true)
+		, responseCode_(HTTP_INTERNAL) { }
+
+
+	HttpClientImpl(HttpClient *owner, 
 					boost::shared_ptr<IOService> ioService, 
 					HttpMethodType method, 
 					const char *uri, 
@@ -90,10 +108,7 @@ public:
 		, timeout_(timeout)
 		, chunkmode_(true)
 		, multipart_(true)
-		, responseCode_(HTTP_INTERNAL) {
-
-		state_ = HttpClient::Prepare;
-	}
+		, responseCode_(HTTP_INTERNAL) { }
 
 	~HttpClientImpl() {
 		_LOG_TRACE("~HttpClientImpl : %p", this);
@@ -538,6 +553,10 @@ private:
 };
 
 //--------------------------------------------------------------------------------------------------------------
+
+HttpClient::HttpClient(boost::shared_ptr<IOService> ioService) {
+	impl_ = new HttpClientImpl(this, ioService);
+}
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService, 
 						 HttpMethodType method, 

@@ -149,6 +149,10 @@ public:
 		assert(0 && "BaseSocket::write can not be called directly");
 		return -1;
 	}
+	virtual int peek(char *buffer, size_t size) {
+		assert(0 && "BaseSocket::peek can not be called directly");
+		return 0;
+	}
 	virtual const void * peek(size_t &size) {
 		assert(0 && "BaseSocket::peek can not be called directly");
 		size = 0;

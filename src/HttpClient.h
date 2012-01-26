@@ -94,11 +94,13 @@ private:
 
 class COCONUT_API HttpClient {
 public:
+	HttpClient(boost::shared_ptr<IOService> ioService);
+
 	HttpClient(boost::shared_ptr<IOService> ioService, 
-				HttpMethodType method, 
-				const char *uri, 
-				const HttpParameter *param, 
-				int timeout);
+			HttpMethodType method, 
+			const char *uri, 
+			const HttpParameter *param, 
+			int timeout);
 	~HttpClient();
 
 	enum ErrorCode {

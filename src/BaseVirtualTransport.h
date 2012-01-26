@@ -40,6 +40,7 @@ public:
 	virtual const char *className() = 0;
 	virtual int read(std::string &data, size_t size) = 0;
 	virtual int read(void *data, size_t size)  = 0;
+	virtual int peek(char *buffer, size_t size) = 0;
 	virtual const void * peek(size_t &size) = 0;
 	virtual void ackReadSize(size_t size) = 0;
 

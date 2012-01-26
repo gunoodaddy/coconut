@@ -32,6 +32,12 @@
 #include <string>
 #include "BaseVirtualTransport.h"
 #include "ThreadUtil.h"
+#include "Exception.h"
+#if defined(WIN32)
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 namespace coconut { 
 
@@ -49,8 +55,188 @@ public:
 	int read(std::string &data, size_t size);
 	int read(void *ptr, size_t size);
 	const void * peek(size_t &size);
+	int peek(char *buffer, size_t size);
 	void ackReadSize(size_t size);
 
+	boost::int32_t writeInt32(boost::int32_t value) {
+		boost::int32_t net = (boost::int32_t)htonl(value);
+		write((boost::int8_t*)&net, 4);
+		return 4;
+	}
+	
+	boost::int16_t writeInt16(boost::int16_t value) {
+		boost::int16_t net = (boost::int16_t)htonl(value);
+		write((boost::int8_t*)&net, 2);
+		return 2;
+	}
+	
+	boost::int8_t writeInt8(boost::int8_t value) {
+		boost::int8_t net = (boost::int8_t)htonl(value);
+		write((boost::int8_t*)&net, 1);
+		return 1;
+	}
+	
+	boost::int32_t writeBinary(const void *data, size_t size) {
+		boost::int32_t pos = 0;
+		pos += write(data, size);
+		return pos;
+	}
+
+	boost::int32_t writeString8(const std::string &value) {
+		boost::int8_t pos = 0;
+		pos += writeInt8(value.size());
+		pos += write(value.c_str(), value.size());
+		return pos;
+	}
+
+	boost::int32_t writeString16(const std::string &value) {
+		boost::int16_t pos = 0;
+		pos += writeInt16(value.size());
+		pos += write(value.c_str(), value.size());
+		return pos;
+	}
+
+	boost::int32_t writeString32(const std::string &value) {
+		boost::int32_t pos = 0;
+		pos += writeInt32(value.size());
+		pos += write(value.c_str(), value.size());
+		return pos;
+	}
+
+	boost::int32_t writeString32List(const stringlist_t &list) {
+		boost::int32_t pos = 0;
+		pos += writeInt32((boost::int32_t)list.size());
+		for(size_t i = 0; i < list.size(); i++) {
+			pos += writeString32(list[i]);
+		}
+		return pos;
+	}
+
+	// Reading helper method
+public:
+	boost::int32_t readInt32(boost::int32_t &value) {
+		union bytes {
+			boost::int8_t b[4];
+			boost::int32_t all;
+		} theBytes;
+
+		if(read((void *)theBytes.b, 4) != 4)
+			throw ProtocolException("readInt32 failed..");
+		else
+			value = (boost::int32_t)ntohl(theBytes.all);
+		return 4;
+	}
+
+	boost::int32_t readInt32() {
+		union bytes {
+			boost::int8_t b[4];
+			boost::int32_t all;
+		} theBytes;
+
+		if(read((void *)theBytes.b, 4) != 4)
+			throw ProtocolException("readInt32 failed..");
+		return (boost::int32_t)ntohl(theBytes.all);
+	}
+
+	boost::int16_t readInt16(boost::int16_t &value) {
+		union bytes {
+			boost::int8_t b[2];
+			boost::int16_t all;
+		} theBytes;
+
+		if(read((void *)theBytes.b, 2) != 2)
+			throw ProtocolException("readInt16 failed..");
+		else
+			value = (boost::int16_t)ntohl(theBytes.all);
+		return 2;
+	}
+
+	boost::int16_t readInt16() {
+		union bytes {
+			boost::int8_t b[2];
+			boost::int16_t all;
+		} theBytes;
+
+		if(read((void *)theBytes.b, 2) != 2)
+			throw ProtocolException("readInt16 failed..");
+		return (boost::int16_t)ntohl(theBytes.all);
+	}
+
+	boost::int8_t readInt8(boost::int8_t &value) {
+		boost::int8_t b[1];
+		int res = read((void *)b, 1);
+		if(res != 1)
+			throw ProtocolException("readInt8 failed..");
+		else
+			value = b[0];
+		return 1;
+	}
+
+	boost::int8_t readInt8() {
+		boost::int8_t b[1];
+		int res = read((void *)b, 1);
+		if(res != 1)
+			throw ProtocolException("readInt8 failed..");
+		return b[0];
+	}
+
+	boost::int32_t readString32(std::string &value) {
+		boost::int8_t len = 0;
+		boost::int8_t pos = 0;
+		pos += readInt8(len);
+		int nread = read(value, len);
+		if(nread != len)
+			throw ProtocolException("readString32 failed..");
+		return pos + len;
+	}
+
+	std::string readString32() {
+		std::string str;
+		size_t len = readInt8();
+		int nread = read(str, len);
+		if(nread != (int)len)
+			throw ProtocolException("readString32 failed..");
+		return str;
+	}
+
+	boost::int32_t readString16(std::string &value) {
+		boost::int16_t len = 0;
+		boost::int16_t pos = 0;
+		pos += readInt16(len);
+		int nread = read(value, len);
+		if(nread != len)
+			throw ProtocolException("readString16 failed..");
+		return pos + len;
+	}
+
+	std::string readString16() {
+		std::string str;
+		size_t len = readInt16();
+		int nread = read(str, len);
+		if(nread != (int)len)
+			throw ProtocolException("readString16 failed..");
+		return str;
+	}
+
+	boost::int32_t readString8(std::string &value) {
+		boost::int32_t len = 0;
+		boost::int32_t pos = 0;
+		pos += readInt32(len);
+		int nread = read(value, len);
+		if(nread != len)
+			throw ProtocolException("readString8 failed..");
+		return pos + len;
+	}
+
+	std::string readString8() {
+		std::string str;
+		size_t len = readInt8();
+		int nread = read(str, len);
+		if(nread != (int)len)
+			throw ProtocolException("readString8 failed..");
+		return str;
+	}
+	
 public:
 	size_t totalSize();
 	size_t remainingSize();

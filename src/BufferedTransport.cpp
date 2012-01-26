@@ -67,6 +67,15 @@ int BufferedTransport::read(void *ptr, size_t size) {
 	return size;
 }
 
+int BufferedTransport::peek(char *buffer, size_t size) {
+	ScopedMutexLock(lock_);
+	if(remainingSize() < size) {
+		size = remainingSize();
+	}
+	memcpy(buffer, currentPtr(), size);
+	return size;
+}
+
 const void * BufferedTransport::peek(size_t &size) {
 	ScopedMutexLock(lock_);
 	if(remainingSize() < size) {

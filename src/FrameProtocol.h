@@ -108,7 +108,7 @@ public:
 		Complete
 	};
 
-	FrameProtocol() : header_(), initHeader_(), state_(Init), payload_pos_(0), payload_pos_on_buffer_(0), payload_protocol_(NULL) { }
+	FrameProtocol() : header_(), initHeader_(), state_(Init), payload_pos_(0), payload_protocol_(NULL) { }
 
 	~FrameProtocol() { 
 	}
@@ -126,7 +126,7 @@ public:
 	bool processWrite(boost::shared_ptr<BaseVirtualTransport> transport);
 
 	size_t readPayloadSize() {
-		return buffer_->readPos() - payload_pos_on_buffer_;
+		return buffer_->readPos() - payload_pos_;
 	}
 	virtual const void * remainingBufferPtr();
 	virtual size_t remainingBufferSize();
@@ -166,7 +166,6 @@ private:
 	State state_;
 	std::string payload_;
 	size_t payload_pos_;
-	size_t payload_pos_on_buffer_;
 	BaseProtocol *payload_protocol_;
 	boost::shared_ptr<BaseProtocol> payload_protocol_shared_ptr_;
 };

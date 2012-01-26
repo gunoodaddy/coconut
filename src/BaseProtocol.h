@@ -59,9 +59,15 @@ public:
 	virtual const void * remainingBufferPtr() {
 		return buffer_->currentPtr();
 	}
+
 	virtual size_t remainingBufferSize() {
 		return buffer_->remainingSize();
 	}
+
+	virtual bool isInvalidPacketReceived() {
+		return false;
+	}
+
 	size_t writingBufferSize() {
 		if(parent_protocol_ && parent_protocol_->isEnabledWriteBuffer()) {
 			return writebuffer_->totalSize() + parent_protocol_->writingBufferSize();
@@ -194,41 +200,6 @@ private:
 	int payload_pos_;
 	boost::int32_t listSize_;
 };
-
-
-/*
-class COCONUT_API JSONProtocol : public ProtocolDecorator {
-public:
-	JSONProtocol(BaseProtocol *protocol) {
-		parent_protocol_ = protocol;
-	}
-	JSONProtocol(boost::shared_ptr<BaseProtocol> protocol) {
-		parent_protocol_shared_ptr_ = protocol;
-	}
-
-	bool isReadComplete() {
-		return false;
-	}
-
-	bool processRead(boost::shared_ptr<BaseVirtualTransport> transport) {
-		if(parent_protocol_->processRead(transport) == false) 
-			return false;
-
-		// TODO	
-		return true;
-	}
-
-	bool processSerialize(size_t bufferSize = 0) {
-		// TODO
-
-		return parent_protocol_->processSerialize(writebuffer_->totalSize() + bufferSize);
-	}
-
-private:
-	std::string json_; // TODO
-};
-*/
-
 
 class COCONUT_API BaseProtocolFactory {
 public:

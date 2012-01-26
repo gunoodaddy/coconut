@@ -94,7 +94,7 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 						break; // need mode data..
 #endif
 					initHeader_ = header_;
-					payload_pos_on_buffer_ = buffer_->readPos();	// must use readPos() return value..
+					payload_pos_ = buffer_->readPos();	// must use readPos() return value..
 					state_ = Complete;
 					//printf("## parsing complete : remain %d length %d total %d bufremain %d initheaderlen %d pos %d readPaySize %d\n", remain, header_.length(), buffer_->totalSize(), buffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize());
 				}
@@ -178,8 +178,8 @@ const void * FrameProtocol::payloadPtr() {
 	if(payload_.size() > 0)
 		return payload_.c_str();
 	else if(isReadComplete()) {
-		if(payload_pos_on_buffer_ < payloadBuffer()->totalSize())
-			return (const char*)payloadBuffer()->basePtr() + payload_pos_on_buffer_;
+		if(payload_pos_ < payloadBuffer()->totalSize())
+			return (const char*)payloadBuffer()->basePtr() + payload_pos_;
 	}
 	return NULL;
 }
