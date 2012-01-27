@@ -65,7 +65,7 @@ namespace TestUDPAndLineProtocol {
 
 		virtual void onLineReceived(const char *line) {
 			LOG_INFO("TestUdpClientController LINE RECEIVED : [%s] port : %d\n", 
-					line, ntohs(udpSocket()->lastClientAddress()->sin_port));
+					line, ntohs(udpSocket()->peerAddress()->port()));
 
 			LOG_INFO("************ Test Success ************");
 			ioServiceContainer()->stop();	// test success
@@ -156,7 +156,7 @@ namespace TestHttpClientGet
 
 			HttpClient client(ioServiceContainer.ioServiceByRoundRobin());
 			client.setEventHandler(&controller);
-			client.request(coconut::HTTP_POST, uri.c_str(), NULL, 20);
+			client.request(coconut::HttpClient::HTTP_POST, uri.c_str(), NULL, 20);
 
 			ioServiceContainer.run();
 			return true;
