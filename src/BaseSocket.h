@@ -46,6 +46,7 @@
 #else
 #include <arpa/inet.h>
 #endif
+#include "BaseAddress.h"
 #include "ThreadUtil.h"
 
 namespace coconut {
@@ -134,6 +135,16 @@ public:
 
 	virtual void checkResponseSocket(int res) {
 		assert(0 && "BaseSocket::checkResponseSocket can not be called directly");
+	}
+
+	virtual const BaseAddress * peerAddress() {
+		assert(0 && "BaseSocket::peerAddress can not be called directly");
+		return NULL;
+	}
+
+	virtual const BaseAddress * sockAddress() {
+		assert(0 && "BaseSocket::sockAddress can not be called directly");
+		return NULL;
 	}
 
 public:
