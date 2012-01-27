@@ -169,8 +169,8 @@ public:
 		size = 0;
 		return NULL;
 	}
-	virtual void ackReadSize(size_t size) {
-		assert(0 && "BaseSocket::ackReadSize can not be called directly");
+	virtual void throwAway(size_t size) {
+		assert(0 && "BaseSocket::throwAway can not be called directly");
 	}
 public:
 	void fire_onSocket_Initialized();

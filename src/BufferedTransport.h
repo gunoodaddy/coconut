@@ -57,7 +57,7 @@ public:
 	int read(void *ptr, size_t size);
 	const void * peek(size_t &size);
 	int peek(char *buffer, size_t size);
-	void ackReadSize(size_t size);
+	void throwAway(size_t size);
 
 	boost::int32_t writeInt32(boost::int32_t value) {
 		boost::int32_t net;

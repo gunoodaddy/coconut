@@ -88,7 +88,7 @@ const void * BufferedTransport::peek(size_t &size) {
 	return currentPtr();
 }
 
-void BufferedTransport::ackReadSize(size_t size) {
+void BufferedTransport::throwAway(size_t size) {
 	fastforward(size);
 }
 

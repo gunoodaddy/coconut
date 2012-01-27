@@ -74,7 +74,7 @@ public:
 				if(nread <= 0)
 					break;
 				stream_->push(buffer, nread);
-				transport->ackReadSize(nread - remainStreamPos_);
+				transport->throwAway(nread - remainStreamPos_);
 
 				if(isReadComplete()) {
 					return true;
