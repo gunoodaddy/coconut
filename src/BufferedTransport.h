@@ -51,6 +51,7 @@ public:
 		return "BufferedTransport";
 	}
 	
+	int write(const char* ptr, size_t size);
 	int write(const void* ptr, size_t size);
 	int read(std::string &data, size_t size);
 	int read(void *ptr, size_t size);
@@ -59,20 +60,29 @@ public:
 	void ackReadSize(size_t size);
 
 	boost::int32_t writeInt32(boost::int32_t value) {
-		boost::int32_t net = (boost::int32_t)htonl(value);
+		boost::int32_t net;
+		if(_setLittleEndian_on) {
+			net = (boost::int32_t)value;
+		} else {
+			net = (boost::int32_t)htonl(value);
+		}
 		write((boost::int8_t*)&net, 4);
 		return 4;
 	}
 	
 	boost::int16_t writeInt16(boost::int16_t value) {
-		boost::int16_t net = (boost::int16_t)htonl(value);
+		boost::int16_t net;
+		if(_setLittleEndian_on) {
+			net = (boost::int16_t)value;
+		} else {
+			net = (boost::int16_t)htons(value);
+		}
 		write((boost::int8_t*)&net, 2);
 		return 2;
 	}
 	
 	boost::int8_t writeInt8(boost::int8_t value) {
-		boost::int8_t net = (boost::int8_t)htonl(value);
-		write((boost::int8_t*)&net, 1);
+		write((boost::int8_t*)&value, 1);
 		return 1;
 	}
 	
@@ -122,8 +132,12 @@ public:
 
 		if(read((void *)theBytes.b, 4) != 4)
 			throw ProtocolException("readInt32 failed..");
-		else
-			value = (boost::int32_t)ntohl(theBytes.all);
+		else {
+			if(_setLittleEndian_on)
+				value = (boost::int32_t)theBytes.all;
+			else
+				value = (boost::int32_t)ntohl(theBytes.all);
+		}
 		return 4;
 	}
 
@@ -135,7 +149,11 @@ public:
 
 		if(read((void *)theBytes.b, 4) != 4)
 			throw ProtocolException("readInt32 failed..");
-		return (boost::int32_t)ntohl(theBytes.all);
+		if(_setLittleEndian_on) {
+			return (boost::int32_t)theBytes.all;
+		} else {
+			return (boost::int32_t)ntohl(theBytes.all);
+		}
 	}
 
 	boost::int16_t readInt16(boost::int16_t &value) {
@@ -146,8 +164,12 @@ public:
 
 		if(read((void *)theBytes.b, 2) != 2)
 			throw ProtocolException("readInt16 failed..");
-		else
-			value = (boost::int16_t)ntohl(theBytes.all);
+		else {
+			if(_setLittleEndian_on)
+				value = (boost::int16_t)theBytes.all;
+			else
+				value = (boost::int16_t)ntohs(theBytes.all);
+		}
 		return 2;
 	}
 
@@ -159,7 +181,11 @@ public:
 
 		if(read((void *)theBytes.b, 2) != 2)
 			throw ProtocolException("readInt16 failed..");
-		return (boost::int16_t)ntohl(theBytes.all);
+		if(_setLittleEndian_on) {
+			return (boost::int16_t)theBytes.all;
+		} else {
+			return (boost::int16_t)ntohs(theBytes.all);
+		}
 	}
 
 	boost::int8_t readInt8(boost::int8_t &value) {

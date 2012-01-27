@@ -34,11 +34,15 @@
 
 namespace coconut { 
 BufferedTransport::BufferedTransport() : readPos_(0) { 
-	_LOG_TRACE("BufferedTransport : %p", this);
+	_LOG_TRACE("BufferedTransport() : %p", this);
 }
 
 BufferedTransport::~BufferedTransport() {
-	_LOG_TRACE("~BufferedTransport : %p", this);
+	_LOG_TRACE("~BufferedTransport() : %p", this);
+}
+
+int BufferedTransport::write(const char* ptr, size_t size) {
+	return write((const void *)ptr, size);
 }
 
 int BufferedTransport::write(const void* ptr, size_t size) {
