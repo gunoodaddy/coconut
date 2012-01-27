@@ -35,6 +35,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #endif
+#include "Coconut.h"
 #include "BaseVirtualTransport.h"
 #include "Exception.h"
 #if defined(WIN32)
@@ -49,20 +50,27 @@ class COCONUT_API VirtualTransportHelper {
 	// Writing helper method
 public:
 	static boost::int32_t writeInt32(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int32_t value) {
-		boost::int32_t net = (boost::int32_t)htonl(value);
+		boost::int32_t net;
+		if(_setLittleEndian_on)
+			net = (boost::int32_t)value;
+		else
+			net = (boost::int32_t)htonl(value);
 		buffer->write((boost::int8_t*)&net, 4);
 		return 4;
 	}
 	
 	static boost::int16_t writeInt16(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int16_t value) {
-		boost::int16_t net = (boost::int16_t)htonl(value);
+		boost::int16_t net;
+		if(_setLittleEndian_on)
+			net = (boost::int16_t)value;
+		else
+			net = (boost::int16_t)htons(value);
 		buffer->write((boost::int8_t*)&net, 2);
 		return 2;
 	}
 	
 	static boost::int8_t writeInt8(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int8_t value) {
-		boost::int8_t net = (boost::int8_t)htonl(value);
-		buffer->write((boost::int8_t*)&net, 1);
+		buffer->write((boost::int8_t*)&value, 1);
 		return 1;
 	}
 	
@@ -112,8 +120,12 @@ public:
 
 		if(buffer->read((void *)theBytes.b, 4) != 4)
 			throw ProtocolException("readInt32 failed..");
-		else
-			value = (boost::int32_t)ntohl(theBytes.all);
+		else {
+			if(_setLittleEndian_on)
+				value = theBytes.all;
+			else
+				value = (boost::int32_t)ntohl(theBytes.all);
+		}
 		return 4;
 	}
 
@@ -125,8 +137,12 @@ public:
 
 		if(buffer->read((void *)theBytes.b, 2) != 2)
 			throw ProtocolException("readInt16 failed..");
-		else
-			value = (boost::int16_t)ntohl(theBytes.all);
+		else {
+			if(_setLittleEndian_on)
+				value = theBytes.all;
+			else
+				value = (boost::int16_t)ntohs(theBytes.all);
+		}
 		return 2;
 	}
 
