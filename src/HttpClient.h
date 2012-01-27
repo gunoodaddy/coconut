@@ -94,6 +94,11 @@ private:
 
 class COCONUT_API HttpClient {
 public:
+	enum HttpMethodType {
+		HTTP_POST,
+		HTTP_GET
+	};
+
 	HttpClient(boost::shared_ptr<IOService> ioService);
 
 	HttpClient(boost::shared_ptr<IOService> ioService, 
