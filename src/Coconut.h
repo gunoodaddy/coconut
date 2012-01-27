@@ -83,6 +83,7 @@ namespace coconut {
 typedef std::vector<std::string> stringlist_t;
 
 extern bool _setEnableDebugMode_on;
+extern bool _setLittleEndian_on;
 
 enum ThreadPriority {
 	LOWEST = 0,
@@ -94,10 +95,12 @@ enum ThreadPriority {
 	HIGHEST = 6
 };
 
+/*
 enum HttpMethodType {
 	HTTP_POST,
 	HTTP_GET
 };
+*/
 
 enum SocketType{
 	TCP,
@@ -106,5 +109,6 @@ enum SocketType{
 
 COCONUT_API void setEnableDebugMode();
 COCONUT_API bool enableDebugMode();
+COCONUT_API void setUseLittleEndianForNetwork(bool littenEndian /* default is falese */);
 
 } // end of namespace coconut

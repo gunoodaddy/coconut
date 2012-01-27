@@ -36,6 +36,7 @@ namespace coconut {
 
 bool _setEnableDebugMode_on = false;
 bool _activateMultithreadMode_on = false;
+bool _setLittleEndian_on = false;
 
 COCONUT_API bool enableDebugMode() {
 	return _setEnableDebugMode_on;
@@ -72,6 +73,10 @@ void activateMultithreadMode() {
 #endif
 	
 	_activateMultithreadMode_on = true;
+}
+
+void setUseLittleEndianForNetwork(bool littenEndian /* default is falese */) {
+	_setLittleEndian_on = littenEndian;
 }
 
 }
