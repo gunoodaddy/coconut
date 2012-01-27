@@ -36,7 +36,7 @@ using namespace coconut::protocol;
 namespace coconut {
 	
 void FrameController::writeFrame(const protocol::FrameHeader &header, boost::shared_ptr<BufferedTransport> buffer) {
-	writeFrame(header, buffer->currentPtr(), buffer->totalSize());
+	writeFrame(header, buffer->currentPtr(), buffer->remainingSize());
 }
 
 /*
