@@ -57,6 +57,9 @@ public:
 	void checkResponseSocket(int res);
 	void install();
 
+	virtual const BaseAddress * peerAddress();
+	virtual const BaseAddress * sockAddress();
+
 private:
 	TcpSocketImpl *impl_;
 };

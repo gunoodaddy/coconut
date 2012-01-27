@@ -35,6 +35,7 @@
 #include "Timer.h"
 #include "Exception.h"
 #include "InternalLogger.h"
+#include "IPv4Address.h"
 #include <string>
 #include <event2/dns.h>
 #include <event2/buffer.h>
@@ -427,6 +428,9 @@ public:
 		ScopedIOServiceLock(owner_->ioService());
 
 		int ret = -1;
+		if(size <= 0)
+			return 0;
+
 		if(BaseSocket::Connected != owner_->state()) {
 			if(pendingWriteSupported_) {
 #if defined(_KBUFFER_)
@@ -439,7 +443,7 @@ public:
 				}
 #endif
 			} else {
-				return -1;
+				return 0;
 			}
 		}
 
@@ -464,6 +468,24 @@ public:
 		}
 
 		return ret;
+	}
+
+	const BaseAddress * peerAddress() {
+		// TODO : if unix domain socket ??
+		struct sockaddr_in sin;
+		socklen_t sa_len = sizeof(sin);
+		getpeername(socketFD(), (struct sockaddr *)&sin, &sa_len);
+		peerAddress_.setSocketAddress(&sin);
+		return &peerAddress_;
+	}
+
+	const BaseAddress * sockAddress() {
+		// TODO : if unix domain socket ??
+		struct sockaddr_in sin;
+		socklen_t sa_len = sizeof(sin);
+		getsockname(socketFD(), (struct sockaddr *)&sin, &sa_len);
+		sockAddress_.setSocketAddress(&sin);
+		return &sockAddress_;
 	}
 
 	void close() {
@@ -638,6 +660,9 @@ private:
 	kbuffer *write_kbuffer_;
 	struct evdns_base *dnsbase_;
 	Timer *conn_timer_;
+
+	IPv4Address peerAddress_;
+	IPv4Address sockAddress_;
 };
 
 
@@ -697,6 +722,14 @@ int TcpSocket::writeString(const std::string &data) {
 
 void TcpSocket::close() {
 	return impl_->close();
+}
+
+const BaseAddress * TcpSocket::peerAddress() {
+	return impl_->peerAddress();
+}
+
+const BaseAddress * TcpSocket::sockAddress() {
+	return impl_->sockAddress();
 }
 
 }

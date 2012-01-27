@@ -60,7 +60,8 @@ public:
 	int writeTo(const void *data, size_t size, const char *host, int port);
 	int write(const void *data, size_t size);
 
-	const struct sockaddr_in * lastClientAddress();
+	virtual const BaseAddress * peerAddress();
+	virtual const BaseAddress * sockAddress();
 
 private:
 	UdpSocketImpl *impl_;

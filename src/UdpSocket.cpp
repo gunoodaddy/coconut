@@ -31,6 +31,7 @@
 #include "UdpSocket.h"
 #include "IOService.h"
 #include "Exception.h"
+#include "IPv4Address.h"
 #include <errno.h>
 #if defined(WIN32)
 #include <ws2tcpip.h>
@@ -145,6 +146,16 @@ public:
 		}
 	}
 
+	const BaseAddress * peerAddress() {
+		peerAddress_.setSocketAddress(&lastclient_sin_);
+		return &peerAddress_;
+	}
+
+	const BaseAddress * sockAddress() {
+		sockAddress_.setSocketAddress(&sin_);
+		return &sockAddress_;
+	}
+
 	void checkResponseSocket(int res) {
 		if (res == -1) {
 			int err = evutil_socket_geterror(socketFD());
@@ -241,10 +252,6 @@ public:
 		owner_->eventHandler()->onSocket_ReadFrom(data, size, sin);
 	}
 
-	const struct sockaddr_in * lastClientAddress() {
-		return &lastclient_sin_;
-	}
-
 private:
 	UdpSocket *owner_;
 	struct event *ev_;
@@ -252,6 +259,10 @@ private:
 	struct sockaddr_in lastclient_sin_;
 	DNSResolver *dnsReolver_;
 	struct sockaddr_in sin_;
+	std::string currentIP_;
+
+	IPv4Address peerAddress_;
+	IPv4Address sockAddress_;
 };
 
 //-------------------------------------------------------------------------------------------------
@@ -296,8 +307,12 @@ int UdpSocket::write(const void *data, size_t size) {
 	return impl_->write(data, size);
 }
 
-const struct sockaddr_in * UdpSocket::lastClientAddress() {
-	return impl_->lastClientAddress();
+const BaseAddress * UdpSocket::peerAddress() {
+	return impl_->peerAddress();
+}
+
+const BaseAddress * UdpSocket::sockAddress() {
+	return impl_->sockAddress();
 }
 
 }
