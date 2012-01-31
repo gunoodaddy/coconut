@@ -34,6 +34,30 @@
 
 namespace coconut { namespace protocol {
 
+bool BaseProtocol::processWriteFromReadBuffer(boost::shared_ptr<BaseVirtualTransport> transport) {
+
+	if(parent_protocol_) {
+		if(false == parent_protocol_->processWriteFromReadBuffer(transport))
+			return false;
+	} else if(parent_protocol_shared_ptr_) {
+		if(false == parent_protocol_shared_ptr_->processWriteFromReadBuffer(transport))
+			return false;
+	}
+
+	_LOG_TRACE("BaseProtocol::processWrite %d %s : %d\n", turnOnWrite_, className(), readBuffer_->remainingSize());
+
+	if(turnOnWrite_ && readBuffer_->remainingSize() > 0) {
+		boost::int32_t pos = transport->write(readBuffer_->currentPtr(), readBuffer_->remainingSize());
+		if(pos != (int)readBuffer_->remainingSize()) {
+			throw ProtocolException("processWrite not write all buffer to transport");
+		} else {
+			readBuffer_->fastforward(pos);
+		}
+	}
+	return true;
+}
+
+
 bool BaseProtocol::processWrite(boost::shared_ptr<BaseVirtualTransport> transport) {
 
 	if(parent_protocol_) {
@@ -64,7 +88,7 @@ boost::shared_ptr<BufferedTransport> BaseProtocol::payloadBuffer() {
 	} else if(parent_protocol_shared_ptr_) {
 		payload = parent_protocol_shared_ptr_->payloadBuffer();
 	} else {
-		payload = buffer_;
+		payload = readBuffer_;
 	}
 	return payload;
 }
