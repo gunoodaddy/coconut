@@ -880,13 +880,15 @@ namespace TestRedisRequest {
 				arg.assign((char *)&data, sizeof(data));
 
 				std::vector<std::string> args;
+				args.push_back("SET");
 				args.push_back(userId);
 				args.push_back(arg);
-				gRedisCtrl_->command("SET", args, 
-											boost::bind(&TestClientController::onRedisRequest_Response, 
-												this, 
-												coconut::placeholders::redisResponse)
-										);
+				gRedisCtrl_->command(args, 
+										boost::bind(&TestClientController::onRedisRequest_Response, 
+											this, 
+											coconut::placeholders::requestContext,
+											coconut::placeholders::redisResponse)
+									);
 				expactedRecvSetCommand_ = true;
 			}
 
@@ -895,18 +897,22 @@ namespace TestRedisRequest {
 				sprintf(userId, "userid_num%d@naver.com", recvedCnt_);
 
 				std::vector<std::string> args;
+				args.push_back("GET");
 				args.push_back(userId);
 
-				gRedisCtrl_->command("GET", args, 
-											boost::bind(&TestClientController::onRedisRequest_Response, 
-												this, 
-												coconut::placeholders::redisResponse)
-										);
+				gRedisCtrl_->command(args, 
+										boost::bind(&TestClientController::onRedisRequest_Response, 
+											this, 
+											coconut::placeholders::requestContext,
+											coconut::placeholders::redisResponse)
+									);
 	
 				expactedRecvSetCommand_ = false;
 			}
 
-			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
+			virtual void onRedisRequest_Response(
+								const struct RedisRequest::requestContext *context, 
+								boost::shared_ptr<RedisResponse> response) { 
 				LOG_DEBUG("onRedisRequest_Response emitted.. ticket %d, data %s, recvCnt %d\n", 
 					response->ticket(), response->resultData()->strValue.c_str(), recvedCnt_);
 
@@ -1154,11 +1160,13 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 						sprintf(value, "127.0.0.1:8000, dummyid=%s", lprot.linePtr());// dummy location routing string.. (:
 
 						std::vector<std::string> args;
+						args.push_back("SET");
 						args.push_back(lprot.linePtr());
 						args.push_back(value);
-						ticketLogin_ = redisRequest_->command("SET", args, 
+						ticketLogin_ = redisRequest_->command(args, 
 													boost::bind(&TestServerClientController::onRedisRequest_Response, 
 														this, 
+														coconut::placeholders::requestContext,
 														coconut::placeholders::redisResponse)
 												);
 						break;
@@ -1178,11 +1186,13 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
 							for(size_t i = 0; i < slprot.listSize(); i++) {
 								std::vector<std::string> args;
+								args.push_back("GET");
 								args.push_back(slprot.stringOf(i));
 
-								redisRequest_->command("GET", args, 
+								redisRequest_->command(args, 
 													boost::bind(&TestServerClientController::onRedisRequest_Response, 
 														this, 
+														coconut::placeholders::requestContext,
 														coconut::placeholders::redisResponse)
 												);
 							}
@@ -1196,7 +1206,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				}
 			}
 
-			virtual void onRedisRequest_Response(boost::shared_ptr<RedisResponse> response) { 
+			virtual void onRedisRequest_Response(
+								const struct RedisRequest::requestContext *context, 
+								boost::shared_ptr<RedisResponse> response) { 
 				LOG_DEBUG("[SERVER] REDIS RESULT : %s, ticket %d, %d, loginUser : %d\n", 
 						response->resultData()->strValue.c_str(), response->ticket(), ticketLogin_, loginOKCnt_);
 
