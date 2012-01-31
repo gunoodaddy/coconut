@@ -267,6 +267,7 @@ public:
 	size_t totalSize();
 	size_t remainingSize();
 	size_t readPos();
+	void setReadPos(size_t pos);
 
 	const void * basePtr();
 	const void * currentPtr();

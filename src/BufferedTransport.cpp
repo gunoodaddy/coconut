@@ -112,6 +112,14 @@ size_t BufferedTransport::readPos() {
 	return readPos_;
 }
 
+void BufferedTransport::setReadPos(size_t pos) {
+	ScopedMutexLock(lock_);
+	if(pos >= totalSize())
+		throw ProtocolException("readpos less than 0 by rewind");
+
+	readPos_ = pos;
+}
+
 void BufferedTransport::clear() {
 	ScopedMutexLock(lock_);
 	readPos_ = 0;
@@ -122,7 +130,7 @@ void BufferedTransport::rewind(size_t size) {
 	ScopedMutexLock(lock_);
 	int temp = readPos_ - size;
 	if(temp < 0) {
-		throw Exception("readpos less than 0 by rewind");
+		throw ProtocolException("readpos less than 0 by rewind");
 	}
 	readPos_ = temp;
 }
