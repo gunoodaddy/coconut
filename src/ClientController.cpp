@@ -85,8 +85,13 @@ void ClientController::onSocket_Error(int error, const char*strerror) {
 	eventClosedConnection()->fireObservers(shared_from_this(), error);
 }
 
-void ClientController::onSocket_Close() {
+void ClientController::fire_onClosed() {
 	onClosed();
+}
+
+void ClientController::onSocket_Close() {
+
+	ioService()->deferredCall(boost::bind(&ClientController::fire_onClosed, this));
 
 	processReconnect();
 
