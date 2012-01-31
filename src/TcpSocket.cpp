@@ -357,7 +357,7 @@ public:
 		if(buffer_len < size)
 			size = buffer_len;
 		const void *pulled_data = evbuffer_pullup(buffer, size);
-		logger::hexdump((const unsigned char*)pulled_data, buffer_len, stdout);
+		//logger::hexdump((const unsigned char*)pulled_data, buffer_len, stdout);
 		return pulled_data;
 	}
 
