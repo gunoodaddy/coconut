@@ -69,6 +69,9 @@ public:
 private:
 	void processDelayedRemoveClientFromSet();
 
+private:	// deferred call
+	void onDelayedClientRemove(boost::shared_ptr<BaseController> client);
+
 private:
 	void onConnectionListener_Accept(coconut_socket_t newSocket);
 	void onConnectionListener_Error(int error);

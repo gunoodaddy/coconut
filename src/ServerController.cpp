@@ -47,18 +47,43 @@ BaseIOServiceContainer *ServerController::ioServiceContainer() {
 	return connListener_->ioService()->ioServiceContainer();
 }
 
+// need thread-safe
+void ServerController::onDelayedClientRemove(boost::shared_ptr<BaseController> client) {
+	lockClients_.lock();
+	clientset_t::iterator it = clients_.find(client);
+	if(it != clients_.end()) {
+		_LOG_DEBUG("remove delaying client from set <DEFERRED-FINAL> : %p\n", (*it).get());
+		boost::shared_ptr<IOService> ioservice = client->ioService();
+		assert(ioservice->isCalledInMountedThread() && "NOT CALLED ON CLIENT'S THREAD");
+
+		clients_.erase(it);
+	}
+	lockClients_.unlock();
+}
+
 void ServerController::processDelayedRemoveClientFromSet() {
+	lockClients_.lock();
 	clientset_t::iterator it = delay_remove_clients_set_.begin();
 	for(; it != delay_remove_clients_set_.end(); it++) {
 
 		clientset_t::iterator itReal = clients_.find(*it);
 		if(itReal != clients_.end()) {
-			clients_.erase(itReal);
-			_LOG_DEBUG("remove delaying client from set\n");
+			boost::shared_ptr<BaseController> client = (*itReal);
+			boost::shared_ptr<IOService> ioservice = (*itReal)->ioService();
+			if(ioservice->isCalledInMountedThread()) {
+				_LOG_DEBUG("remove delaying client from set <DIRECTLY> : %p\n", client.get());
+				clients_.erase(itReal);
+			} else {
+				_LOG_DEBUG("remove delaying client from set <DEFERRED-QUEUE> : %p\n", client.get());
+				lockClients_.unlock();
+				ioservice->deferredCall(boost::bind(&ServerController::onDelayedClientRemove, this, client));				
+				lockClients_.lock();
+			}
 		}
 	}
 
 	delay_remove_clients_set_.clear();
+	lockClients_.unlock();
 }
 
 void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
