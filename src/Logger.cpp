@@ -50,9 +50,6 @@ void hexdump(const unsigned char *data, const int len, FILE * fp) {
 	const unsigned char *p;
 	int i, k;
 	
-	if(_setEnableDebugMode_on == false)
-		return;
-
 	if (len == 0)
 		return;
 
