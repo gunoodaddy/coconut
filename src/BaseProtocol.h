@@ -44,7 +44,7 @@ namespace coconut { namespace protocol {
 class COCONUT_API BaseProtocol {
 public:
 	BaseProtocol() : parent_protocol_(NULL), turnOnWrite_(true) {
-		buffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
+		readBuffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
 		writebuffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
 	}
 	virtual ~BaseProtocol() { 
@@ -54,14 +54,15 @@ public:
 	virtual bool isReadComplete() = 0;
 	virtual bool processRead(boost::shared_ptr<BaseVirtualTransport> transport) = 0;
 	virtual bool processWrite(boost::shared_ptr<BaseVirtualTransport> transport);
+	virtual bool processWriteFromReadBuffer(boost::shared_ptr<BaseVirtualTransport> transport);
 	virtual bool processSerialize(size_t bufferSize = 0) = 0;
 
 	virtual const void * remainingBufferPtr() {
-		return buffer_->currentPtr();
+		return readBuffer_->currentPtr();
 	}
 
 	virtual size_t remainingBufferSize() {
-		return buffer_->remainingSize();
+		return readBuffer_->remainingSize();
 	}
 
 	virtual bool isInvalidPacketReceived() {
@@ -97,7 +98,7 @@ public:
 	}
 
 	bool processReadFromReadingBuffer() {
-		return processRead(buffer_);
+		return processRead(readBuffer_);
 	}
 
 	bool processReadFromPayloadBuffer() {
@@ -105,7 +106,7 @@ public:
 	}
 
 	void addToReadingBuffer(const void *data, size_t size) {
-		buffer_->write(data, size);
+		readBuffer_->write(data, size);
 	}
 
 	boost::shared_ptr<BufferedTransport> payloadBuffer();	// or readBuffer()
@@ -115,7 +116,7 @@ public:
 
 	void resetReadingBufferToRemainingBuffer();
 	void resetBuffer() {
-		buffer_->clear();
+		readBuffer_->clear();
 		resetWritingBuffer();
 	}
 	void resetWritingBuffer() {
@@ -139,7 +140,7 @@ public:
 	}
 
 protected:
-	boost::shared_ptr<BufferedTransport> buffer_;
+	boost::shared_ptr<BufferedTransport> readBuffer_;
 	boost::shared_ptr<BufferedTransport> writebuffer_;
 	BaseProtocol *parent_protocol_;
 	boost::shared_ptr<BaseProtocol> parent_protocol_shared_ptr_;
