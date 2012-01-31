@@ -36,7 +36,7 @@
 namespace coconut {
 
 class COCONUT_API FrameController : public ClientController {
-private:
+public:
 	class FrameProtocolFactory : public protocol::BaseProtocolFactory {
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
@@ -44,6 +44,7 @@ private:
 			return prot;
 		}
 	};
+private:
 	void _onPreInitialized() {
 		boost::shared_ptr<FrameProtocolFactory> factory(new FrameProtocolFactory);
 		setProtocolFactory(factory);

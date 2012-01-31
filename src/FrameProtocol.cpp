@@ -72,31 +72,31 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 				{
 //#define PROTOCOL_READ_FROM_SOCKET
 #ifdef PROTOCOL_READ_FROM_SOCKET
-					int remain = header_.length() - payload_pos_ - buffer_->totalSize();
+					int remain = header_.length() - payload_pos_ - readBuffer_->totalSize();
 					if(remain > 0) {
 						// if remain > 0, it means that you need to read from socket..
-						// and [buffer_] store only "payload" data..
+						// and [readBuffer_] store only "payload" data..
 						// therefore [transport] variable must be "BaseSocket" class instance for read from socket..
 						// if remain < 0, already you read all bytes for parsing packet..
 						// thease options are decided in ClientController::onSocket_ReadEvent
 						assert(strcmp(transport->className(),  "BaseSocket") == 0);
 						char tempBuf[IOBUF_LEN];
 						int nread = transport->read((void *)tempBuf, remain);
-						//printf("%d %d %d %d %d\n", remain, nread,  header_.length() , payload_pos_ , buffer_->totalSize());
+						//printf("%d %d %d %d %d\n", remain, nread,  header_.length() , payload_pos_ , readBuffer_->totalSize());
 						if(nread > 0)
-							buffer_->write(tempBuf, nread);
-						if(buffer_->totalSize() < header_.length() - payload_pos_)
+							readBuffer_->write(tempBuf, nread);
+						if(readBuffer_->totalSize() < header_.length() - payload_pos_)
 							break; // need more data..
 					}
 #else
-					int remain = header_.length() - buffer_->totalSize();
+					int remain = header_.length() - readBuffer_->totalSize();
 					if(remain > 0)
 						break; // need mode data..
 #endif
 					initHeader_ = header_;
-					payload_pos_ = buffer_->readPos();	// must use readPos() return value..
+					payload_pos_ = readBuffer_->readPos();	// must use readPos() return value..
 					state_ = Complete;
-					//printf("## parsing complete : remain %d length %d total %d bufremain %d initheaderlen %d pos %d readPaySize %d\n", remain, header_.length(), buffer_->totalSize(), buffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize());
+					//printf("## parsing complete : remain %d length %d total %d bufremain %d initheaderlen %d pos %d readPaySize %d\n", remain, header_.length(), readBuffer_->totalSize(), readBuffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize());
 				}
 			case Complete:
 				return true;
@@ -159,15 +159,15 @@ bool FrameProtocol::processSerialize(size_t bufferSize) {
 
 const void * FrameProtocol::remainingBufferPtr() {
 	if(isReadComplete())
-		return (const char*)buffer_->currentPtr() + (initHeader_.length() - payload_pos_ - readPayloadSize());
+		return (const char*)readBuffer_->currentPtr() + (initHeader_.length() - payload_pos_ - readPayloadSize());
 	return BaseProtocol::remainingBufferPtr();
 }
 
 
 size_t FrameProtocol::remainingBufferSize() {
 	if(isReadComplete()) {
-		//printf("===========> FrameProtocol::remainingBufferSize : %d %d %d %d %d\n", buffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize(), buffer_->remainingSize() - (initHeader_.length() - payload_pos_ - readPayloadSize()));
-		return buffer_->remainingSize() - (initHeader_.length() - payload_pos_ - readPayloadSize());
+		//printf("===========> FrameProtocol::remainingBufferSize : %d %d %d %d %d\n", readBuffer_->remainingSize(), initHeader_.length(), payload_pos_, readPayloadSize(), readBuffer_->remainingSize() - (initHeader_.length() - payload_pos_ - readPayloadSize()));
+		return readBuffer_->remainingSize() - (initHeader_.length() - payload_pos_ - readPayloadSize());
 	}
 	return BaseProtocol::remainingBufferSize();
 }

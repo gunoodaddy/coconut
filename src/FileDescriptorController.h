@@ -36,7 +36,7 @@
 namespace coconut {
 
 class COCONUT_API FileDescriptorController : public ClientController { 
-private:
+public:
 	class COCONUT_API FDProtocolFactory : public protocol::BaseProtocolFactory {
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
@@ -44,6 +44,7 @@ private:
 			return protocol;
 		}
 	};
+private:
 	void _onPreInitialized() {
 		boost::shared_ptr<FDProtocolFactory> factory(new FDProtocolFactory);
 		setProtocolFactory(factory);

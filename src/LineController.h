@@ -36,7 +36,7 @@
 namespace coconut {
 
 class COCONUT_API LineController : public ClientController {
-private:
+public:
 	class LineProtocolFactory : public protocol::BaseProtocolFactory {
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
@@ -44,6 +44,8 @@ private:
 			return line;
 		}
 	};
+
+private:
 	void _onPreInitialized() {
 		boost::shared_ptr<LineProtocolFactory> factory(new LineProtocolFactory);
 		setProtocolFactory(factory);

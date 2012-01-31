@@ -36,7 +36,7 @@
 namespace coconut {
 
 class COCONUT_API JSONController : public ClientController {
-private:
+public:
 	class JSONProtocolFactory : public protocol::BaseProtocolFactory {
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
@@ -44,6 +44,7 @@ private:
 			return json;
 		}
 	};
+private:
 	void _onPreInitialized() {
 		boost::shared_ptr<JSONProtocolFactory> factory(new JSONProtocolFactory);
 		setProtocolFactory(factory);

@@ -126,7 +126,7 @@ public:
 	bool processWrite(boost::shared_ptr<BaseVirtualTransport> transport);
 
 	size_t readPayloadSize() {
-		return buffer_->readPos() - payload_pos_;
+		return readBuffer_->readPos() - payload_pos_;
 	}
 	virtual const void * remainingBufferPtr();
 	virtual size_t remainingBufferSize();
