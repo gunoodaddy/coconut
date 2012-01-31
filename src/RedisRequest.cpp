@@ -60,11 +60,15 @@ public:
 		, port_(port)
 		, closing_(false)
 		, connected_(false)
-		, deferredCaller_(ioService) { }
+		, deferredCaller_(ioService) { 
+		_LOG_TRACE("RedisRequestImpl() : %p", this);
+	}
+	
 
 	~RedisRequestImpl() {
 		// TODO redis gracefully close test need..
 		close(false);
+		_LOG_TRACE("~RedisRequestImpl() : %p", this);
 	}
 
 	static boost::uint32_t issueTicket() {
@@ -109,22 +113,62 @@ public:
 		_LOG_DEBUG("redis connect start : %s:%d", host_.c_str(), port_);
 	}
 
-	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
+	ticket_t _commandPrepare(const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
 		ticket_t ticket = issueTicket();
 
 		// for preventing from multithread race condition, must insert to map here..
+		struct RedisRequest::requestContext context;
+		context.args = args;
+		context.ticket = ticket;
+		context.handler = handler;
+
 		lockRedis_.lock();
-		mapCallback_.insert(MapCallback_t::value_type(ticket, handler));
+		mapCallback_.insert(MapCallback_t::value_type(ticket, context));
 		lockRedis_.unlock();
+		return ticket;
+	}
+
+	ticket_t command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler) {
+
+		int cnt = 0;
+		size_t pos = 0;
+		size_t pos2 = 0;
+		std::string str;
+		std::vector<std::string> tempArgs;
+
+		tempArgs.push_back(cmd);
+
+		do {
+			pos2 = args.find(" ", pos);
+			str = args.substr(pos, (pos2 - pos));
+
+#define TRIM_SPACE " \t\r\n\v"
+			str.erase(str.find_last_not_of(TRIM_SPACE)+1);
+			str.erase(0,str.find_first_not_of(TRIM_SPACE));
+
+			if(!str.empty()) {
+				tempArgs.push_back(str);
+			}
+			pos = args.find_first_not_of(" ", pos2);
+			if(pos == std::string::npos)
+				break;
+			cnt++;
+		} while(true);
+
+		return command(tempArgs, handler);
+	}
+
+	ticket_t command(const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
+		ticket_t ticket = _commandPrepare(args, handler);
 
 		if(ioService_->isCalledInMountedThread() == false) {
-			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::_command, this, ticket, cmd, args));
+			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::_command, this, ticket, args));
 			return ticket;
 		}
 
 		// must lock here (or deadlock may occur by DeferredCaller's mutex..)
 		lockRedis_.lock();
-		_command(ticket, cmd, args);
+		_command(ticket, args);
 		lockRedis_.unlock();
 		return ticket;
 	}
@@ -138,39 +182,8 @@ public:
 	}
 
 private:
-	void _command(ticket_t ticket, const std::string &cmd, const std::vector<std::string> &args) {
-		ScopedMutexLock(lockRedis_);
-
-		if(!connected_) {
-			reservedCommands_.push_back(boost::bind(&RedisRequestImpl::_command, this, ticket, cmd, args));
-			return;
-		}
-
-		_LOG_DEBUG("redis request start : cmd = %s, argsize = %d", cmd.c_str(), args.size());
-
-		int ret = 0;
-		if(args.size() == 1) {
-			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b", cmd.c_str(), 
-					args[0].c_str(), args[0].size());
-		} else if(args.size() == 2) {
-			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b %b", cmd.c_str(), 
-					args[0].c_str(), args[0].size(),
-					args[1].c_str(), args[1].size());
-		} else if(args.size() == 3) {
-			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b %b %b", cmd.c_str(), 
-					args[0].c_str(), args[0].size(),
-					args[1].c_str(), args[1].size(),
-					args[2].c_str(), args[2].size());
-		} else if(args.size() == 4) {
-			ret = redisAsyncCommand(redisContext_, getCallback, (void *)ticket, "%s %b %b %b %b", cmd.c_str(), 
-					args[0].c_str(), args[0].size(),
-					args[1].c_str(), args[1].size(),
-					args[2].c_str(), args[2].size(),
-					args[3].c_str(), args[3].size());
-		} else {
-			cancel(ticket);
-			throw RedisException(ret, "Redis invalid argument count");
-		}
+	void _doCommand(ticket_t ticket, int argc, const char **argv, const size_t *argvlen) {
+		int ret = redisAsyncCommandArgv(redisContext_, getCallback, (void *)ticket, argc, argv, argvlen);
 
 		if(ret != REDIS_OK) {
 			cancel(ticket);
@@ -178,10 +191,28 @@ private:
 		}
 	}
 
-	RedisRequest::ResponseHandler _findEventHandler(ticket_t ticket) {
+	void _command(ticket_t ticket, const std::vector<std::string> &args) {
+		ScopedMutexLock(lockRedis_);
+
+		if(!connected_) {
+			reservedCommands_.push_back(boost::bind(&RedisRequestImpl::_command, this, ticket, args));
+			return;
+		}
+
+		_LOG_DEBUG("redis request start : cmd = %s, argsize = %d", args[0].c_str(), args.size());
+
+		std::vector<size_t> tempArgLens;
+		for(size_t i = 0; i < args.size(); i++) {
+			tempArgLens.push_back(args[i].size());
+		}
+		
+		_doCommand(ticket, args.size(), (const char **)&args[0], (const size_t *)&tempArgLens[0]);
+	}
+
+	const struct RedisRequest::requestContext * _findRequestContext(ticket_t ticket) {
 		MapCallback_t::iterator it = mapCallback_.find(ticket);
 		if(it != mapCallback_.end()) {
-			return it->second;
+			return &it->second;
 		}
 		return NULL;
 	}
@@ -216,10 +247,10 @@ private:
 		std::string str;
 		str.assign(reply->str, reply->len);
 		boost::shared_ptr<RedisResponse> res(new RedisResponse(reply, ticket));
-		RedisRequest::ResponseHandler handler = _findEventHandler(ticket);
+		const struct RedisRequest::requestContext *context = _findRequestContext(ticket);
 
-		if(handler) {
-			handler(res);
+		if(context) {
+			context->handler(context, res);
 		}
 	}
 
@@ -264,7 +295,7 @@ private:
 	Mutex lockRedis_;
 	volatile bool closing_;
 	volatile bool connected_;
-	typedef std::map<ticket_t, RedisRequest::ResponseHandler> MapCallback_t;
+	typedef std::map<ticket_t, struct RedisRequest::requestContext> MapCallback_t;
 	MapCallback_t mapCallback_;
 	
 	// thread sync call method
@@ -276,9 +307,11 @@ private:
 
 RedisRequest::RedisRequest(boost::shared_ptr<IOService> ioService, const char *host, int port/*, int timeout*/)  {
 	impl_ = new RedisRequestImpl(this, ioService, host, port);
+	_LOG_TRACE("RedisRequest() : %p", this);
 }
 
 RedisRequest::~RedisRequest() {
+	_LOG_TRACE("~RedisRequest() : %p", this);
 	delete impl_;
 }
 
@@ -298,43 +331,12 @@ void RedisRequest::cancel(ticket_t ticket) {
 	impl_->cancel(ticket);
 }
 
-ticket_t RedisRequest::command(const std::string &cmds, ResponseHandler handler) {
-	int cnt = 0;
-	size_t pos = 0;
-	size_t pos2 = 0;
-	std::string cmd;
-	std::string str;
-	std::vector<std::string> args;
-
-	do {
-		pos2 = cmds.find(" ", pos);
-		str = cmds.substr(pos, (pos2 - pos));
-
-#define TRIM_SPACE " \t\r\n\v"
-		str.erase(str.find_last_not_of(TRIM_SPACE)+1);
-		str.erase(0,str.find_first_not_of(TRIM_SPACE));
-
-		if(!str.empty()) {
-
-			if(cnt == 0) {
-				cmd = str;
-			} else {
-				args.push_back(str);
-			}
-		}
-		pos = cmds.find_first_not_of(" ", pos2);
-		if(pos == std::string::npos)
-			break;
-		cnt++;
-	} while(true);
-
-	_LOG_DEBUG("redis command %s split to [%s], argument size = %d\n", cmds.c_str(), cmd.c_str(), args.size());
-
-	return command(cmd, args, handler);
+ticket_t RedisRequest::command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler) {
+	return impl_->command(cmd, args, handler);
 }
 
-ticket_t RedisRequest::command(const std::string &cmd, const std::vector<std::string> &args, ResponseHandler handler) {
-	return impl_->command(cmd, args, handler);
+ticket_t RedisRequest::command(const std::vector<std::string> &args, ResponseHandler handler) {
+	return impl_->command(args, handler);
 }
 
 }

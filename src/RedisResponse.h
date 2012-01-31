@@ -56,6 +56,7 @@ public:
 	const char* resultErrorMsg() const;
 	const RedisReplyData * resultData() const;
 	const RedisReplyData * resultDataOf(size_t index) const;
+	size_t resultDataCount() const;
 	ticket_t ticket() const;
 
 private:

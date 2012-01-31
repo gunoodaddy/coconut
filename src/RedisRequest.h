@@ -41,7 +41,15 @@ public:
 	RedisRequest(boost::shared_ptr<IOService> ioService, const char *host, int port/*, int timeout*/);
 	~RedisRequest();
 
-	typedef boost::function< void (boost::shared_ptr<RedisResponse>) > ResponseHandler;
+	struct requestContext;
+	typedef boost::function< void (const struct requestContext *, boost::shared_ptr<RedisResponse>) > ResponseHandler;
+
+	struct requestContext {
+		ticket_t ticket;
+		std::string command;
+		std::vector<std::string> args;
+		ResponseHandler handler;
+	};
 
 public:
 	boost::shared_ptr<IOService> ioService();
@@ -49,8 +57,8 @@ public:
 	void connect();
 	void close(bool callback = true);
 
-	ticket_t command(const std::string &cmd, ResponseHandler handler);
-	ticket_t command(const std::string &cmd, const std::vector<std::string> &args, ResponseHandler handler);
+	ticket_t command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler);
+	ticket_t command(const std::vector<std::string> &args, ResponseHandler handler);
 	void cancel(ticket_t ticket);
 
 private:

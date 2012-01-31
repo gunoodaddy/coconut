@@ -82,6 +82,10 @@ public:
 		return err_;
 	}
 
+	size_t resultDataCount() const {
+		return results_.size();
+	}
+
 	const char* resultErrorMsg() const {
 		return errmsg_.c_str();
 	}
@@ -138,6 +142,10 @@ const RedisResponse::RedisReplyData* RedisResponse::resultData() const {
 
 const RedisResponse::RedisReplyData* RedisResponse::resultDataOf(size_t index) const {
 	return impl_->resultDataOf(index);
+}
+
+size_t RedisResponse::resultDataCount() const {
+	return impl_->resultDataCount();
 }
 
 ticket_t RedisResponse::ticket() const {
