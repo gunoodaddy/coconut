@@ -60,6 +60,10 @@ public:
 		protocolFactory_ = factory;
 	}
 
+	boost::shared_ptr<protocol::BaseProtocolFactory> protocolFactory() {
+		return protocolFactory_;
+	}
+
 	boost::shared_ptr<ClientController> sharedMyself();
 
 	boost::shared_ptr<BaseSocket> socket() {
@@ -93,6 +97,8 @@ public:
 		}
 	}
 
+	void fire_onClosed();
+
 private:
 	void processReconnect();
 
@@ -107,6 +113,7 @@ private:
 
 protected:
 	// ClientController callback event
+
 	virtual void onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol) { }
 	virtual void onReceivedData(const void *data, int size) { }
 	virtual void onReceivedDatagram(const void *data, int size, const struct sockaddr_in *sin) { }
