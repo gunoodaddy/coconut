@@ -54,6 +54,7 @@ public:
 	}
 	boost::shared_ptr<IOService> ioServiceByRoundRobin();
 	boost::shared_ptr<IOService> ioServiceByIndex(size_t index);
+	boost::shared_ptr<IOService> ioServiceOfCurrentThread();
 	void initialize();
 	void run();
 	void stop();

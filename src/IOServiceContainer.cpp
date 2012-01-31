@@ -105,6 +105,18 @@ boost::shared_ptr<IOService> IOServiceContainer::ioServiceByIndex(size_t index) 
 }
 
 
+boost::shared_ptr<IOService> IOServiceContainer::ioServiceOfCurrentThread() {
+	boost::shared_ptr<IOService> ret;
+	for(size_t i = 0; i < ioservices_.size(); i++) {
+		if(ioservices_[i]->isCalledInMountedThread()) {
+			ret = ioservices_[i];
+			break;
+		}
+	}
+	return ret;
+}
+
+
 void IOServiceContainer::run() {
 	
 	if(ioservices_.size() <= 0) {
