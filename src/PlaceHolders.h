@@ -35,9 +35,14 @@
 
 namespace coconut { namespace placeholders {
 
-inline boost::arg<1> redisResponse()
+inline boost::arg<1> requestContext() 
 {
 	  return boost::arg<1>();
+}
+
+inline boost::arg<2> redisResponse()
+{
+	  return boost::arg<2>();
 }
 
 }}
