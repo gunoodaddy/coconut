@@ -8,7 +8,7 @@ libcoconut_la_LIBADD = -lboost_thread -ljson
 
 libcoconut_la_SOURCES = \
                        dep/kbuffer.c \
-                       Coconut.cpp \
+                       CoconutLib.cpp \
                        Logger.cpp \
                        IOService.cpp \
                        IOServiceContainer.cpp \

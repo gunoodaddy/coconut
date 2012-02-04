@@ -33,18 +33,6 @@
 #include <conio.h>
 #endif
 #include <fcntl.h>
-#include "NetworkHelper.h"
-#include "IOService.h"
-#include "IOServiceContainer.h"
-#include "LineController.h"
-#include "JSONController.h"
-#include "FrameController.h"
-#include "JSONProtocol.h"
-#include "HttpClient.h"
-#include "RedisRequest.h"
-#include "PlaceHolders.h"
-#include "FileDescriptorController.h"
-#include "Logger.h"
 
 using namespace coconut;
 using namespace coconut::protocol;

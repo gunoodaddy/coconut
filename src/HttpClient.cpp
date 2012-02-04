@@ -27,7 +27,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "HttpClient.h"
 #include "IOService.h"
 #include "Exception.h"

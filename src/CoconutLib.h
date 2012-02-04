@@ -27,53 +27,27 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "CoconutLib.h"
-#include "BaseSocket.h"
-#include "IOService.h"
-#include "ThreadUtil.h"
+#pragma once
+
+#include "Defines.h"
+
+#if defined(COCONUT_USE_PRECOMPILE)
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/function.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/interprocess/detail/atomic.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/bind.hpp>
+#endif
 
 namespace coconut {
 
-void BaseSocket::fire_onSocket_Initialized() {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Initialized();
-	lockHandler_.unlock();
-}
+extern bool _setLittleEndian_on;
 
-void BaseSocket::fire_onSocket_Connected() {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Connected();
-	lockHandler_.unlock();
-}
+COCONUT_API void setEnableDebugMode();
+COCONUT_API bool enableDebugMode();
+COCONUT_API void setUseLittleEndianForNetwork(bool littenEndian /* default is falese */);
 
-void BaseSocket::fire_onSocket_Error(int error, const char *strerror) {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Error(error, strerror);
-	lockHandler_.unlock();	
-}
-
-void BaseSocket::fire_onSocket_ReadEvent(int fd) {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_ReadEvent(fd);
-	lockHandler_.unlock();	
-}
-
-void BaseSocket::fire_onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_ReadFrom(data, size, sin);
-	lockHandler_.unlock();
-}
-
-void BaseSocket::fire_onSocket_Close() {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Close();
-	lockHandler_.unlock();
-}
-
-}
+} // end of namespace coconut

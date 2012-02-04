@@ -29,9 +29,6 @@
 
 #include "Coconut.h"
 #include <fcntl.h>
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
-#include "FileDescriptorController.h"
 
 class MyFDController : public coconut::FileDescriptorController {
 

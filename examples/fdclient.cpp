@@ -28,9 +28,6 @@
 */
 
 #include "Coconut.h"
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
-#include "FileDescriptorController.h"
 
 class MyFDController : public coconut::FileDescriptorController {
 	virtual void onDescriptorReceived(int fd) {

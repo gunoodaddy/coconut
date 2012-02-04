@@ -27,7 +27,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "InternalLogger.h"
 #include "BaseProtocol.h"
 #include <VirtualTransportHelper.h>

@@ -27,11 +27,11 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "BaseControllerEvent.h"
 #include "BaseController.h"
 #include "IOService.h"
-#include "Coconut.h"
+#include "CoconutLib.h"
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/bind.hpp>
 #endif

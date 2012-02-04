@@ -27,7 +27,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "InternalLogger.h"
 #include "ThreadUtil.h"
 #include <stdio.h>
@@ -45,6 +45,7 @@ namespace coconut { namespace logger {
 static LogLevel gCurrentLogLevel_ = LEVEL_TRACE;
 static LogHookCallback gLogHookCallback;
 static Mutex gLogLock;
+
 
 void hexdump(const unsigned char *data, const int len, FILE * fp) {           
 	const unsigned char *p;

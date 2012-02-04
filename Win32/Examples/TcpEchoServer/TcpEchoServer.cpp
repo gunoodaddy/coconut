@@ -2,9 +2,6 @@
 //
 #include "stdafx.h"
 #include "Coconut.h"
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
-#include "LineController.h"
 
 #define USE_LINE_CONTROLLER
 

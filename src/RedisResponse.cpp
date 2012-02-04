@@ -27,7 +27,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "IOService.h"
 #include "RedisResponse.h"
 #include <vector>

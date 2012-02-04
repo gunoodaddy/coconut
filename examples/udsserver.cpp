@@ -28,8 +28,6 @@
 */
 
 #include "Coconut.h"
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
 
 class MyClientController : public coconut::BinaryController {
 

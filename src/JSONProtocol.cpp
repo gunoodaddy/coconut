@@ -27,7 +27,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "JSONProtocol.h"
 #include "VirtualTransportHelper.h"
 #include "BaseVirtualTransport.h"

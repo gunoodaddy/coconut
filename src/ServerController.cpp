@@ -27,7 +27,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "InternalLogger.h"
 #include "ServerController.h"
 #include "ClientController.h"

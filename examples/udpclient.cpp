@@ -29,8 +29,6 @@
 
 #include "Coconut.h"
 #include <arpa/inet.h>
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
 
 #define UDP_PORT	7777
 

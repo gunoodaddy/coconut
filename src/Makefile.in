@@ -73,7 +73,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(include_coconutdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcoconut_la_DEPENDENCIES =
-am_libcoconut_la_OBJECTS = kbuffer.lo Coconut.lo Logger.lo \
+am_libcoconut_la_OBJECTS = kbuffer.lo CoconutLib.lo Logger.lo \
 	IOService.lo IOServiceContainer.lo DeferredCaller.lo Timer.lo \
 	DNSResolver.lo BufferedTransport.lo BaseSocket.lo TcpSocket.lo \
 	UdpSocket.lo ConnectionListener.lo RedisRequest.lo \
@@ -242,7 +242,7 @@ AM_LDFLAGS = $(BOOST_LDFLAGS)
 libcoconut_la_LIBADD = -lboost_thread -ljson
 libcoconut_la_SOURCES = \
                        dep/kbuffer.c \
-                       Coconut.cpp \
+                       CoconutLib.cpp \
                        Logger.cpp \
                        IOService.cpp \
                        IOServiceContainer.cpp \
@@ -394,7 +394,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseSocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BufferedTransport.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ClientController.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Coconut.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoconutLib.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConnectionListener.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DNSResolver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DeferredCaller.Plo@am__quote@

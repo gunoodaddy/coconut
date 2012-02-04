@@ -27,22 +27,22 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include <event2/thread.h>
 #include <fcntl.h>
 #include <assert.h>
 
 namespace coconut {
 
-bool _setEnableDebugMode_on = false;
 bool _activateMultithreadMode_on = false;
 bool _setLittleEndian_on = false;
+bool _setEnableDebugMode_on = false;
 
-COCONUT_API bool enableDebugMode() {
+bool enableDebugMode() {
 	return _setEnableDebugMode_on;
 }
 
-COCONUT_API void setEnableDebugMode() {
+void setEnableDebugMode() {
 	_setEnableDebugMode_on = true;
 }
 

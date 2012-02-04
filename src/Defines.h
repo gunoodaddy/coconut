@@ -27,53 +27,64 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "CoconutLib.h"
-#include "BaseSocket.h"
-#include "IOService.h"
-#include "ThreadUtil.h"
+#pragma once
+
+#include "config.h"
+#include <vector>
+#include <string>
+
+#if defined(WIN32)
+#if defined(COCONUT_STATIC)
+#define COCONUT_API
+//   definitions used when building DLL
+#elif defined(COCONUT_EXPORTS)
+#define COCONUT_API __declspec(dllexport)
+#else
+//    definitions used when using DLL
+#define COCONUT_API __declspec(dllimport)
+#endif
+#else
+#define COCONUT_API 
+#endif
+
+// ** Compatibility **
+#define COOKIE_INVALID_SOCKET	0
+#if defined(WIN32)
+#define COOKIE_ETIMEDOUT	WSAETIMEDOUT
+#else
+#define COOKIE_ETIMEDOUT	ETIMEDOUT
+#endif
+
+#if defined(WIN32)
+typedef intptr_t coconut_socket_t;
+#else
+typedef int coconut_socket_t;
+#endif
+
+#define MAKE_TIMEVAL_SEC(SEC) MAKE_TIMEVAL_MSEC(SEC*1000)
+#define MAKE_TIMEVAL_MSEC(MSEC) {MSEC/1000, (MSEC % 1000) * 1000}
+
+#define IOBUF_LEN	16*1024
 
 namespace coconut {
 
-void BaseSocket::fire_onSocket_Initialized() {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Initialized();
-	lockHandler_.unlock();
-}
+typedef std::vector<std::string> stringlist_t;
 
-void BaseSocket::fire_onSocket_Connected() {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Connected();
-	lockHandler_.unlock();
-}
+extern bool _setLittleEndian_on;
 
-void BaseSocket::fire_onSocket_Error(int error, const char *strerror) {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Error(error, strerror);
-	lockHandler_.unlock();	
-}
+enum ThreadPriority {
+	LOWEST = 0,
+	LOWER = 1,
+	LOW = 2,
+	NORMAL = 3,
+	HIGH = 4,
+	HIGHER = 5,
+	HIGHEST = 6
+};
 
-void BaseSocket::fire_onSocket_ReadEvent(int fd) {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_ReadEvent(fd);
-	lockHandler_.unlock();	
-}
+enum SocketType{
+	TCP,
+	UDP,
+};
 
-void BaseSocket::fire_onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_ReadFrom(data, size, sin);
-	lockHandler_.unlock();
-}
-
-void BaseSocket::fire_onSocket_Close() {
-	lockHandler_.lock();
-	if(handler_ && ioService_->isStopped() == false)
-		handler_->onSocket_Close();
-	lockHandler_.unlock();
-}
-
-}
+} // end of namespace coconut

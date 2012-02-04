@@ -28,11 +28,6 @@
 */
 
 #include "Coconut.h"
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
-#include "LineController.h"
-#include "Logger.h"
-#include "ThreadUtil.h"
 
 #define BIND_PORT	8765
 

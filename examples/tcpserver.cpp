@@ -28,9 +28,6 @@
 */
 
 #include "Coconut.h"
-#include "NetworkHelper.h"
-#include "IOServiceContainer.h"
-#include "Logger.h"
 
 class MyClientController : public coconut::BinaryController {
 	virtual void onReceivedData(const void *data, int size) {

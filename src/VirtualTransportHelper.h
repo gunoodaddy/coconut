@@ -35,7 +35,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #endif
-#include "Coconut.h"
+#include "CoconutLib.h"
 #include "BaseVirtualTransport.h"
 #include "Exception.h"
 #if defined(WIN32)

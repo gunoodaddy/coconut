@@ -28,10 +28,6 @@
 */
 
 #include "Coconut.h"
-#include "IOServiceContainer.h"
-#include "HttpServer.h"
-#include "Exception.h"
-#include "Logger.h"
 #include <event2/http.h>
 #include <event2/buffer.h>
 
