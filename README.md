@@ -51,7 +51,6 @@ total 28 lines.
 https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 
 * If you use Win32 IOCP, you must use `3rdParty/src/libevent.tgz`.
-  
   Original libevent >= 2.0.15 has a bug in `evutil_tv_to_msec` function. (need to add *tv* pointer null check code) 
 
 * Or you should fix this bug in your own libevent source.
@@ -65,13 +64,10 @@ http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/dow
 https://github.com/antirez/hiredis
 
 * On Win32, you must use `3rdParty/src/hiredis` instead upper link so that the build is successful.
-
   The hiredis in upper git link is not compiled on Win32.
 
-* `3rdParty/src/hiredis` are based in git repository https://github.com/koenvandesande/hiredis.git
-  
-  We modified plus koenvandesande's sources following function `redisFormatCommandArgv`
-
+* `3rdParty/src/hiredis` are based in git repository https://github.com/koenvandesande/hiredis.git.
+  We modified plus koenvandesande's sources following function `redisFormatCommandArgv`.
   In win32, sprintf `%zu` format is not valid. so changed `%d` if Win32   
   
 
