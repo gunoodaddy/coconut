@@ -201,12 +201,15 @@ private:
 
 		_LOG_DEBUG("redis request start : cmd = %s, argsize = %d", args[0].c_str(), args.size());
 
+		std::vector<const char *> tempArgs;	
 		std::vector<size_t> tempArgLens;
+
 		for(size_t i = 0; i < args.size(); i++) {
+			tempArgs.push_back(args[i].c_str());
 			tempArgLens.push_back(args[i].size());
 		}
-		
-		_doCommand(ticket, args.size(), (const char **)&args[0], (const size_t *)&tempArgLens[0]);
+
+		_doCommand(ticket, args.size(), (const char **)&tempArgs[0], (const size_t *)&tempArgLens[0]);
 	}
 
 	const struct RedisRequest::requestContext * _findRequestContext(ticket_t ticket) {

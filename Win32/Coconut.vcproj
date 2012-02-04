@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\;..\;..\src;&quot;$(BOOST_HOME)&quot;;&quot;$(LIBEVENT_HOME)\include&quot;;&quot;$(LIBEVENT_HOME)\WIN32-Code&quot;;&quot;$(HIREDIS_HOME)&quot;;..\3rdParty\src\"
-				PreprocessorDefinitions="COCONUT_USE_PRECOMPILE;HIREDIS_WIN;WIN32;_DEBUG;_WINDOWS;_USRDLL;COCONUT_EXPORTS"
+				PreprocessorDefinitions="COCONUT_USE_PRECOMPILE;COCONUT_EXPORTS;HIREDIS_WIN;WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -182,29 +182,77 @@
 			<File
 				RelativePath="..\src\BaseController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\BaseControllerEvent.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\BaseProtocol.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\BaseSocket.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\BufferedTransport.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\ClientController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\Coconut.cpp"
+				RelativePath="..\src\CoconutLib.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -212,60 +260,165 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\ConnectionListener.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\DeferredCaller.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\DNSResolver.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\FileDescriptorController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\FileDescriptorProtocol.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\FrameController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\FrameProtocol.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\HttpClient.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\HttpServer.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\IOService.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\IOServiceContainer.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\JSONController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\JSONProtocol.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\dep\kbuffer.c"
@@ -276,48 +429,129 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\LineController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\LineProtocol.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\Logger.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\NetworkHelper.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\RedisRequest.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\RedisResponse.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\ServerController.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\TcpSocket.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\Timer.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\src\UdpSocket.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -359,6 +593,10 @@
 			</File>
 			<File
 				RelativePath="..\src\Coconut.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\CoconutLib.h"
 				>
 			</File>
 			<File

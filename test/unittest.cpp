@@ -38,7 +38,7 @@ using namespace coconut;
 using namespace coconut::protocol;
 
 static const char *REDIS_ADDRESS = "61.247.198.102";
-static int gPortBase = 8000;
+static int gPortBase = 8100;
 
 namespace TestUDPAndLineProtocol {
 	static const int UDP_PORT = 1234;

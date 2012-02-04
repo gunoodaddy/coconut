@@ -33,6 +33,12 @@
 #include <map>
 #include <event2/dns.h>
 
+#if defined(WIN32)
+#define STRDUP _strdup
+#else
+#define STRDUP strdup
+#endif
+
 namespace coconut {
 
 class DNSResolverImpl {
@@ -97,11 +103,11 @@ public:
 		if (!(context = (struct dns_context_t *)malloc(sizeof(struct dns_context_t)))) {
 			return false;
 		}
-		if (!(context->host_alloc = strdup(host))) {
+		if (!(context->host_alloc = STRDUP(host))) {
 			free(context);
 			return false;
 		}
-		context->host_alloc = strdup("localhost");
+		context->host_alloc = STRDUP("localhost");
 		context->self = this;
 		context->handler = handler;
 		context->ptr = ptr;
