@@ -64,7 +64,10 @@ https://github.com/antirez/hiredis
 
 * On Win32, you must use `3rdParty/src/hiredis` instead upper link so that the build is successful.
   The hiredis in upper git link is not compiled on Win32.
-* Or use this git repository https://github.com/koenvandesande/hiredis.git
+* `3rdParty/src/hiredis` are based in git repository https://github.com/koenvandesande/hiredis.git
+  We modified plus koenvandesande's sources following function `redisFormatCommandArgv`
+  In win32, sprintf `%zu` format is not valid. so changed `%d` if Win32   
+  
 
 ### libjson 7.4.1
 http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
