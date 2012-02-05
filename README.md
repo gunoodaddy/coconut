@@ -66,7 +66,7 @@ https://github.com/antirez/hiredis
 * `3rdParty/src/hiredis` are based in git repository https://github.com/koenvandesande/hiredis.git.
 * We modified plus koenvandesande's sources following function `redisFormatCommandArgv`.
 * In win32, sprintf `%zu` format is not valid. so changed `%d` if Win32   
-* If you do not want to use redis, turn on `COCONUT_REDIS_DISABLE` macro 
+* If you do not want to use redis, turn on `COCONUT_REDIS_DISABLE` macro.
   
 
 ### libjson 7.4.1
@@ -76,7 +76,7 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
 * We modified JSONStream class to parse correctly. (7.4.1 libjson has a few bug in JSONStream)
 * You can find 'gunoodaddy' comment in `3rdParty/src/libjson` modified codes.
 * And if you use linux 64bit os, must edit \<lib_json_root\>/makefile to add `-fPIC` to cxxflags_default.
-* If you do not want to use json feature, turn on `COCONUT_JSON_DISABLE` macro 
+* If you do not want to use json feature, turn on `COCONUT_JSON_DISABLE` macro.
 
 ## Build / Installation 
 
