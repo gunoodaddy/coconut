@@ -275,7 +275,7 @@ UdpSocket::~UdpSocket() {
 	delete impl_;
 }
 
-int UdpSocket::socketFD() {
+coconut_socket_t UdpSocket::socketFD() {
 	return impl_->socketFD();
 }
 

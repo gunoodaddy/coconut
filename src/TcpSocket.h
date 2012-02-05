@@ -42,7 +42,7 @@ public:
 	~TcpSocket();
 
 public:
-	int socketFD();
+	coconut_socket_t socketFD();
 	void connect();
 	void connect(const char *host, int port, int timeout = 0);
 	void connectUnix(const char *path, int timeout = 0);

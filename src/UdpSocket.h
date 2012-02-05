@@ -50,7 +50,7 @@ public:
 	~UdpSocket();
 	
 public:
-	int socketFD();
+	coconut_socket_t socketFD();
 	void connect();
 	void bind();
 	void close();

@@ -95,7 +95,7 @@ public:
 		return lastErrorString_.c_str();
 	}
 
-	virtual int socketFD() { 
+	virtual coconut_socket_t socketFD() { 
 		return -1;
 	}
 
