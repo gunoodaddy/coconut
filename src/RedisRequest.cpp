@@ -28,6 +28,7 @@
 */
 
 #include "CoconutLib.h"
+#ifndef COCONT_REDIS_DISABLE
 #include "IOService.h"
 #include "RedisRequest.h"
 #include "DeferredCaller.h"
@@ -343,3 +344,5 @@ ticket_t RedisRequest::command(const std::vector<std::string> &args, ResponseHan
 }
 
 }
+
+#endif

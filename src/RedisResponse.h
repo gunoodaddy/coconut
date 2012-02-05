@@ -29,6 +29,8 @@
 
 #pragma once
 
+#ifndef COCONT_REDIS_DISABLE
+
 namespace coconut {
 
 typedef long ticket_t;
@@ -64,3 +66,4 @@ private:
 };
 
 }
+#endif

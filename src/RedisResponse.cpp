@@ -28,6 +28,7 @@
 */
 
 #include "CoconutLib.h"
+#ifndef COCONT_REDIS_DISABLE
 #include "IOService.h"
 #include "RedisResponse.h"
 #include <vector>
@@ -153,3 +154,4 @@ ticket_t RedisResponse::ticket() const {
 }
 
 }
+#endif

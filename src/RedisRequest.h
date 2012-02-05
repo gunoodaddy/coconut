@@ -29,6 +29,8 @@
 
 #pragma once
 
+#ifndef COCONT_REDIS_DISABLE
+
 #include "RedisResponse.h"
 
 namespace coconut {
@@ -66,3 +68,4 @@ private:
 };
 
 }
+#endif
