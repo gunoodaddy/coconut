@@ -29,7 +29,7 @@
 
 #pragma once
 
-#ifndef COCONT_REDIS_DISABLE
+#ifndef COCONUT_REDIS_DISABLE
 
 namespace coconut {
 

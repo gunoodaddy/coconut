@@ -28,7 +28,7 @@
 */
 
 #include "CoconutLib.h"
-#ifndef COCONT_JSON_DISABLE
+#ifndef COCONUT_JSON_DISABLE
 #include "JSONProtocol.h"
 #include "VirtualTransportHelper.h"
 #include "BaseVirtualTransport.h"

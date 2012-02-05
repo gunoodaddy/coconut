@@ -28,7 +28,7 @@
 */
 
 #include "CoconutLib.h"
-#ifndef COCONT_REDIS_DISABLE
+#ifndef COCONUT_REDIS_DISABLE
 #include "IOService.h"
 #include "RedisRequest.h"
 #include "DeferredCaller.h"
