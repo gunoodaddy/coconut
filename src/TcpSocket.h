@@ -31,8 +31,6 @@
 
 #include "BaseSocket.h"
 
-struct kbuffer;
-
 namespace coconut {
 
 class IOService;
