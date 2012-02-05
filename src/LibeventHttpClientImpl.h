@@ -43,6 +43,8 @@
 #if defined(WIN32)
 #include <io.h>
 #endif
+#include "HttpClient.h"
+#include "HttpClientImpl.h"
 
 #ifndef TAILQ_FIRST
 #define TAILQ_FIRST(head)       ((head)->tqh_first)
@@ -65,7 +67,7 @@ static std::string gNullStr("");
 
 namespace coconut {
 
-class LibeventHttpClientImpl {
+class LibeventHttpClientImpl : public HttpClientImpl {
 public:
 	LibeventHttpClientImpl(HttpClient *owner, 
 					boost::shared_ptr<IOService> ioService) 
@@ -87,7 +89,7 @@ public:
 
 	LibeventHttpClientImpl(HttpClient *owner, 
 					boost::shared_ptr<IOService> ioService, 
-					HttpClient::HttpMethodType method, 
+					HttpMethodType method, 
 					const char *uri, 
 					const HttpParameter *param, 
 					int timeout) 
@@ -210,7 +212,7 @@ public:
 		return gNullStr;
 	}
 
-	void request(HttpClient::HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) {
+	void request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) {
 		ScopedIOServiceLock(ioService_);
 		if(HttpClient::Prepare != state_) {
 			throw IllegalStateException("Already http requested, you need to call cancelRequest");
@@ -274,7 +276,7 @@ public:
 
 		int contentlength = 0;
 
-		if(HttpClient::HTTP_POST == method_) {
+		if(HTTP_POST == method_) {
 			_makeMultipartBoundary();
 			_makePostHeader();
 			contentlength = _makePostBody();
@@ -386,7 +388,7 @@ public:
 		std::string result;
 		result +=  evhttp_uri_get_path(evuri_);	
 		_LOG_DEBUG("QUERY %s\n", result.c_str());
-		if(HttpClient::HTTP_GET == method_) {
+		if(HTTP_GET == method_) {
 			result += "?";
 			result += _makeGetMethodBody();
 		}
@@ -428,7 +430,7 @@ public:
 		dnsbase_ = evdns_base_new(ioService_->coreHandle(), 1);
 		assert(dnsbase_ && "evdns_base can not be allocated");
 
-		evhttp_make_request(evcon_, req_, method_ == HttpClient::HTTP_POST ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str());
+		evhttp_make_request(evcon_, req_, method_ == HTTP_POST ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str());
 
 		state_ = HttpClient::Requesting;
 	}
@@ -536,7 +538,7 @@ private:
 	struct evhttp_request *req_;
 	struct evhttp_uri* evuri_;
 	struct evbuffer *responsebuffer_;
-	HttpClient::HttpMethodType method_;
+	HttpMethodType method_;
 	std::string uri_;
 	const HttpParameter *paramTemp_;
 	int timeout_;

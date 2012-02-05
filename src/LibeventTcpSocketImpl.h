@@ -40,12 +40,15 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #endif
+#include "IPv4Address.h"
+#include "TcpSocket.h"
+#include "TcpSocketImpl.h"
 
 #define _KBUFFER_ 1
 
 namespace coconut {
 
-class LibeventTcpSocketImpl : private Timer::EventHandler {
+class LibeventTcpSocketImpl : public TcpSocketImpl, private Timer::EventHandler {
 public:
 	static const int TIMERID_CONNECT = (1|INTERNAL_TIMER_BIT);
 

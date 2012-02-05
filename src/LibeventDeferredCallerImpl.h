@@ -35,23 +35,38 @@
 #endif
 #include <event2/event.h>
 #include <vector>
+#include "DeferredCallerImpl.h"
 
 namespace coconut {
 
-class LibeventDeferredCallerImpl {
+class LibeventDeferredCallerImpl : public DeferredCallerImpl {
 public:
-	
-	LibeventDeferredCallerImpl() : eventDeferred_(NULL) { } 
+	LibeventDeferredCallerImpl() : DeferredCallerImpl() { }
 
 	LibeventDeferredCallerImpl(boost::shared_ptr<IOService> ioService) 
-		: ioService_(ioService), eventDeferred_(NULL) {
-		eventDeferred_ = event_new(ioService->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
+		: DeferredCallerImpl(ioService), eventDeferred_(NULL) {
+
+		createHandle();
 	}
 
 	~LibeventDeferredCallerImpl() { 
 		_LOG_TRACE("~LibeventDeferredCallerImpl %p %p\n", this, eventDeferred_);
-		if(eventDeferred_)
+		destroyHandle();
+	}
+
+	void createHandle() {
+		eventDeferred_ = event_new(ioService_->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
+	}
+
+	void destroyHandle() {
+		if(eventDeferred_) {
 			event_free(eventDeferred_);
+			eventDeferred_ = NULL;
+		}
+	}
+
+	void triggerDeferredEvent() {
+		event_active(eventDeferred_, EV_READ, 1);
 	}
 
 private:
@@ -60,42 +75,8 @@ private:
 		SELF->fireDeferredEvent();
 	}
 
-	void fireDeferredEvent() {
-		lock_.lock();
-		for(size_t i = 0; i < deferredMethods_.size(); i++) {
-			deferredMethods_[i]();
-		}
-		deferredMethods_.clear();
-		lock_.unlock();
-	}
-
-public:
-	void setIOService(boost::shared_ptr<IOService> ioService) {
-		ioService_ = ioService;
-
-		if(eventDeferred_) {
-			event_free(eventDeferred_);
-			eventDeferred_ = NULL;
-		}
-		eventDeferred_ = event_new(ioService->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
-	}
-
-	void deferredCall(DeferredCaller::deferedMethod_t func) {
-		assert(eventDeferred_ && "event is not installed..");
-
-		lock_.lock();
-		deferredMethods_.push_back(func);
-		lock_.unlock();
-
-		// this function must be called last in this function for preventing from race-condition.
-		event_active(eventDeferred_, EV_READ, 1);
-	}
-
 private:
-	boost::shared_ptr<IOService> ioService_;
 	struct event *eventDeferred_;
-	std::vector<DeferredCaller::deferedMethod_t> deferredMethods_;
-	Mutex lock_;
 };
 
 }

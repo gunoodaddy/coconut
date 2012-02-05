@@ -28,34 +28,58 @@
 */
 
 #pragma once
-#if defined(WIN32)
-#include <ws2tcpip.h>
-#else
-#include <netdb.h>
+
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 #endif
+
+#include "DeferredCaller.h"
 
 namespace coconut {
 
-class IOService;
-class DNSResolverImpl;
-
-class DNSResolver {
+class DeferredCallerImpl {
 public:
-	DNSResolver(boost::shared_ptr<IOService> ioService);
-	~DNSResolver();
+	DeferredCallerImpl() { }
+	DeferredCallerImpl(boost::shared_ptr<IOService> ioService) 
+		: ioService_(ioService) { }
 
-	class EventHandler {
-		public:
-			virtual ~EventHandler() { }
-			virtual void onDnsResolveResult(int errcode, const char *host, struct addrinfo *addr, void *ptr) = 0;
-	};
+	virtual ~DeferredCallerImpl() { }
+
+protected:
+	void fireDeferredEvent() {
+		lock_.lock();
+		for(size_t i = 0; i < deferredMethods_.size(); i++) {
+			deferredMethods_[i]();
+		}
+		deferredMethods_.clear();
+		lock_.unlock();
+	}
 
 public:
-	void cleanUp();
-	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
+	void setIOService(boost::shared_ptr<IOService> ioService) {
+		ioService_ = ioService;
 
-private:
-	boost::shared_ptr<DNSResolverImpl> impl_;
+		createHandle();
+	}
+
+	void deferredCall(DeferredCaller::deferedMethod_t func) {
+		lock_.lock();
+		deferredMethods_.push_back(func);
+		lock_.unlock();
+
+		// this function must be called last in this function for preventing from race-condition.
+		triggerDeferredEvent();
+	}
+
+	virtual void createHandle() = 0;
+	virtual void destroyHandle() = 0;
+	virtual void triggerDeferredEvent() = 0;
+
+protected:
+	boost::shared_ptr<IOService> ioService_;
+	std::vector<DeferredCaller::deferedMethod_t> deferredMethods_;
+	Mutex lock_;
 };
 
-} // end of namespace coconut
+}

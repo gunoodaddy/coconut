@@ -31,10 +31,12 @@
 
 #include <event2/event.h>
 #include <map>
+#include "Timer.h"
+#include "TimerImpl.h"
 
 namespace coconut {
 
-class LibeventTimerImpl {
+class LibeventTimerImpl : public TimerImpl {
 public:
 	LibeventTimerImpl(Timer *owner) : owner_(owner) { }
 	~LibeventTimerImpl() { 

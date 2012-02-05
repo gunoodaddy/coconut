@@ -37,10 +37,11 @@
 #include <fcntl.h>
 #include <map>
 #include <vector>
+#include "HttpServerImpl.h"
 
 namespace coconut {
 
-class LibeventHttpServerImpl {
+class LibeventHttpServerImpl : public HttpServerImpl {
 public:
 	LibeventHttpServerImpl(HttpServer *owner, 
 				   boost::shared_ptr<IOService> ioService,

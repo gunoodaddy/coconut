@@ -32,6 +32,7 @@
 #include "IOServiceContainer.h"
 #include "Exception.h"
 #include "InternalLogger.h"
+#include "LibeventSystemFactory.h"
 
 namespace coconut {
 
@@ -63,6 +64,8 @@ void IOServiceContainer::initialize() {
 	if(threadCount_ < 0) {
 		new Exception("thread cound is invalid.");
 	}
+
+	IOSystemFactory::setInstance(boost::shared_ptr<IOSystemFactory>(new LibeventSystemFactory));
 
 #if defined(WIN32) 
 	if(iocpEnabled_) {

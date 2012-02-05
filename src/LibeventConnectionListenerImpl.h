@@ -35,10 +35,12 @@
 #include <errno.h>
 #include <event2/util.h>
 #include <event2/listener.h>
+#include "ConnectionListener.h"
+#include "ConnectionListenerImpl.h"
 
 namespace coconut {
 
-class LibeventConnectionListenerImpl {
+class LibeventConnectionListenerImpl : public ConnectionListenerImpl {
 public:
 	LibeventConnectionListenerImpl(ConnectionListener *owner, int port) 
 		: owner_(owner)

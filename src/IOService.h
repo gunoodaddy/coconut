@@ -36,9 +36,6 @@
 #include <boost/function.hpp>
 #endif
 
-#ifdef __USE_PTHREAD__
-#include <pthread.h>
-#endif
 #include "ThreadUtil.h"
 
 #define ScopedIOServiceLock(ioService)	ScopedMutexLock(ioService->mutex())
@@ -51,7 +48,7 @@ struct event_base;
 
 namespace coconut {
 class BaseIOServiceContainer;
-class LibeventIOServiceImpl;
+class IOServiceImpl;
 
 class COCONUT_API IOService : public boost::enable_shared_from_this<IOService> {
 public:
@@ -64,17 +61,9 @@ private:
 public:
 	typedef boost::function< void () > deferedMethod_t;
 
-#ifdef __USE_PTHREAD__
-	pthread_t threadHandle();
-#else
 	boost::thread::id threadHandle();
-#endif
 
-#ifdef __USE_PTHREAD__
-	pthread_t nativeThreadHandle();
-#else
 	boost::thread::native_handle_type nativeThreadHandle();
-#endif
 
 	int id();
 	void initialize();
@@ -99,7 +88,7 @@ private:
 	
 private:
 	friend class IOServiceContainer;
-	LibeventIOServiceImpl *impl_;
+	boost::shared_ptr<IOServiceImpl> impl_;
 };
 
 }

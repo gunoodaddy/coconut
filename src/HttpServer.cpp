@@ -32,16 +32,16 @@
 #include "IOService.h"
 #include "Exception.h"
 #include "InternalLogger.h"
-#include "LibeventHttpServerImpl.h"
+#include "HttpServerImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 
 HttpServer::HttpServer(boost::shared_ptr<IOService> ioService, int port) {
-	impl_ = new LibeventHttpServerImpl(this, ioService, port);
+	impl_ = IOSystemFactory::instance()->createHttpServerImpl(this, ioService, port);
 }
 
 HttpServer::~HttpServer() {
-	delete impl_;
 }
 
 boost::shared_ptr<IOService> HttpServer::ioService() {

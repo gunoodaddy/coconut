@@ -87,4 +87,9 @@ enum SocketType{
 	UDP,
 };
 
+enum HttpMethodType {
+	HTTP_POST,
+	HTTP_GET
+};
+
 } // end of namespace coconut

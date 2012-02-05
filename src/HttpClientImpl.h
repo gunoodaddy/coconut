@@ -28,34 +28,27 @@
 */
 
 #pragma once
-#if defined(WIN32)
-#include <ws2tcpip.h>
-#else
-#include <netdb.h>
-#endif
 
 namespace coconut {
 
-class IOService;
-class DNSResolverImpl;
-
-class DNSResolver {
+class HttpClientImpl {
 public:
-	DNSResolver(boost::shared_ptr<IOService> ioService);
-	~DNSResolver();
-
-	class EventHandler {
-		public:
-			virtual ~EventHandler() { }
-			virtual void onDnsResolveResult(int errcode, const char *host, struct addrinfo *addr, void *ptr) = 0;
-	};
+	virtual ~HttpClientImpl() { }
 
 public:
-	void cleanUp();
-	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
+	virtual boost::shared_ptr<IOService> ioService() = 0;
 
-private:
-	boost::shared_ptr<DNSResolverImpl> impl_;
+	virtual void cleanUp(bool deleteReqFlag) = 0;
+	virtual void cancelRequest() = 0;
+
+	virtual const void* responseBody() = 0;
+	virtual int responseBodySize() = 0;
+	virtual int responseCode() = 0;
+
+	virtual const std::string& findHeader(const char *key) = 0;
+
+	virtual void request(HttpMethodType method, const char *uri, const HttpParameter * param, int timeout) = 0;
+	virtual void request() = 0;
 };
 
-} // end of namespace coconut
+}

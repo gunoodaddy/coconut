@@ -32,21 +32,20 @@
 #include "IOService.h"
 #include "ThreadUtil.h"
 #include "InternalLogger.h"
-#include "LibeventDeferredCallerImpl.h"
+#include "DeferredCallerImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 
-DeferredCaller::DeferredCaller() : impl_(NULL) { 
-	impl_ = new LibeventDeferredCallerImpl;
+DeferredCaller::DeferredCaller() {
+	impl_ = IOSystemFactory::instance()->createDeferredCallerImpl();
 }
 
-DeferredCaller::DeferredCaller(boost::shared_ptr<IOService> ioService) : impl_(NULL)
-{
-	impl_ = new LibeventDeferredCallerImpl(ioService);
+DeferredCaller::DeferredCaller(boost::shared_ptr<IOService> ioService) {
+	impl_ = IOSystemFactory::instance()->createDeferredCallerImpl(ioService);
 }
 
 DeferredCaller::~DeferredCaller() {
-	delete impl_;
 }
 
 void DeferredCaller::setIOService(boost::shared_ptr<IOService> ioService) {

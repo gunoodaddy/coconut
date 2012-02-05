@@ -82,7 +82,8 @@ am_libcoconut_la_OBJECTS = kbuffer.lo CoconutLib.lo Logger.lo \
 	FileDescriptorProtocol.lo BaseController.lo \
 	BaseControllerEvent.lo ClientController.lo ServerController.lo \
 	LineController.lo JSONController.lo FrameController.lo \
-	FileDescriptorController.lo NetworkHelper.lo
+	FileDescriptorController.lo NetworkHelper.lo \
+	IOSystemFactory.lo
 libcoconut_la_OBJECTS = $(am_libcoconut_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -271,7 +272,8 @@ libcoconut_la_SOURCES = \
                        JSONController.cpp \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
-                       NetworkHelper.cpp
+                       NetworkHelper.cpp \
+					   IOSystemFactory.cpp
 
 include_coconutdir = $(includedir)/coconut
 include_coconut_HEADERS = \
@@ -310,6 +312,7 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          NetworkHelper.h \
+						 IOSystemFactory.h \
 						 ../config.h
 
 CLEANFILES = core* tag cscope.* .*.sw*
@@ -406,6 +409,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpServer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOService.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOServiceContainer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOSystemFactory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineController.Plo@am__quote@

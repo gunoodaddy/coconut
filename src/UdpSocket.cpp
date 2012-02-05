@@ -33,16 +33,16 @@
 #include "Exception.h"
 #include "IPv4Address.h"
 #include "InternalLogger.h"
-#include "LibeventUdpSocketImpl.h"
+#include "UdpSocketImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 
 UdpSocket::UdpSocket(boost::shared_ptr<IOService> ioService, int port) : BaseSocket(ioService, UDP) {
-	impl_ = new LibeventUdpSocketImpl(this, port);
+	impl_ = IOSystemFactory::instance()->createUdpSocketImpl(this, port);
 }
 
 UdpSocket::~UdpSocket() {
-	delete impl_;
 }
 
 coconut_socket_t UdpSocket::socketFD() {

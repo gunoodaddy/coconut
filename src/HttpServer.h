@@ -41,7 +41,7 @@ struct evhttp_request;
 namespace coconut {
 
 class IOService;
-class LibeventHttpServerImpl;
+class HttpServerImpl;
 
 
 class COCONUT_API HttpRequest {
@@ -80,7 +80,7 @@ public:
 	void start();
 
 private:
-	LibeventHttpServerImpl *impl_;
+	boost::shared_ptr<HttpServerImpl> impl_;
 };
 
 }

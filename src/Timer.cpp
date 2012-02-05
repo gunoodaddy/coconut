@@ -32,16 +32,16 @@
 #include "Timer.h"
 #include "InternalLogger.h"
 #include "ThreadUtil.h"
-#include "LibeventTimerImpl.h"
+#include "TimerImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 	
 Timer::Timer(boost::shared_ptr<IOService> ioService) : ioService_(ioService), handler_(NULL) { 
-	impl_ = new LibeventTimerImpl(this);
+	impl_ = IOSystemFactory::instance()->createTimerImpl(this);
 }
 
 Timer::~Timer() {
-	delete impl_;
 }
 
 void Timer::setTimer(int id, unsigned int msec, bool repeat) {

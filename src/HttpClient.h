@@ -36,7 +36,7 @@
 namespace coconut {
 
 class IOService;
-class LibeventHttpClientImpl;
+class HttpClientImpl;
 
 class HttpParameter {
 public:
@@ -94,11 +94,6 @@ private:
 
 class COCONUT_API HttpClient {
 public:
-	enum HttpMethodType {
-		HTTP_POST,
-		HTTP_GET
-	};
-
 	HttpClient(boost::shared_ptr<IOService> ioService);
 
 	HttpClient(boost::shared_ptr<IOService> ioService, 
@@ -154,7 +149,7 @@ public:
 	void request();
 
 private:
-	LibeventHttpClientImpl *impl_;
+	boost::shared_ptr<HttpClientImpl> impl_;
 	EventHandler *handler_;
 };
 

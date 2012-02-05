@@ -42,7 +42,7 @@
 namespace coconut {
 
 class IOService;
-class LibeventTimerImpl;
+class TimerImpl;
 
 class COCONUT_API Timer {
 public:
@@ -72,7 +72,7 @@ public:
 	void killTimer(int id);
 
 private:
-	LibeventTimerImpl *impl_;
+	boost::shared_ptr<TimerImpl> impl_;
 	boost::shared_ptr<IOService> ioService_;	
 	EventHandler *handler_;
 };

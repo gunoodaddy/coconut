@@ -32,22 +32,23 @@
 #include "ConnectionListener.h"
 #include "Exception.h"
 #include "InternalLogger.h"
-#include "LibeventConnectionListenerImpl.h"
+#include "ConnectionListenerImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 
 ConnectionListener::ConnectionListener(boost::shared_ptr<IOService> ioService, int port)
 	: ioService_(ioService), handler_(NULL) {
-	impl_ = new LibeventConnectionListenerImpl(this, port);
+
+	impl_ = IOSystemFactory::instance()->createConnectionListenerImpl(this, port);
 }
 
 ConnectionListener::ConnectionListener(boost::shared_ptr<IOService> ioService, const char* path)
 	: ioService_(ioService), handler_(NULL) {
-	impl_ = new LibeventConnectionListenerImpl(this, path);
+	impl_ = IOSystemFactory::instance()->createConnectionListenerImpl(this, path);
 }
 
 ConnectionListener::~ConnectionListener(void) {
-	delete impl_;
 }
 
 void ConnectionListener::listen() {

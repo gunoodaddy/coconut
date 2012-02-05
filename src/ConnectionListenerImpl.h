@@ -28,34 +28,17 @@
 */
 
 #pragma once
-#if defined(WIN32)
-#include <ws2tcpip.h>
-#else
-#include <netdb.h>
-#endif
+
+#include <string>
 
 namespace coconut {
 
-class IOService;
-class DNSResolverImpl;
-
-class DNSResolver {
+class ConnectionListenerImpl {
 public:
-	DNSResolver(boost::shared_ptr<IOService> ioService);
-	~DNSResolver();
+	virtual ~ConnectionListenerImpl(void) { }
 
-	class EventHandler {
-		public:
-			virtual ~EventHandler() { }
-			virtual void onDnsResolveResult(int errcode, const char *host, struct addrinfo *addr, void *ptr) = 0;
-	};
-
-public:
-	void cleanUp();
-	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
-
-private:
-	boost::shared_ptr<DNSResolverImpl> impl_;
+	virtual void listen() = 0;
+	virtual const std::string & listeningPath() = 0;
 };
 
-} // end of namespace coconut
+}

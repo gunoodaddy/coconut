@@ -31,6 +31,8 @@
 
 #include <map>
 #include <event2/dns.h>
+#include "DNSResolver.h"
+#include "DNSResolverImpl.h"
 
 #if defined(WIN32)
 #define STRDUP _strdup
@@ -40,7 +42,7 @@
 
 namespace coconut { 
 
-class LibeventDNSResolverImpl {
+class LibeventDNSResolverImpl : public DNSResolverImpl {
 public:
 	LibeventDNSResolverImpl(boost::shared_ptr<IOService> ioService) : ioService_(ioService), dnsbase_(NULL) { }
 	~LibeventDNSResolverImpl() {

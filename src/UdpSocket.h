@@ -42,7 +42,7 @@
 namespace coconut {
 
 class IOService;
-class LibeventUdpSocketImpl;
+class UdpSocketImpl;
 
 class COCONUT_API UdpSocket : public BaseSocket {
 public:
@@ -64,7 +64,7 @@ public:
 	virtual const BaseAddress * sockAddress();
 
 private:
-	LibeventUdpSocketImpl *impl_;
+	boost::shared_ptr<UdpSocketImpl> impl_;
 };
 
 }

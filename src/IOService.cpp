@@ -34,7 +34,9 @@
 #include "config.h"
 #include "BaseIOServiceContainer.h"
 #include "ThreadUtil.h"
-#include "LibeventIOServiceImpl.h"
+#include "IOServiceImpl.h"
+#include "IOSystemFactory.h"
+#include "LibeventSystemFactory.h"
 
 namespace coconut {
 
@@ -74,10 +76,12 @@ public:
 public:
 	static DefaultIOServiceContainer * instance(boost::shared_ptr<IOService> ioService) {
 		lock_.lock();
-		if(!selfInstance_)
+		if(!selfInstance_) {
 			selfInstance_ = boost::shared_ptr<DefaultIOServiceContainer>(new DefaultIOServiceContainer(ioService));
-		else
+			selfInstance_->initialize();
+		} else {
 			selfInstance_->setIOService(ioService);
+		}
 		lock_.unlock();
 		return selfInstance_.get();
 	}
@@ -87,7 +91,7 @@ public:
 	virtual boost::shared_ptr<IOService> ioServiceByIndex(size_t index) { return ioService_; }
 	
 	void initialize() {
-		assert(false && "never call this function : initialize()");
+		IOSystemFactory::setInstance(boost::shared_ptr<IOSystemFactory>(new LibeventSystemFactory));
 	}
 	void run() {
 		assert(false && "never call this function : run()");
@@ -114,7 +118,7 @@ IOService::IOService() {
 	int key = gKeyMaker_.makeKey();
 
 	BaseIOServiceContainer *ioServiceContainer = DefaultIOServiceContainer::instance(shared_from_this());
-	impl_ = new LibeventIOServiceImpl(key, ioServiceContainer, false);
+	impl_ = IOSystemFactory::instance()->createIOServiceImpl(key, ioServiceContainer, false);
 }
 
 IOService::IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode) {
@@ -122,32 +126,19 @@ IOService::IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode
 		ioServiceContainer = DefaultIOServiceContainer::instance(shared_from_this());
 		
 	int key = gKeyMaker_.makeKey();
-	impl_ = new LibeventIOServiceImpl(key, ioServiceContainer, threadMode);
+	impl_ = IOSystemFactory::instance()->createIOServiceImpl(key, ioServiceContainer, threadMode);
 }
 
 IOService::~IOService() {
-	delete impl_;
 }
 
-#ifdef __USE_PTHREAD__
-pthread_t IOService::threadHandle() {
-	return impl_->threadHandle();
-}
-#else
 boost::thread::id IOService::threadHandle() {
 	return impl_->threadHandle();
 }
-#endif
 
-#ifdef __USE_PTHREAD__
-pthread_t IOService::nativeThreadHandle() {
-	return impl_->nativeThreadHandle();
-}
-#else
 boost::thread::native_handle_type IOService::nativeThreadHandle() {
 	return impl_->nativeThreadHandle();
 }
-#endif
 
 bool IOService::isCalledInMountedThread() {
 	return impl_->isCalledInMountedThread();

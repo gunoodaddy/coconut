@@ -35,16 +35,16 @@
 #include "InternalLogger.h"
 #include "Exception.h"
 #include <string>
-#include "LibeventTcpSocketImpl.h"
+#include "TcpSocketImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 	
 TcpSocket::TcpSocket(boost::shared_ptr<IOService> ioService) : BaseSocket(ioService, TCP) {
-	impl_ = new LibeventTcpSocketImpl(this);
+	impl_ = IOSystemFactory::instance()->createTcpSocketImpl(this);
 }
 
 TcpSocket::~TcpSocket() {
-	delete impl_;
 }
 
 coconut_socket_t TcpSocket::socketFD() {

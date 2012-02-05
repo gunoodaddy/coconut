@@ -144,7 +144,7 @@ namespace TestHttpClientGet
 
 			HttpClient client(ioServiceContainer.ioServiceByRoundRobin());
 			client.setEventHandler(&controller);
-			client.request(coconut::HttpClient::HTTP_POST, uri.c_str(), NULL, 20);
+			client.request(coconut::HTTP_POST, uri.c_str(), NULL, 20);
 
 			ioServiceContainer.run();
 			return true;

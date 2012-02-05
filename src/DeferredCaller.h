@@ -36,7 +36,7 @@
 namespace coconut {
 
 class IOService;
-class LibeventDeferredCallerImpl;
+class DeferredCallerImpl;
 
 class COCONUT_API DeferredCaller {
 public:
@@ -51,7 +51,7 @@ public:
 	void deferredCall(deferedMethod_t func);
 
 private:
-	LibeventDeferredCallerImpl *impl_;
+	boost::shared_ptr<DeferredCallerImpl> impl_;
 };
 
 }

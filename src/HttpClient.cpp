@@ -32,12 +32,14 @@
 #include "IOService.h"
 #include "Exception.h"
 #include "InternalLogger.h"
-#include "LibeventHttpClientImpl.h"
+#include "HttpClientImpl.h"
+#include "IOSystemFactory.h"
 
 namespace coconut {
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService) {
-	impl_ = new LibeventHttpClientImpl(this, ioService);
+	impl_ = IOSystemFactory::instance()->createHttpClientImpl(this, ioService);
+	//impl_ = new LibeventHttpClientImpl(this, ioService);
 }
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService, 
@@ -45,11 +47,11 @@ HttpClient::HttpClient(boost::shared_ptr<IOService> ioService,
 						 const char *uri, 
 						 const HttpParameter *param, 
 						 int timeout) {
-	impl_ = new LibeventHttpClientImpl(this, ioService, method, uri, param, timeout);
+	impl_ = IOSystemFactory::instance()->createHttpClientImpl(this, ioService, method, uri, param, timeout);
+	//impl_ = new LibeventHttpClientImpl(this, ioService, method, uri, param, timeout);
 }
 
 HttpClient::~HttpClient() {
-	delete impl_;
 }
 
 boost::shared_ptr<IOService> HttpClient::ioService() {

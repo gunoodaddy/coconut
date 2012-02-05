@@ -34,7 +34,7 @@
 namespace coconut {
 
 class IOService;
-class LibeventTcpSocketImpl;
+class TcpSocketImpl;
 
 class COCONUT_API TcpSocket : public BaseSocket {
 public:
@@ -59,7 +59,7 @@ public:
 	virtual const BaseAddress * sockAddress();
 
 private:
-	LibeventTcpSocketImpl *impl_;
+	boost::shared_ptr<TcpSocketImpl> impl_;
 };
 
 }

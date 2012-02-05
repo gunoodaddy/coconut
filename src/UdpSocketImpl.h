@@ -28,34 +28,26 @@
 */
 
 #pragma once
-#if defined(WIN32)
-#include <ws2tcpip.h>
-#else
-#include <netdb.h>
-#endif
 
 namespace coconut {
 
-class IOService;
-class DNSResolverImpl;
-
-class DNSResolver {
+class UdpSocketImpl {
 public:
-	DNSResolver(boost::shared_ptr<IOService> ioService);
-	~DNSResolver();
-
-	class EventHandler {
-		public:
-			virtual ~EventHandler() { }
-			virtual void onDnsResolveResult(int errcode, const char *host, struct addrinfo *addr, void *ptr) = 0;
-	};
-
+	virtual ~UdpSocketImpl() { }
+	
 public:
-	void cleanUp();
-	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
+	virtual coconut_socket_t socketFD() = 0;
+	virtual void connect() = 0;
+	virtual void bind() = 0;
+	virtual void close() = 0;
+	virtual void checkResponseSocket(int res) = 0;
 
-private:
-	boost::shared_ptr<DNSResolverImpl> impl_;
+	virtual int writeTo(const void *data, size_t size, const struct sockaddr_in *sin) = 0;
+	virtual int writeTo(const void *data, size_t size, const char *host, int port) = 0;
+	virtual int write(const void *data, size_t size) = 0;
+
+	virtual const BaseAddress * peerAddress() = 0;
+	virtual const BaseAddress * sockAddress() = 0;
 };
 
-} // end of namespace coconut
+}

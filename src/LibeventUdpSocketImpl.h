@@ -37,10 +37,12 @@
 #endif
 #include <event2/event.h>
 #include "DNSResolver.h"
+#include "UdpSocket.h"
+#include "UdpSocketImpl.h"
 
 namespace coconut {
 
-class LibeventUdpSocketImpl : public DNSResolver::EventHandler {
+class LibeventUdpSocketImpl : public UdpSocketImpl, private DNSResolver::EventHandler {
 public:
 	LibeventUdpSocketImpl(UdpSocket *owner, int port) 
 		: owner_(owner)

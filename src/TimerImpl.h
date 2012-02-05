@@ -28,34 +28,27 @@
 */
 
 #pragma once
-#if defined(WIN32)
-#include <ws2tcpip.h>
-#else
-#include <netdb.h>
+
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/shared_ptr.hpp>
 #endif
+
+#if defined(_MSC_VER)
+#pragma warning ( disable: 4231 4251 4275 4786 )
+#endif
+
+#define INTERNAL_TIMER_BIT	0x40000000
 
 namespace coconut {
 
-class IOService;
-class DNSResolverImpl;
-
-class DNSResolver {
+class TimerImpl {
 public:
-	DNSResolver(boost::shared_ptr<IOService> ioService);
-	~DNSResolver();
-
-	class EventHandler {
-		public:
-			virtual ~EventHandler() { }
-			virtual void onDnsResolveResult(int errcode, const char *host, struct addrinfo *addr, void *ptr) = 0;
-	};
+	virtual ~TimerImpl() { }
 
 public:
-	void cleanUp();
-	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
-
-private:
-	boost::shared_ptr<DNSResolverImpl> impl_;
+	virtual void setTimer(int id, unsigned int msec, bool repeat = true) = 0;
+	virtual void killTimer(int id) = 0;
 };
 
-} // end of namespace coconut
+}
+
