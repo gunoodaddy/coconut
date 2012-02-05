@@ -32,7 +32,7 @@
 namespace coconut {
 
 class IOService;
-class ConnectionListenerImpl;
+class LibeventConnectionListenerImpl;
 
 class COCONUT_API ConnectionListener {
 public:
@@ -65,7 +65,7 @@ public:
 	const char * listeningPath();
 
 private:
-	ConnectionListenerImpl *impl_;
+	LibeventConnectionListenerImpl *impl_;
 	boost::shared_ptr<IOService> ioService_;	
 	EventHandler *handler_;
 };

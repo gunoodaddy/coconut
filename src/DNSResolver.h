@@ -37,7 +37,7 @@
 namespace coconut {
 
 class IOService;
-class DNSResolverImpl;
+class LibeventDNSResolverImpl;
 
 class DNSResolver {
 public:
@@ -55,7 +55,7 @@ public:
 	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
 
 private:
-	DNSResolverImpl *impl_;
+	LibeventDNSResolverImpl *impl_;
 };
 
 } // end of namespace coconut

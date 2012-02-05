@@ -51,7 +51,7 @@ struct event_base;
 
 namespace coconut {
 class BaseIOServiceContainer;
-class IOServiceImpl;
+class LibeventIOServiceImpl;
 
 class COCONUT_API IOService : public boost::enable_shared_from_this<IOService> {
 public:
@@ -99,7 +99,7 @@ private:
 	
 private:
 	friend class IOServiceContainer;
-	IOServiceImpl *impl_;
+	LibeventIOServiceImpl *impl_;
 };
 
 }

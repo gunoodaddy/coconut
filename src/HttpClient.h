@@ -36,7 +36,7 @@
 namespace coconut {
 
 class IOService;
-class HttpClientImpl;
+class LibeventHttpClientImpl;
 
 class HttpParameter {
 public:
@@ -154,7 +154,7 @@ public:
 	void request();
 
 private:
-	HttpClientImpl *impl_;
+	LibeventHttpClientImpl *impl_;
 	EventHandler *handler_;
 };
 
