@@ -54,20 +54,19 @@ public:
 	}
 
 	boost::shared_ptr<HttpServerImpl> createHttpServerImpl(
-															HttpServer *owner, 
-															boost::shared_ptr<IOService> ioService, 
-															int port) {
+							HttpServer *owner, 
+							boost::shared_ptr<IOService> ioService, 
+							int port) {
 		return boost::shared_ptr<HttpServerImpl>(new LibeventHttpServerImpl(owner, ioService, port));
 	}
 
-
 	boost::shared_ptr<HttpClientImpl> createHttpClientImpl(
-															HttpClient *owner, 
-															boost::shared_ptr<IOService> ioService,
-															HttpMethodType method = HTTP_GET,
-															const char *uri = "",
-															const HttpParameter *param = NULL,
-															int timeout = 0) {
+							HttpClient *owner, 
+							boost::shared_ptr<IOService> ioService,
+							HttpMethodType method = HTTP_GET,
+							const char *uri = "",
+							const HttpParameter *param = NULL,
+							int timeout = 0) {
 		return boost::shared_ptr<HttpClientImpl>(new LibeventHttpClientImpl(owner, ioService, method, uri, param, timeout));
 	}
 

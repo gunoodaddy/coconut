@@ -39,7 +39,6 @@ namespace coconut {
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService) {
 	impl_ = IOSystemFactory::instance()->createHttpClientImpl(this, ioService);
-	//impl_ = new LibeventHttpClientImpl(this, ioService);
 }
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService, 
@@ -48,7 +47,6 @@ HttpClient::HttpClient(boost::shared_ptr<IOService> ioService,
 						 const HttpParameter *param, 
 						 int timeout) {
 	impl_ = IOSystemFactory::instance()->createHttpClientImpl(this, ioService, method, uri, param, timeout);
-	//impl_ = new LibeventHttpClientImpl(this, ioService, method, uri, param, timeout);
 }
 
 HttpClient::~HttpClient() {

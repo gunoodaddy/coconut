@@ -44,17 +44,17 @@ public:
 	virtual boost::shared_ptr<IOServiceImpl> createIOServiceImpl(int id, BaseIOServiceContainer *container, bool threadMode) = 0;
 
 	virtual boost::shared_ptr<HttpServerImpl> createHttpServerImpl(
-															HttpServer *owner, 
-															boost::shared_ptr<IOService> ioService, 
-															int port) = 0;
+							HttpServer *owner, 
+							boost::shared_ptr<IOService> ioService, 
+							int port) = 0;
 
 	virtual boost::shared_ptr<HttpClientImpl> createHttpClientImpl(
-															HttpClient *owner, 
-															boost::shared_ptr<IOService> ioService, 
-															HttpMethodType method = HTTP_GET,
-															const char *uri = "",
-															const HttpParameter *param = NULL,
-															int timeout = 0) = 0;
+							HttpClient *owner, 
+							boost::shared_ptr<IOService> ioService, 
+							HttpMethodType method = HTTP_GET,
+							const char *uri = "",
+							const HttpParameter *param = NULL,
+							int timeout = 0) = 0;
 
 public:
 	static boost::shared_ptr<IOSystemFactory> instance() {
