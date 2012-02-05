@@ -28,6 +28,7 @@
 */
 
 #include "CoconutLib.h"
+#ifndef COCONT_JSON_DISABLE
 #include "JSONController.h"
 #include "InternalLogger.h"
 
@@ -53,3 +54,4 @@ void JSONController::onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol
 }
 
 } // end of namespace coconut
+#endif

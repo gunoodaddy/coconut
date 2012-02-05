@@ -29,6 +29,8 @@
 
 #pragma once
 
+#ifndef COCONT_JSON_DISABLE
+
 #include <string>
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>
@@ -65,4 +67,4 @@ private:
 };
 
 } }
-
+#endif

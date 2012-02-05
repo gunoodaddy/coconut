@@ -28,6 +28,7 @@
 */
 
 #include "CoconutLib.h"
+#ifndef COCONT_JSON_DISABLE
 #include "JSONProtocol.h"
 #include "VirtualTransportHelper.h"
 #include "BaseVirtualTransport.h"
@@ -202,3 +203,4 @@ size_t JSONProtocol::remainingBufferSize() {
 }
 
 }}
+#endif

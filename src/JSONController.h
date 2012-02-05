@@ -29,6 +29,8 @@
 
 #pragma once
 
+#ifndef COCONT_JSON_DISABLE
+
 #include "ClientController.h"
 #include "BaseProtocol.h"
 #include "JSONProtocol.h"
@@ -65,3 +67,4 @@ private:
 };
 
 } // end of namespace coconut
+#endif
