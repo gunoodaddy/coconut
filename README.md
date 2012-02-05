@@ -14,6 +14,7 @@ C++ Simple & High Performance Network Opensource Framework Using libevent2
 ## TCP Echo Server Example
 
 total 26 lines.
+(It's not iocp sample.)
 
     #include "Coconut.h"
     using namespace coconut;
