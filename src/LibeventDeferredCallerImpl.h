@@ -55,7 +55,7 @@ public:
 	}
 
 	void createHandle() {
-		eventDeferred_ = event_new(ioService_->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
+		eventDeferred_ = event_new((struct event_base *)ioService_->coreHandle(), -1, EV_READ|EV_PERSIST, cb_func, this);
 	}
 
 	void destroyHandle() {

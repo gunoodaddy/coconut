@@ -103,7 +103,7 @@ public:
 
 	void start() {
 		if(NULL == http_) {
-			http_ = evhttp_new(ioService_->coreHandle());
+			http_ = evhttp_new((struct event_base *)ioService_->coreHandle());
 		}
 
 		evhttp_set_gencb(http_, http_path_callback, this);

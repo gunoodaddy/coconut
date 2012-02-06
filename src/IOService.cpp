@@ -156,7 +156,7 @@ BaseIOServiceContainer *IOService::ioServiceContainer() {
 	return impl_->ioServiceContainer();
 }
 
-struct event_base * IOService::coreHandle() {
+coconut_io_handle_t IOService::coreHandle() {
 	return impl_->coreHandle();
 }
 

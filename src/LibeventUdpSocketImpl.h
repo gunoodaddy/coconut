@@ -129,7 +129,7 @@ public:
 			}
 		}
 
-		ev_ = event_new(owner_->ioService()->coreHandle(), sock, EV_READ|EV_PERSIST, event_cb, this);
+		ev_ = event_new((struct event_base *)owner_->ioService()->coreHandle(), sock, EV_READ|EV_PERSIST, event_cb, this);
 		event_add(ev_, NULL);	// TODO UDP READ TIMEOUT??
 
 		owner_->eventHandler()->onSocket_Initialized();

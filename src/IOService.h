@@ -44,9 +44,8 @@
 	if(ioService->isStopped())	\
 		return;
 
-struct event_base;
-
 namespace coconut {
+
 class BaseIOServiceContainer;
 class IOServiceImpl;
 
@@ -76,7 +75,7 @@ public:
 	void deferredCall(deferedMethod_t func);
 
 	BaseIOServiceContainer *ioServiceContainer();
-	struct event_base * coreHandle();
+	coconut_io_handle_t coreHandle();
 	Mutex &mutex();
 
 #if defined(WIN32)

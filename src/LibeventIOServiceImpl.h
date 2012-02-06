@@ -52,8 +52,8 @@ public:
 	}
 
 public:
-	struct event_base * coreHandle() {
-		return base_;
+	coconut_io_handle_t coreHandle() {
+		return (coconut_io_handle_t)base_;
 	}
 	
 	void triggerDeferredEvent() {

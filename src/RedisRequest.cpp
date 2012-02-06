@@ -108,7 +108,7 @@ public:
 		}
 		redisContext_->data = this;
 
-		redisLibeventAttach(redisContext_, ioService_->coreHandle());
+		redisLibeventAttach(redisContext_, (struct event_base *)ioService_->coreHandle());
 		redisAsyncSetConnectCallback(redisContext_, connectCallback);
 		redisAsyncSetDisconnectCallback(redisContext_, disconnectCallback);
 		_LOG_DEBUG("redis connect start : %s:%d", host_.c_str(), port_);
@@ -117,12 +117,12 @@ public:
 	ticket_t _commandPrepare(const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
 		ticket_t ticket = issueTicket();
 
-		// for preventing from multithread race condition, must insert to map here..
 		struct RedisRequest::requestContext context;
 		context.args = args;
 		context.ticket = ticket;
 		context.handler = handler;
 
+		// for preventing from multithread race condition, must insert to map here..
 		lockRedis_.lock();
 		mapCallback_.insert(MapCallback_t::value_type(ticket, context));
 		lockRedis_.unlock();

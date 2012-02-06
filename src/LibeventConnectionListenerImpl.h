@@ -109,7 +109,7 @@ public:
 
 		}
 
-		listener_ = evconnlistener_new_bind(owner_->ioService()->coreHandle(), accept_conn_cb, this,
+		listener_ = evconnlistener_new_bind((struct event_base *)owner_->ioService()->coreHandle(), accept_conn_cb, this,
 				LEV_OPT_CLOSE_ON_FREE|LEV_OPT_REUSEABLE, -1,
 				sinptr, addrlen);
 

@@ -61,6 +61,8 @@ typedef intptr_t coconut_socket_t;
 typedef int coconut_socket_t;
 #endif
 
+typedef void * coconut_io_handle_t;
+
 #define MAKE_TIMEVAL_SEC(SEC) MAKE_TIMEVAL_MSEC(SEC*1000)
 #define MAKE_TIMEVAL_MSEC(MSEC) {MSEC/1000, (MSEC % 1000) * 1000}
 

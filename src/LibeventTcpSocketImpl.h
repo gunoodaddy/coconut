@@ -260,7 +260,7 @@ public:
 
 		_createBufferEvent(-1);
 
-		dnsbase_ = evdns_base_new(owner_->ioService()->coreHandle(), 1);
+		dnsbase_ = evdns_base_new((struct event_base *)owner_->ioService()->coreHandle(), 1);
 		int ret = bufferevent_socket_connect_hostname(bev_, dnsbase_, AF_UNSPEC, host_.c_str(), port_);
 
 		if(0 != ret) {
@@ -297,9 +297,9 @@ public:
 
 	void _createEvent(coconut_socket_t fd) {
 		if(NULL == ev_read_)
-			ev_read_ = event_new(owner_->ioService()->coreHandle(), fd, EV_READ|EV_PERSIST, event_cb, this);
+			ev_read_ = event_new((struct event_base *)owner_->ioService()->coreHandle(), fd, EV_READ|EV_PERSIST, event_cb, this);
 		if(NULL == ev_write_)
-			ev_write_ = event_new(owner_->ioService()->coreHandle(), fd, EV_WRITE|EV_PERSIST, event_cb, this);
+			ev_write_ = event_new((struct event_base *)owner_->ioService()->coreHandle(), fd, EV_WRITE|EV_PERSIST, event_cb, this);
 
 		if(NULL == write_evbuffer_) 
 			write_evbuffer_ = evbuffer_new();
@@ -311,7 +311,7 @@ public:
 
 	void _createBufferEvent(coconut_socket_t fd) {
 		if(NULL == bev_) {
-			bev_ = bufferevent_socket_new(owner_->ioService()->coreHandle(), fd, BEV_OPT_CLOSE_ON_FREE);
+			bev_ = bufferevent_socket_new((struct event_base *)owner_->ioService()->coreHandle(), fd, BEV_OPT_CLOSE_ON_FREE);
 			bufferevent_enable(bev_, EV_READ|EV_WRITE);
 		}
 	

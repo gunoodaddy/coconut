@@ -146,7 +146,7 @@ public:
 		destoryHandle();
 	}
 
-	virtual struct event_base * coreHandle() = 0;
+	virtual coconut_io_handle_t coreHandle() = 0;
 	virtual void stop() = 0;
 	virtual void dispatchEvent() = 0;
 	virtual void createHandle() = 0;
