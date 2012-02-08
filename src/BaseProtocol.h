@@ -109,7 +109,7 @@ public:
 		readBuffer_->write(data, size);
 	}
 
-	boost::shared_ptr<BufferedTransport> payloadBuffer();	// or readBuffer()
+	virtual boost::shared_ptr<BufferedTransport> payloadBuffer();	// or readBuffer()
 	boost::shared_ptr<BufferedTransport> writingBuffer() {
 		return writebuffer_;
 	}
