@@ -41,6 +41,19 @@ BufferedTransport::~BufferedTransport() {
 	_LOG_TRACE("~BufferedTransport() : %p", this);
 }
 
+int BufferedTransport::erase(size_t pos, size_t size) {
+	if(buffer_.size() < (pos + size))
+		throw ProtocolException("erase size greater than buffer size");
+	buffer_.erase(pos, size);
+	return size;
+}
+
+int BufferedTransport::insertInt8(size_t pos, boost::int8_t value) {
+	boost::int8_t *ptr = (boost::int8_t*)&value;
+	buffer_.insert(pos, (const char*)ptr, 1);
+	return 1;
+}
+
 int BufferedTransport::write(const char* ptr, size_t size) {
 	return write((const void *)ptr, size);
 }

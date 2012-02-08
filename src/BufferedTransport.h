@@ -51,6 +51,7 @@ public:
 		return "BufferedTransport";
 	}
 	
+	int erase(size_t pos, size_t size);
 	int write(const char* ptr, size_t size);
 	int write(const void* ptr, size_t size);
 	int read(std::string &data, size_t size);
@@ -58,6 +59,7 @@ public:
 	const void * peek(size_t &size);
 	int peek(char *buffer, size_t size);
 	void throwAway(size_t size);
+	int insertInt8(size_t pos, boost::int8_t value);
 
 	boost::int32_t writeInt32(boost::int32_t value) {
 		boost::int32_t net;
