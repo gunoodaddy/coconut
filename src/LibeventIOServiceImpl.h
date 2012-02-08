@@ -119,7 +119,7 @@ public:
 		//assert(false && "event loop exit???? why?");
 	}
 
-	bool isStopped() {
+	inline bool isStopped() {
 		return loopExitFlag_;
 	}
 
