@@ -53,6 +53,7 @@ public:
 	static const int TIMERID_CONNECT = (1|INTERNAL_TIMER_BIT);
 
 	LibeventTcpSocketImpl(TcpSocket *owner) : owner_(owner)
+		, expired_(false)
 		, errorDetected_(false)
 		, pendingWriteSupported_(true)
 		, bev_(NULL)
@@ -103,7 +104,7 @@ public:
 		}
 	}
 
-	static void event_cb(coconut_socket_t fd, short what, void *arg) {
+	static inline void event_cb(coconut_socket_t fd, short what, void *arg) {
 		LibeventTcpSocketImpl *SELF = (LibeventTcpSocketImpl *)arg;
 		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 
@@ -115,6 +116,11 @@ public:
 		}
 	}
 	
+	static void write_cb(struct bufferevent *bev, void *ptr) {
+		LibeventTcpSocketImpl *SELF = (LibeventTcpSocketImpl *)ptr;
+		SELF->_onBufferEventWritten();
+	}
+
 	static void read_cb(struct bufferevent *bev, void *ptr) {
 #define READ_MODE_3 
 #if defined(READ_MODE_1)
@@ -327,7 +333,7 @@ public:
 		ScopedIOServiceLock(owner_->ioService());
 
 		if(bev_) {
-			bufferevent_setcb(bev_, read_cb, NULL, bufevent_cb, this);
+			bufferevent_setcb(bev_, read_cb, write_cb, bufevent_cb, this);
 
 			struct evbuffer *readBuffer = bufferevent_get_input(bev_);
 			if(readBuffer) {
@@ -354,7 +360,7 @@ public:
 		if(buffer_len < size)
 			size = buffer_len;
 		const void *pulled_data = evbuffer_pullup(buffer, size);
-		//logger::hexdump((const unsigned char*)pulled_data, buffer_len, stdout);
+		logger::hexdump((const unsigned char*)pulled_data, size, stdout);
 		return pulled_data;
 	}
 
@@ -485,6 +491,21 @@ public:
 		return &sockAddress_;
 	}
 
+	void closeAfterAllSent() {
+		expired_ = true;
+		if(bev_) {
+			bufferevent_enable(bev_, EV_WRITE);
+			
+			// following function is checking output buffer is empty. if yes, close
+			_checkOutpuBufferAndClose();
+		} else {
+			event_del(ev_read_);
+			event_add(ev_write_, NULL);
+		}
+
+		// wait for sending all buffer.
+	}
+
 	void close() {
 		_close();
 		fire_onSocket_Close();
@@ -506,15 +527,33 @@ public:
 			bev_ = NULL;
 		}
 		if(ev_read_) {
-			coconut_socket_t fd = event_get_fd(ev_read_);
 			event_free(ev_read_);
-			evutil_closesocket(fd);
 			ev_read_ = NULL;
 		}
 		if(ev_write_) {
+			coconut_socket_t fd = event_get_fd(ev_write_);
+			evutil_closesocket(fd);
+
 			event_free(ev_write_);
 			ev_write_ = NULL;
 		}
+	}
+
+	void _checkOutpuBufferAndClose() {
+		if(expired_) {
+			if(bev_) {
+				struct evbuffer *output = bufferevent_get_output(bev_);
+				if(evbuffer_get_length(output) <= 0) {
+					_LOG_DEBUG("(bufferevent) this socket is expired! socket closed.. : %d", socketFD());
+					close();	// directly close!
+					return;
+				}
+			}
+		}
+	}
+
+	void _onBufferEventWritten() {
+		_checkOutpuBufferAndClose();
 	}
 
 	void _onReadEvent(coconut_socket_t fd) {
@@ -532,6 +571,10 @@ public:
 			do {
 				if(kbuffer_get_size(write_kbuffer_) <= 0) {
 					event_del(ev_write_);
+					if(expired_) {
+						_LOG_DEBUG("(event) this socket is expired! socket closed.. : %d", socketFD());
+						close();
+					}
 					break;
 				}
 				const void *data = kbuffer_get_contiguous_data(write_kbuffer_, &size);
@@ -644,8 +687,9 @@ private:	// fire event callback
 
 private:
 	TcpSocket *owner_;
-	bool errorDetected_;
-	bool pendingWriteSupported_;
+	volatile bool expired_;
+	volatile bool errorDetected_;
+	volatile bool pendingWriteSupported_;
 	struct bufferevent *bev_;	
 	struct event *ev_read_;
 	struct event *ev_write_;

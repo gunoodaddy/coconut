@@ -50,6 +50,7 @@ public:
 	virtual int write(const void *data, size_t size) = 0;
 
 	virtual void close() = 0;
+	virtual void closeAfterAllSent() = 0;
 
 	virtual void checkResponseSocket(int res) = 0;
 

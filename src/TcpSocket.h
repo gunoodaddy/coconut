@@ -52,6 +52,7 @@ public:
 	int write(const void *data, size_t size);
 	int writeString(const std::string &data);
 	void close();
+	void closeAfterAllSent();
 	void checkResponseSocket(int res);
 	void install();
 

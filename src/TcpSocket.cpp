@@ -95,6 +95,10 @@ void TcpSocket::close() {
 	return impl_->close();
 }
 
+void TcpSocket::closeAfterAllSent() {
+	return impl_->closeAfterAllSent();
+}
+
 const BaseAddress * TcpSocket::peerAddress() {
 	return impl_->peerAddress();
 }
