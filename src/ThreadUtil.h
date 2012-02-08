@@ -33,7 +33,8 @@
 #if ! defined(COCONUT_USE_PRECOMPILE)
  #include <boost/thread/recursive_mutex.hpp>
 #endif
-#define ScopedMutexLock(mutex)	boost::recursive_mutex::scoped_lock autolock(mutex.handle());
+//#define ScopedMutexLock(mutex)	boost::recursive_mutex::scoped_lock autolock(mutex.handle());
+#define ScopedMutexLock(mutex)	coconut::Mutex::ScopedLock autolock(&mutex)
 
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/interprocess/detail/atomic.hpp>
@@ -73,15 +74,40 @@ public:
 
 	virtual ~Mutex() { }
 
+	class ScopedLock
+	{
+		Mutex* m;
+		bool locked;
+		public:
+		explicit ScopedLock(Mutex* m_):
+			m(m_),locked(true)
+		{
+			m->lock();
+		}
+		void unlock()
+		{
+			m->unlock();
+			locked=false;
+		}
+
+		~ScopedLock()
+		{
+			if(locked)
+			{
+				m->unlock();
+			}
+		}
+	};
+
 public:
-	int lock() {
+	inline int lock() {
 		if(_activateMultithreadMode_on) {
 			mutex_.lock();
 		}
 		return 0;
 	}
 
-	int unlock() {
+	inline int unlock() {
 		if(_activateMultithreadMode_on) {
 			mutex_.unlock();
 		}
