@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <map>
 #include <vector>
+#include "HttpRequest.h"
 #include "HttpServerImpl.h"
 
 namespace coconut {
@@ -74,8 +75,10 @@ private:
 	void fire_onDocumentCallback(struct evhttp_request *req) {
 		ScopedMutexLock(lock_);
 
-		HttpRequest request(req);
-		handler_->onHttpServer_DocumentRequest(owner_, &request);
+		boost::shared_ptr<HttpRequest> request 
+				= boost::shared_ptr<HttpRequest>(new HttpRequest((coconut_http_request_handle_t)req));
+
+		handler_->onHttpServer_DocumentRequest(owner_, request);
 /*
 		const char *uri = evhttp_request_get_uri(req);
 		mapcallback_t::iterator it = mapCallback_.find(uri);
@@ -112,6 +115,7 @@ public:
 		if (!handle_) {
 			throw SocketException("couldn't bind to port for http server");
 		}
+		handler_->onHttpServer_Initialized(owner_);
 	}
 
 private:

@@ -27,30 +27,36 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#pragma once
-
 #include "CoconutLib.h"
-#include "Exception.h"
-#include "Logger.h"
-#include "ThreadUtil.h"
-#include "IOService.h"
-#include "IOServiceContainer.h"
-#include "HttpClient.h"
-#include "HttpServer.h"
 #include "HttpRequest.h"
-#include "RedisRequest.h"
-#include "RedisResponse.h"
-#include "PlaceHolders.h"
-#include "ClientController.h"
-#include "FileDescriptorController.h"
-#include "FrameController.h"
-#include "JSONController.h"
-#include "LineController.h"
-#include "ServerController.h"
-#include "BaseProtocol.h"
-#include "BufferedTransport.h"
-#include "VirtualTransportHelper.h"
-#include "TcpSocket.h"
-#include "UdpSocket.h"
-#include "NetworkHelper.h"
+#include "HttpRequestImpl.h"
+#include "IOSystemFactory.h"
+
+namespace coconut {
+
+HttpRequest::HttpRequest(coconut_http_request_handle_t req) : native_handle_(req) { 
+	impl_ = IOSystemFactory::instance()->createHttpRequestImpl(this);
+}
+
+const char * HttpRequest::uri() {
+	return impl_->uri();
+}
+
+const char * HttpRequest::path() {
+	return impl_->path();
+}
+
+const char * HttpRequest::findParameter(const char *key) {
+	return impl_->findParameter(key);
+}
+
+void HttpRequest::sendReplyString(int code, const char *reason, const std::string &str) {
+	impl_->sendReplyData(code, reason, str.c_str(), str.size());
+}
+
+void HttpRequest::sendReplyData(int code, const char *reason, const char* data, size_t size) {
+	impl_->sendReplyData(code, reason, data, size);
+}
+
+}
 

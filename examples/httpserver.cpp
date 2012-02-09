@@ -32,11 +32,11 @@
 #include <event2/buffer.h>
 
 class HttpServerHandler : public coconut::HttpServer::EventHandler {
-	virtual void onHttpServer_DocumentRequest(coconut::HttpServer *server, coconut::HttpRequest *request) { 
+	virtual void onHttpServer_DocumentRequest(coconut::HttpServer *server, boost::shared_ptr<coconut::HttpRequest> request) { 
 
 		// directly using libevent-http api
 		{
-			struct evhttp_request *req = request->nativeHandle();
+			struct evhttp_request *req = (struct evhttp_request*)request->nativeHandle();
 			const char *uri = evhttp_request_get_uri(req);
 			LOG_INFO("onHttpServer_DocumentRequest emitted.. uri = %s", uri);
 

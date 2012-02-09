@@ -41,21 +41,8 @@ struct evhttp_request;
 namespace coconut {
 
 class IOService;
+class HttpRequest;
 class HttpServerImpl;
-
-
-class COCONUT_API HttpRequest {
-public:
-	HttpRequest(struct evhttp_request *req) : native_handle_(req) { }
-
-	struct evhttp_request *nativeHandle() {
-		return native_handle_;
-	}
-
-private:
-	struct evhttp_request *native_handle_;
-};
-
 
 class COCONUT_API HttpServer {
 public:
@@ -66,7 +53,8 @@ public:
 	{
 	public:
 		virtual ~EventHandler() { }
-		virtual void onHttpServer_DocumentRequest(HttpServer *server, HttpRequest *request) { }
+		virtual void onHttpServer_Initialized(HttpServer *server) { }
+		virtual void onHttpServer_DocumentRequest(HttpServer *server, boost::shared_ptr<HttpRequest> request) { }
 		// maybe another callback added..
 		// if decided one callback count (like now), TODO replace boost::bind mechanism..
 	};

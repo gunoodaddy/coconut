@@ -29,28 +29,17 @@
 
 #pragma once
 
-#include "CoconutLib.h"
-#include "Exception.h"
-#include "Logger.h"
-#include "ThreadUtil.h"
-#include "IOService.h"
-#include "IOServiceContainer.h"
-#include "HttpClient.h"
-#include "HttpServer.h"
-#include "HttpRequest.h"
-#include "RedisRequest.h"
-#include "RedisResponse.h"
-#include "PlaceHolders.h"
-#include "ClientController.h"
-#include "FileDescriptorController.h"
-#include "FrameController.h"
-#include "JSONController.h"
-#include "LineController.h"
-#include "ServerController.h"
-#include "BaseProtocol.h"
-#include "BufferedTransport.h"
-#include "VirtualTransportHelper.h"
-#include "TcpSocket.h"
-#include "UdpSocket.h"
-#include "NetworkHelper.h"
+namespace coconut {
+
+class HttpRequestImpl {
+public:
+	virtual ~HttpRequestImpl() { }
+
+	virtual const char * uri() = 0;
+	virtual const char * path() = 0;
+	virtual const char * findParameter(const char *key) = 0;
+	virtual void sendReplyData(int code, const char *reason, const char* data, size_t size) = 0;
+};
+
+}
 

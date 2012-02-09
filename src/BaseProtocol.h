@@ -43,7 +43,7 @@ namespace coconut { namespace protocol {
 
 class COCONUT_API BaseProtocol {
 public:
-	BaseProtocol() : parent_protocol_(NULL), turnOnWrite_(true) {
+	BaseProtocol() : parent_protocol_(NULL), turnOnWrite_(true), ownerKey_(0) {
 		readBuffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
 		writebuffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
 	}
@@ -139,12 +139,21 @@ public:
 		return turnOnWrite_;
 	}
 
+	void setOwnerKey(int ownerKey) {
+		ownerKey_ = ownerKey;
+	}
+
+	int ownerKey() {
+		return ownerKey_;
+	}
+
 protected:
 	boost::shared_ptr<BufferedTransport> readBuffer_;
 	boost::shared_ptr<BufferedTransport> writebuffer_;
 	BaseProtocol *parent_protocol_;
 	boost::shared_ptr<BaseProtocol> parent_protocol_shared_ptr_;
-	bool turnOnWrite_;
+	volatile bool turnOnWrite_;
+	int ownerKey_;
 };
 
 

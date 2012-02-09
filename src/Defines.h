@@ -32,6 +32,9 @@
 #include "config.h"
 #include <vector>
 #include <string>
+#if defined(HAVE_SYS_QUEUE_H)
+#include <sys/queue.h>
+#endif
 
 #if defined(WIN32)
 #if defined(COCONUT_STATIC)
@@ -62,6 +65,7 @@ typedef int coconut_socket_t;
 #endif
 
 typedef void * coconut_io_handle_t;
+typedef void * coconut_http_request_handle_t;
 
 #define MAKE_TIMEVAL_SEC(SEC) MAKE_TIMEVAL_MSEC(SEC*1000)
 #define MAKE_TIMEVAL_MSEC(MSEC) {MSEC/1000, (MSEC % 1000) * 1000}
@@ -93,5 +97,30 @@ enum HttpMethodType {
 	HTTP_POST,
 	HTTP_GET
 };
+
+#ifndef TAILQ_INIT
+#define	TAILQ_INIT(head) do {						\
+	(head)->tqh_first = NULL;					\
+	(head)->tqh_last = &(head)->tqh_first;				\
+} while (/*CONSTCOND*/0)
+#endif
+
+#ifndef TAILQ_FIRST
+#define TAILQ_FIRST(head)       ((head)->tqh_first)
+#endif
+#ifndef TAILQ_END
+#define TAILQ_END(head)         NULL
+#endif
+#ifndef TAILQ_NEXT
+#define TAILQ_NEXT(elm, field)      ((elm)->field.tqe_next)
+#endif
+
+#ifndef TAILQ_FOREACH
+#define TAILQ_FOREACH(var, head, field)                 \
+	for ((var) = TAILQ_FIRST(head);                 \
+			(var) != TAILQ_END(head);                  \
+			(var) = TAILQ_NEXT(var, field))
+#endif
+
 
 } // end of namespace coconut

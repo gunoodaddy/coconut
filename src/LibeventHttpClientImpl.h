@@ -37,31 +37,11 @@
 #include <fcntl.h>
 #include <map>
 #include <vector>
-#if defined(HAVE_SYS_QUEUE_H)
-#include <sys/queue.h>
-#endif
 #if defined(WIN32)
 #include <io.h>
 #endif
 #include "HttpClient.h"
 #include "HttpClientImpl.h"
-
-#ifndef TAILQ_FIRST
-#define TAILQ_FIRST(head)       ((head)->tqh_first)
-#endif
-#ifndef TAILQ_END
-#define TAILQ_END(head)         NULL
-#endif
-#ifndef TAILQ_NEXT
-#define TAILQ_NEXT(elm, field)      ((elm)->field.tqe_next)
-#endif
-
-#ifndef TAILQ_FOREACH
-#define TAILQ_FOREACH(var, head, field)                 \
-	for ((var) = TAILQ_FIRST(head);                 \
-			(var) != TAILQ_END(head);                  \
-			(var) = TAILQ_NEXT(var, field))
-#endif
 
 static std::string gNullStr("");
 

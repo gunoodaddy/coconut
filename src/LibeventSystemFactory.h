@@ -37,6 +37,7 @@
 #include "LibeventTcpSocketImpl.h"
 #include "LibeventUdpSocketImpl.h"
 #include "LibeventIOServiceImpl.h"
+#include "LibeventHttpRequestImpl.h"
 #include "LibeventHttpServerImpl.h"
 #include "LibeventHttpClientImpl.h"
 
@@ -87,6 +88,10 @@ public:
 							boost::shared_ptr<IOService> ioService, 
 							int port) {
 		return boost::shared_ptr<HttpServerImpl>(new LibeventHttpServerImpl(owner, ioService, port));
+	}
+
+	boost::shared_ptr<HttpRequestImpl> createHttpRequestImpl(HttpRequest *owner) {
+		return boost::shared_ptr<HttpRequestImpl>(new LibeventHttpRequestImpl(owner));
 	}
 
 	boost::shared_ptr<HttpClientImpl> createHttpClientImpl(

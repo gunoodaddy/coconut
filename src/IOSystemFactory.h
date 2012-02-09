@@ -47,6 +47,8 @@ class HttpParameter;
 class HttpClient;
 class HttpServer;
 class HttpServerImpl;
+class HttpRequest;
+class HttpRequestImpl;
 class IOServiceImpl;
 class BaseIOServiceContainer;
 
@@ -69,6 +71,8 @@ public:
 	virtual boost::shared_ptr<UdpSocketImpl> createUdpSocketImpl(UdpSocket *owner, int port) = 0;
 	
 	virtual boost::shared_ptr<IOServiceImpl> createIOServiceImpl(int id, BaseIOServiceContainer *container, bool threadMode) = 0;
+
+	virtual boost::shared_ptr<HttpRequestImpl> createHttpRequestImpl(HttpRequest *owner) = 0;
 
 	virtual boost::shared_ptr<HttpServerImpl> createHttpServerImpl(
 							HttpServer *owner, 

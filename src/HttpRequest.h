@@ -29,28 +29,31 @@
 
 #pragma once
 
-#include "CoconutLib.h"
-#include "Exception.h"
-#include "Logger.h"
-#include "ThreadUtil.h"
-#include "IOService.h"
-#include "IOServiceContainer.h"
-#include "HttpClient.h"
-#include "HttpServer.h"
-#include "HttpRequest.h"
-#include "RedisRequest.h"
-#include "RedisResponse.h"
-#include "PlaceHolders.h"
-#include "ClientController.h"
-#include "FileDescriptorController.h"
-#include "FrameController.h"
-#include "JSONController.h"
-#include "LineController.h"
-#include "ServerController.h"
-#include "BaseProtocol.h"
-#include "BufferedTransport.h"
-#include "VirtualTransportHelper.h"
-#include "TcpSocket.h"
-#include "UdpSocket.h"
-#include "NetworkHelper.h"
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/shared_ptr.hpp>
+#endif
 
+namespace coconut {
+
+class HttpRequestImpl;
+
+class COCONUT_API HttpRequest {
+public:
+	HttpRequest(coconut_http_request_handle_t req);
+
+	coconut_http_request_handle_t nativeHandle() {
+		return native_handle_;
+	}
+
+	const char * uri();
+	const char * path();
+	const char * findParameter(const char *key);
+	void sendReplyString(int code, const char *reason, const std::string &str);
+	void sendReplyData(int code, const char *reason, const char* data, size_t size);
+
+private:
+	coconut_http_request_handle_t native_handle_;
+	boost::shared_ptr<HttpRequestImpl> impl_;
+};
+
+}

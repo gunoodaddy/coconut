@@ -23,6 +23,7 @@ libcoconut_la_SOURCES = \
                        RedisRequest.cpp \
                        RedisResponse.cpp \
                        HttpClient.cpp \
+                       HttpRequest.cpp \
                        HttpServer.cpp \
                        BaseProtocol.cpp \
                        FrameProtocol.cpp \
