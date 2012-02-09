@@ -237,9 +237,18 @@ private:
 		connected_ = false;
 	}
 
-	void fire_onRedisRequest_Error(int error, const char *strerror) {
+	void fire_onRedisRequest_Error(int error, const char *strerror, void *privdata) {
 		if(false == closing_) {
 			// TODO redis connect error callback
+		}
+
+		if(privdata) {
+			ticket_t ticket = (ticket_t)privdata;
+			const struct RedisRequest::requestContext *context = _findRequestContext(ticket);
+			if(context) {
+				boost::shared_ptr<RedisResponse> res(new RedisResponse(error, strerror));
+				context->handler(context, res);
+			}
 		}
 	}
 
@@ -248,8 +257,6 @@ private:
 
 		//redisAsyncDisconnect(c); // TODO when disconnect??
 		ticket_t ticket = (ticket_t)privdata;
-		std::string str;
-		str.assign(reply->str, reply->len);
 		boost::shared_ptr<RedisResponse> res(new RedisResponse(reply, ticket));
 		const struct RedisRequest::requestContext *context = _findRequestContext(ticket);
 
@@ -268,7 +275,7 @@ private:
 		RedisRequestImpl *SELF = (RedisRequestImpl *)c->data;
 #if ! defined(WIN32) 
 		if (status != REDIS_OK) {
-			SELF->fire_onRedisRequest_Error(c->err, c->errstr);
+			SELF->fire_onRedisRequest_Error(c->err, c->errstr, NULL);
 			return;
 		}
 #endif
@@ -284,7 +291,7 @@ private:
 		RedisRequestImpl *SELF = (RedisRequestImpl *)c->data;
 		redisReply *reply = (redisReply *)r;
 		if (reply == NULL) {
-			SELF->fire_onRedisRequest_Error(c->err, c->errstr);
+			SELF->fire_onRedisRequest_Error(c->err, c->errstr, privdata);
 			return;
 		}
 		SELF->fire_onRedisRequest_Response(reply, privdata);
