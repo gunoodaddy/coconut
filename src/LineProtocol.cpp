@@ -34,16 +34,16 @@
 
 namespace coconut { namespace protocol {
 
-LineProtocol::LineProtocol() : readComplete_(false) {
+LineProtocol::LineProtocol() : readComplete_(false), remainReadBufferSize_(0) {
 	_LOG_TRACE("LineProtocol : %p", this);
 }
 
-LineProtocol::LineProtocol(BaseProtocol *protocol) : readComplete_(false) {
+LineProtocol::LineProtocol(BaseProtocol *protocol) : readComplete_(false), remainReadBufferSize_(0) {
 	_LOG_TRACE("LineProtocol with parent_protocol : %p", this);
 	parent_protocol_ = protocol;
 }
 
-LineProtocol::LineProtocol(boost::shared_ptr<BaseProtocol> protocol) : readComplete_(false) {
+LineProtocol::LineProtocol(boost::shared_ptr<BaseProtocol> protocol) : readComplete_(false), remainReadBufferSize_(0) {
 	_LOG_TRACE("LineProtocol with parent_protocol_shared_ptr : %p", this);
 	parent_protocol_shared_ptr_ = protocol;
 }
@@ -63,32 +63,52 @@ bool LineProtocol::processSerialize(size_t bufferSize) {
 	return true;
 }
 
+#define BUFFER_SIZE 4096
+
 bool LineProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transport) {
 	if(callParentProcessRead(transport) == false)
 		return false;
 
 	try {
-		do {
-			boost::int8_t byte;
-			if(VirtualTransportHelper::readInt8(transport, byte) == 1) {
-				if(byte != '\n') {
-					if(byte != '\r')
-						line_.append(1, (char)byte);
-				} else {
-					_LOG_DEBUG("LineProtocol line received : [%s]", line_.c_str()); 
-					readComplete_ = true;
-					return true;
+		char buffer[BUFFER_SIZE] = {0, };
+		int nread = transport->read(buffer, BUFFER_SIZE);	
+		
+		for(int i = 0; i < nread; i++) {
+			if(buffer[i] == '\r' || buffer[i] == '\n') {
+				size_t addition = 0;
+				if(i < nread - 1) {
+					if( buffer[i] == '\r' && buffer[i+1] == '\n' 
+					 || buffer[i] == '\n' && buffer[i+1] == '\r') {
+						addition = 1;
+					}
 				}
-			} else {
-				break;
+				remainReadBufferSize_ = nread - i - (1 + addition);
+				line_.append(buffer, i);
+				_LOG_DEBUG("LineProtocol line received : [%s]", line_.c_str()); 
+				readComplete_ = true;
+				return true;
 			}
-		} while(1); 
+		}
 	} catch (SocketException &e) {
 		(void)e;
 	} catch (ProtocolException &e) {
 		(void)e;
 	}
 	return false;
+}
+
+const void * LineProtocol::remainingBufferPtr() {
+	if(isReadComplete()) {
+		return (const char*)payloadBuffer()->currentPtr() - remainReadBufferSize_;
+	}
+	return BaseProtocol::remainingBufferPtr();
+}
+
+size_t LineProtocol::remainingBufferSize() {
+	if(isReadComplete()) {
+		return remainReadBufferSize_;
+	}
+	return BaseProtocol::remainingBufferSize();
 }
 
 }}

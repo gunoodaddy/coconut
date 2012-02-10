@@ -30,6 +30,8 @@
 #include "Coconut.h"
 
 #define BIND_PORT	8765
+#define ECHO_DATA_SHORT	"get keh........................."
+#define ECHO_DATA_LONG	"get keh......................................................................................................................................................................................................................................................."
 
 size_t MAX_CLIENT_COUNT = 0;
 size_t MAX_SEND_COUNT = 0;
@@ -61,7 +63,7 @@ public:
 
 	void sendMessage() {
 		if(++currSentCount_ <= sendCount_) {
-			writeLine("get keh");
+			writeLine(ECHO_DATA_LONG);
 		}
 	}
 	virtual void onLineReceived(const char *line) {

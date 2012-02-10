@@ -56,6 +56,9 @@ public:
 
 	bool processSerialize(size_t bufferSize = 0);
 
+	const void * remainingBufferPtr();
+	size_t remainingBufferSize();
+
 public:
 	void setLine(const std::string &string) {
 		line_ = string;
@@ -67,7 +70,8 @@ public:
 
 private:
 	std::string line_;
-	bool readComplete_;
+	volatile bool readComplete_;
+	int remainReadBufferSize_;
 };
 
 } }
