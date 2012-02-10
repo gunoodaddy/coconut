@@ -63,7 +63,7 @@ public:
 		createHandle();
 	}
 
-	void deferredCall(DeferredCaller::deferedMethod_t func) {
+	void deferredCall(DeferredCaller::deferredMethod_t func) {
 		lock_.lock();
 		deferredMethods_.push_back(func);
 		lock_.unlock();
@@ -78,7 +78,7 @@ public:
 
 protected:
 	boost::shared_ptr<IOService> ioService_;
-	std::vector<DeferredCaller::deferedMethod_t> deferredMethods_;
+	std::vector<DeferredCaller::deferredMethod_t> deferredMethods_;
 	Mutex lock_;
 };
 

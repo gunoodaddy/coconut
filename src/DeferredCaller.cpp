@@ -52,7 +52,7 @@ void DeferredCaller::setIOService(boost::shared_ptr<IOService> ioService) {
 	impl_->setIOService(ioService);
 }
 
-void DeferredCaller::deferredCall(deferedMethod_t func) {
+void DeferredCaller::deferredCall(deferredMethod_t func) {
 	impl_->deferredCall(func);
 }
 

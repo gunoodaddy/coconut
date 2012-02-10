@@ -44,11 +44,11 @@ public:
 	DeferredCaller(boost::shared_ptr<IOService> ioService); 
 	~DeferredCaller();
 
-	typedef boost::function< void () > deferedMethod_t;
+	typedef boost::function< void () > deferredMethod_t;
 
 public:
 	void setIOService(boost::shared_ptr<IOService> ioService);
-	void deferredCall(deferedMethod_t func);
+	void deferredCall(deferredMethod_t func);
 
 private:
 	boost::shared_ptr<DeferredCallerImpl> impl_;

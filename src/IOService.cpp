@@ -144,7 +144,7 @@ bool IOService::isCalledInMountedThread() {
 	return impl_->isCalledInMountedThread();
 }
 
-void IOService::deferredCall(deferedMethod_t func) {
+void IOService::deferredCall(deferredMethod_t func) {
 	return impl_->deferredCall(func);
 }
 

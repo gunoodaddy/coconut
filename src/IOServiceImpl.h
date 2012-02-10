@@ -68,7 +68,7 @@ public:
 		return threadHandle() == boost::this_thread::get_id();
 	}
 
-	void deferredCall(IOService::deferedMethod_t func) {
+	void deferredCall(IOService::deferredMethod_t func) {
 		lockDeferredCaller_.lock();
 		deferredCallbacks_.push_back(func);
 		lockDeferredCaller_.unlock();
@@ -178,7 +178,7 @@ protected:
 	
 	Mutex lock_;
 	Mutex lockDeferredCaller_;
-	std::vector<IOService::deferedMethod_t> deferredCallbacks_;
+	std::vector<IOService::deferredMethod_t> deferredCallbacks_;
 };
 
 }

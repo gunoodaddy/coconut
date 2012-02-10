@@ -58,7 +58,7 @@ private:
 	IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode = false);
 
 public:
-	typedef boost::function< void () > deferedMethod_t;
+	typedef boost::function< void () > deferredMethod_t;
 
 	boost::thread::id threadHandle();
 
@@ -72,7 +72,7 @@ public:
 	bool isCalledInMountedThread();
 	bool isStopped();
 
-	void deferredCall(deferedMethod_t func);
+	void deferredCall(deferredMethod_t func);
 
 	BaseIOServiceContainer *ioServiceContainer();
 	coconut_io_handle_t coreHandle();
