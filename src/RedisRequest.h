@@ -51,16 +51,17 @@ public:
 		std::string command;
 		std::vector<std::string> args;
 		ResponseHandler handler;
+		int ttl;	// private
 	};
 
 public:
 	boost::shared_ptr<IOService> ioService();
 
 	void connect();
-	void close(bool callback = true);
+	void close();
 
-	ticket_t command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler);
-	ticket_t command(const std::vector<std::string> &args, ResponseHandler handler);
+	ticket_t command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler, int timeout/*sec*/= 0);
+	ticket_t command(const std::vector<std::string> &args, ResponseHandler handler, int timeout/*sec*/= 0);
 	void cancel(ticket_t ticket);
 
 private:

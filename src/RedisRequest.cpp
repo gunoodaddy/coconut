@@ -35,6 +35,7 @@
 #include "Exception.h"
 #include "ThreadUtil.h"
 #include "InternalLogger.h"
+#include "Timer.h"
 #include <event2/event.h>
 #include <event2/event_compat.h>
 #include <event2/event_struct.h>
@@ -46,10 +47,26 @@
 #include <hiredis/async.h>
 #endif
 
+#define DEFAULT_RECONNECT_TIMEOUT 	1000	// unit : msec
+#define DEFAULT_CONNECT_TIMEOUT 	2000	// unit : msec
+
 namespace coconut {
 
-class RedisRequestImpl {
+class RedisRequestImpl : public Timer::EventHandler {
 public:
+	const static int TIMER_ID_RECONNECT 			= 0x1;
+	const static int TIMER_ID_CONNECTION_TIMEOUT 	= 0x3;
+	const static int TIMER_ID_COMMAND_TTL 			= 0x5;
+
+	enum RedisRequestState {
+		REDISREQUEST_INIT,
+		REDISREQUEST_CONNECTING,
+		REDISREQUEST_CONNECTED,
+		REDISREQUEST_CONNECTFAILED,
+		REDISREQUEST_CLOSED,
+		REDISREQUEST_RECONECTREADY,
+	};
+
 	RedisRequestImpl(RedisRequest *owner, 
 					 boost::shared_ptr<IOService> ioService, 
 					 const char *host, 
@@ -59,9 +76,11 @@ public:
 		, redisContext_(NULL)
 		, host_(host)
 		, port_(port)
-		, closing_(false)
-		, connected_(false)
-		, deferredCaller_(ioService) { 
+		, state_(REDISREQUEST_INIT)
+		, timerObj_(NULL) 
+		, deferredCaller_(ioService) 
+	{
+		_makeTimer();
 		_LOG_TRACE("RedisRequestImpl() : %p", this);
 	}
 	
@@ -81,55 +100,57 @@ public:
 		return ioService_;
 	}
 
-	void close(bool callback) {
+	void close(bool callback = true) {
 		if(redisContext_) {
-			// TODO gracefully async disconnect logic need
-			// CHECK IT OUT!
-			closing_ = true;
-			if(false == callback) {
+			if(callback) {
 				redisContext_->onConnect = NULL;
 				redisContext_->onDisconnect = NULL;
 			}
+
+			// TODO gracefully async disconnect logic need
+			// CHECK IT OUT!
 			redisAsyncFree(redisContext_);
 			redisContext_ = NULL;
 		}
+		state_ = REDISREQUEST_CLOSED;
+	}
+
+	void reconnect() {
+		_LOG_DEBUG("REDIS RECONNECT START : this = %p", this);
+		CHECK_IOSERVICE_STOP_VOID_RETURN(ioService_);
+		state_ = REDISREQUEST_RECONECTREADY;
+		timerObj_->setTimer(TIMER_ID_RECONNECT, DEFAULT_RECONNECT_TIMEOUT, false);
 	}
 
 	void connect() {
 		if(redisContext_) {
 			throw IllegalStateException("Error redisContext already created");
 		}
-		closing_ = false;
+		state_ = REDISREQUEST_CONNECTING;
 		ScopedMutexLock(lockRedis_);
 		redisContext_ = redisAsyncConnect(host_.c_str(), port_);
-		if (redisContext_->err) {
-			// Let *c leak for now...
-			throw RedisException(redisContext_->errstr);
-		}
-		redisContext_->data = this;
 
+		if (redisContext_->err) {
+			_LOG_DEBUG("REDIS CONNECT FAILED (CREATE ERROR): %s:%d, err = %x, this = %p"
+				, host_.c_str(), port_, redisContext_->err, this);
+
+			state_ = REDISREQUEST_CONNECTFAILED;
+			//fire_onRedisRequest_Error(redisContext_->err, "connect error", NULL);
+			// disconnectCallback() is called later soon..
+			// error process will be executed by that function.
+		}
+
+		redisContext_->data = this;
 		redisLibeventAttach(redisContext_, (struct event_base *)ioService_->coreHandle());
 		redisAsyncSetConnectCallback(redisContext_, connectCallback);
 		redisAsyncSetDisconnectCallback(redisContext_, disconnectCallback);
-		_LOG_DEBUG("redis connect start : %s:%d", host_.c_str(), port_);
+		timerObj_->setTimer(TIMER_ID_CONNECTION_TIMEOUT, DEFAULT_CONNECT_TIMEOUT, false);
+
+		_LOG_DEBUG("redis connect start : %s:%d, flag = 0x%x, fd = %d, context = %p, this = %p"
+				, host_.c_str(), port_, redisContext_->c.flags, redisContext_->c.fd, redisContext_, this);
 	}
 
-	ticket_t _commandPrepare(const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
-		ticket_t ticket = issueTicket();
-
-		struct RedisRequest::requestContext context;
-		context.args = args;
-		context.ticket = ticket;
-		context.handler = handler;
-
-		// for preventing from multithread race condition, must insert to map here..
-		lockRedis_.lock();
-		mapCallback_.insert(MapCallback_t::value_type(ticket, context));
-		lockRedis_.unlock();
-		return ticket;
-	}
-
-	ticket_t command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler) {
+	ticket_t command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler, int timeout = 0) {
 
 		int cnt = 0;
 		size_t pos = 0;
@@ -156,11 +177,26 @@ public:
 			cnt++;
 		} while(true);
 
-		return command(tempArgs, handler);
+		return command(tempArgs, handler, timeout);
 	}
 
-	ticket_t command(const std::vector<std::string> &args, RedisRequest::ResponseHandler handler) {
-		ticket_t ticket = _commandPrepare(args, handler);
+	ticket_t command(const std::vector<std::string> &args, RedisRequest::ResponseHandler handler, int timeout = 0) {
+		ticket_t ticket = issueTicket();
+
+		if(timeout > 0) {
+			timerObj_->setTimer(TIMER_ID_COMMAND_TTL, 1000, true);
+		}
+
+		struct RedisRequest::requestContext context;
+		context.args = args;
+		context.ticket = ticket;
+		context.handler = handler;
+		context.ttl = timeout > 0 ? timeout : -1;
+
+		// for preventing from multithread race condition, must insert to map here..
+		lockRedis_.lock();
+		mapCallback_.insert(MapCallback_t::value_type(ticket, context));
+		lockRedis_.unlock();
 
 		if(ioService_->isCalledInMountedThread() == false) {
 			deferredCaller_.deferredCall(boost::bind(&RedisRequestImpl::_command, this, ticket, args));
@@ -174,15 +210,40 @@ public:
 		return ticket;
 	}
 
+
 	void cancel(ticket_t ticket) {
 		ScopedMutexLock(lockRedis_);
+		_LOG_DEBUG("redis request canceled : ticket = %d, count = %d/%d <START>"
+			, ticket, mapCallback_.size(), reservedCommands_.size());
+		_removeContext(ticket);
+		_LOG_DEBUG("redis request canceled : ticket = %d, count = %d/%d <END>"
+			, ticket, mapCallback_.size(), reservedCommands_.size());
+	}
+
+private:
+	void _removeContext(ticket_t ticket) {
+		ScopedMutexLock(lockRedis_);
+
 		MapCallback_t::iterator it = mapCallback_.find(ticket);
 		if(it != mapCallback_.end()) {
 			mapCallback_.erase(it);
 		}
+
+		VectorReservedContext_t::iterator itR = reservedCommands_.begin();
+		for(; itR != reservedCommands_.end(); itR++) {
+			if((*itR).ticket == ticket) {
+				reservedCommands_.erase(itR);
+				break;
+			}
+		}
 	}
 
-private:
+	void _makeTimer() {
+		if(NULL == timerObj_) {
+			timerObj_ = new Timer(ioService());
+			timerObj_->setEventHandler(this);
+		}
+	}
 	void _doCommand(ticket_t ticket, int argc, const char **argv, const size_t *argvlen) {
 		int ret = redisAsyncCommandArgv(redisContext_, getCallback, (void *)ticket, argc, argv, argvlen);
 
@@ -195,12 +256,17 @@ private:
 	void _command(ticket_t ticket, const std::vector<std::string> &args) {
 		ScopedMutexLock(lockRedis_);
 
-		if(!connected_) {
-			reservedCommands_.push_back(boost::bind(&RedisRequestImpl::_command, this, ticket, args));
+		if(state_ != REDISREQUEST_CONNECTED) {
+			struct reservedCommandContext reserved;
+			reserved.ticket = ticket;
+			reserved.callback = boost::bind(&RedisRequestImpl::_command, this, ticket, args);
+			reservedCommands_.push_back(reserved);
+			_LOG_DEBUG("redis request reserved : redis is not connected.. ticket = %d, cmd = %s, argsize = %d, this = %p"
+				, (int)ticket, args[0].c_str(), args.size(), this);
 			return;
 		}
 
-		_LOG_DEBUG("redis request start : cmd = %s, argsize = %d", args[0].c_str(), args.size());
+		_LOG_DEBUG("redis request start : cmd = %s, argsize = %d, this = %p", args[0].c_str(), args.size(), this);
 
 		std::vector<const char *> tempArgs;	
 		std::vector<size_t> tempArgLens;
@@ -223,31 +289,57 @@ private:
 
 	void fire_onRedisRequest_Connected() {
 		ScopedMutexLock(lockRedis_);
-		connected_ = true;
+		state_ = REDISREQUEST_CONNECTED;
 
-		_LOG_DEBUG("redis connected..\n");
+		timerObj_->killTimer(TIMER_ID_CONNECTION_TIMEOUT);
+		_LOG_DEBUG("REDIS CONNECTED : this = %p, fd = %d", this, redisContext_->c.fd);
 
 		for(size_t i = 0; i < reservedCommands_.size(); i++) {
-			reservedCommands_[i]();	// call
+			reservedCommands_[i].callback();	// call
 		}
 	}
 
-	void fire_onRedisRequest_Closed() {
+	void fire_onRedisRequest_ConnectFailed() {
+		
 		ScopedMutexLock(lockRedis_);
-		connected_ = false;
+		state_ = REDISREQUEST_CONNECTFAILED;
+		timerObj_->killTimer(TIMER_ID_CONNECTION_TIMEOUT);
+
+		fire_onRedisRequest_Error(redisContext_->err, redisContext_->errstr, NULL);
+
+		// hiredis lib will free my redisContext_ internally..
+		// MUST be set NULL
+		redisContext_ = NULL;
+
+		reconnect();
+		_LOG_DEBUG("REDIS CONNECT FAILED : this = %p, context = %p", this, redisContext_);
+	}
+
+	void fire_onRedisRequest_Closed(int status) {
+		// CAUTION!
+		// NEVER ACCESS redisContext_ HERE!!!!
+		// redisContext_ can be NULL already!
+
+		ScopedMutexLock(lockRedis_);
+		_LOG_DEBUG("REDIS CLOSED : %p", this);
+
+		state_ = REDISREQUEST_CLOSED;
+
+		// hiredis lib will free my redisContext_ internally..
+		// MUST be set NULL
+		redisContext_ = NULL;
+
+		reconnect();
 	}
 
 	void fire_onRedisRequest_Error(int error, const char *strerror, void *privdata) {
-		if(false == closing_) {
-			// TODO redis connect error callback
-		}
-
 		if(privdata) {
 			ticket_t ticket = (ticket_t)privdata;
 			const struct RedisRequest::requestContext *context = _findRequestContext(ticket);
 			if(context) {
-				boost::shared_ptr<RedisResponse> res(new RedisResponse(error, strerror));
+				boost::shared_ptr<RedisResponse> res(new RedisResponse(error, strerror, ticket));
 				context->handler(context, res);
+				_removeContext(ticket);
 			}
 		}
 	}
@@ -255,16 +347,77 @@ private:
 	void fire_onRedisRequest_Response(redisReply *reply, void *privdata) {
 		ScopedMutexLock(lockRedis_);
 
-		//redisAsyncDisconnect(c); // TODO when disconnect??
 		ticket_t ticket = (ticket_t)privdata;
 		boost::shared_ptr<RedisResponse> res(new RedisResponse(reply, ticket));
 		const struct RedisRequest::requestContext *context = _findRequestContext(ticket);
 
 		if(context) {
 			context->handler(context, res);
+			_removeContext(ticket);
 		}
 	}
 
+	// Timer callback
+private:
+	void setState(RedisRequestState state) {
+		state_ = state;
+	}
+
+	void onTimer_Timer(int id) {
+		switch(id) {
+			case TIMER_ID_CONNECTION_TIMEOUT:
+				if(redisContext_) {
+					LOG_DEBUG("REDIS CONNECT TIMEOUT : this = %p, context = %p, status = %x/%x, fd = %d\n"
+						, this, redisContext_, redisContext_->err, redisContext_->c.flags, redisContext_->c.fd);
+
+					// for preventing <RACE CONDITION> (not thread issue, but hiredis async disconnect logic problem)
+					// MUST RESET fd value..
+					redisContext_->c.fd = COOKIE_INVALID_SOCKET;
+					redisAsyncDisconnect(redisContext_);
+					redisContext_ = NULL;
+					state_ = REDISREQUEST_CLOSED;
+					reconnect();
+				} else {
+					reconnect();
+				}
+				break;
+			case TIMER_ID_RECONNECT:
+				assert(redisContext_ == NULL && "redisContext_ MUST be freed before reconnect()");
+				connect();
+				break;
+			case TIMER_ID_COMMAND_TTL:
+			{
+				ScopedMutexLock(lockRedis_);
+				std::list<ticket_t> cancelList;
+				bool needThisTimer = false;
+				MapCallback_t::iterator it = mapCallback_.begin();
+				for(; it != mapCallback_.end(); it++) {
+					if(it->second.ttl > 0) {
+						LOG_TRACE("REDIS COMMAND TTL CHECK : this = %p, ticket = %d, ttl = %d\n"
+							, this, (int)it->second.ticket, it->second.ttl);
+						if(--it->second.ttl <= 0) {
+							cancelList.push_back(it->second.ticket);
+						}
+						needThisTimer = true;
+					}
+				}
+
+				if(!needThisTimer) {
+					timerObj_->killTimer(id);
+				}
+
+				if(cancelList.size() > 0) {
+					std::list<ticket_t>::iterator itL = cancelList.begin();
+					for( ; itL != cancelList.end(); itL++) {
+						fire_onRedisRequest_Error(REDIS_ERR_OTHER, "timeout", (void *)(*itL));
+						cancel(*itL);
+					}
+				} 
+				break;
+			}
+		}
+	}
+	
 	// redis callback
 private:
 #if defined(WIN32) 
@@ -275,7 +428,7 @@ private:
 		RedisRequestImpl *SELF = (RedisRequestImpl *)c->data;
 #if ! defined(WIN32) 
 		if (status != REDIS_OK) {
-			SELF->fire_onRedisRequest_Error(c->err, c->errstr, NULL);
+			SELF->fire_onRedisRequest_ConnectFailed();
 			return;
 		}
 #endif
@@ -284,7 +437,7 @@ private:
 
 	static void disconnectCallback(const redisAsyncContext *c, int status) {
 		RedisRequestImpl *SELF = (RedisRequestImpl *)c->data;
-		SELF->fire_onRedisRequest_Closed();
+		SELF->fire_onRedisRequest_Closed(status);
 	}
 
 	static void getCallback(redisAsyncContext *c, void *r, void *privdata) {
@@ -304,14 +457,20 @@ private:
 	std::string host_;
 	int port_;
 	Mutex lockRedis_;
-	volatile bool closing_;
-	volatile bool connected_;
+	RedisRequestState state_;
 	typedef std::map<ticket_t, struct RedisRequest::requestContext> MapCallback_t;
 	MapCallback_t mapCallback_;
+	Timer *timerObj_;
 	
 	// thread sync call method
 	DeferredCaller deferredCaller_;
-	std::vector<DeferredCaller::deferedMethod_t> reservedCommands_;
+
+	struct reservedCommandContext {
+		ticket_t ticket;
+		DeferredCaller::deferredMethod_t callback;
+	};
+	typedef std::vector<struct reservedCommandContext> VectorReservedContext_t;
+	VectorReservedContext_t reservedCommands_;
 };
 
 //---------------------------------------------------------------------------------------------------------------
@@ -334,20 +493,27 @@ void RedisRequest::connect() {
 	impl_->connect();
 }
 
-void RedisRequest::close(bool callback) {
-	impl_->close(callback);
+void RedisRequest::close() {
+	impl_->close();
 }
 
 void RedisRequest::cancel(ticket_t ticket) {
 	impl_->cancel(ticket);
 }
 
-ticket_t RedisRequest::command(const std::string &cmd, const std::string args, RedisRequest::ResponseHandler handler) {
-	return impl_->command(cmd, args, handler);
+ticket_t RedisRequest::command(const std::string &cmd, 
+                               const std::string args, 
+                               RedisRequest::ResponseHandler handler, 
+                               int timeout) 
+{
+	return impl_->command(cmd, args, handler, timeout);
 }
 
-ticket_t RedisRequest::command(const std::vector<std::string> &args, ResponseHandler handler) {
-	return impl_->command(args, handler);
+ticket_t RedisRequest::command(const std::vector<std::string> &args, 
+                               ResponseHandler handler, 
+                               int timeout) 
+{
+	return impl_->command(args, handler, timeout);
 }
 
 }

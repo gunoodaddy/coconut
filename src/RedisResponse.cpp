@@ -49,14 +49,18 @@ public:
 		_load();
 	}
 
-	RedisResponseImpl(RedisResponse *owner, int err, const char *errmsg)
-			: owner_(owner), err_(err), errmsg_(errmsg) { 
+	RedisResponseImpl(RedisResponse *owner, int err, const char *errmsg, ticket_t ticket)
+			: owner_(owner), reply_(NULL), ticket_(ticket), err_(err), errmsg_(errmsg) { 
 		_load();
 	}
 
 	~RedisResponseImpl() { }
 
 	void _load() {
+		if(!reply_) {
+			return;	// error response case
+		}
+
 		if(reply_->type != REDIS_REPLY_ARRAY) {
 			struct RedisResponse::RedisReplyData result;
 			result.type = reply_->type;
@@ -92,8 +96,9 @@ public:
 	}
 
 	const RedisResponse::RedisReplyData * resultData() const { 
-		assert(results_.size() > 0 && "RedisResponse result array size <= 0");
-		return &results_[0];
+		if(results_.size() > 0)
+			return &results_[0];
+		return NULL;
 	}
 
 	const RedisResponse::RedisReplyData * resultDataOf(size_t index) const {
@@ -117,12 +122,12 @@ private:
 
 //-------------------------------------------------------------------------------------------------------
 
-RedisResponse::RedisResponse(void *reply, int ticket) {
+RedisResponse::RedisResponse(void *reply, ticket_t ticket) {
 	impl_ = new RedisResponseImpl(this, (struct redisReply *)reply, ticket);
 }
 
-RedisResponse::RedisResponse(int err, const char *errmsg) {
-	impl_ = new RedisResponseImpl(this, err, errmsg);
+RedisResponse::RedisResponse(int err, const char *errmsg, ticket_t ticket) {
+	impl_ = new RedisResponseImpl(this, err, errmsg, ticket);
 }
 
 RedisResponse::~RedisResponse() {
