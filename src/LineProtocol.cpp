@@ -74,16 +74,21 @@ bool LineProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transport
 		int nread = transport->read(buffer, BUFFER_SIZE);	
 		
 		for(int i = 0; i < nread; i++) {
-			if(buffer[i] == '\r' || buffer[i] == '\n') {
+			if(buffer[i] == '\n') {
 				size_t addition = 0;
-				if(i < nread - 1) {
-					if( buffer[i] == '\r' && buffer[i+1] == '\n' 
-					 || buffer[i] == '\n' && buffer[i+1] == '\r') {
-						addition = 1;
+				size_t delimSize = 1;
+				if(buffer[i-1] != '\r') {	// \r\n check
+					if(i < nread - 1) {
+						if( buffer[i + 1] == '\r' )	{ // \n\r check
+							addition = 1;
+							delimSize = 2;
+						}
 					}
+				} else {
+					delimSize = 2;
 				}
 				remainReadBufferSize_ = nread - i - (1 + addition);
-				line_.append(buffer, i);
+				line_.append(buffer, i - (delimSize - 1));
 				_LOG_DEBUG("LineProtocol line received : [%s]", line_.c_str()); 
 				readComplete_ = true;
 				return true;
