@@ -133,7 +133,7 @@ public:
 		size_t buffer_len = evbuffer_get_length(readBuffer);
 		const void *data = evbuffer_pullup(readBuffer, buffer_len);
 
-		hexdump((const unsigned char*)data, buffer_len, stdout);
+		//hexdump((const unsigned char*)data, buffer_len, stdout);
 
 		LibeventTcpSocketImpl *SELF = (LibeventTcpSocketImpl *)ptr;
 		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
@@ -360,7 +360,7 @@ public:
 		if(buffer_len < size)
 			size = buffer_len;
 		const void *pulled_data = evbuffer_pullup(buffer, size);
-		logger::hexdump((const unsigned char*)pulled_data, size, stdout);
+		//logger::hexdump((const unsigned char*)pulled_data, size, stdout);
 		return pulled_data;
 	}
 
