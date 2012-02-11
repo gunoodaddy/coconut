@@ -66,8 +66,12 @@ public:
 		param.value.assign(value, valuesize);
 		parameters_.push_back(param);
 	}
-	void addParameter(const char *key, const char *value) {
-		addParameter(key, value, strlen(value));
+	void addParameter(const char *key, const std::string &value) {
+		parameter_t param;
+		param.type = STRING_TYPE;
+		param.key = key;
+		param.value = value;
+		parameters_.push_back(param);
 	}
 	void addParameter(const char *key, int value) {
 		char buffer[256] = {0, };
