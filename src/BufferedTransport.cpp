@@ -156,6 +156,29 @@ void BufferedTransport::fastforward(size_t size) {
 	readPos_ = temp;
 }
 
+std::string BufferedTransport::toStringFromCurrentPtr() {
+	std::string str;
+	str.assign((char *)currentPtr(), remainingSize());
+	return str;
+}
+
+std::string BufferedTransport::toStringFromBasePtr() {
+	std::string str;
+	str.assign((char *)basePtr(), totalSize());
+	return str;
+}
+
+std::string BufferedTransport::readString(size_t size) {
+	ScopedMutexLock(lock_);
+	if(remainingSize() < size) {
+		size = remainingSize();
+	}
+	std::string str;
+	str.assign((const char *)currentPtr(), size);
+	fastforward(size);
+	return str;
+}
+
 
 }
 

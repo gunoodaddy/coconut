@@ -32,6 +32,7 @@
 #include <string>
 #include "BaseVirtualTransport.h"
 #include "ThreadUtil.h"
+#include "Logger.h"
 #include "Exception.h"
 #if defined(WIN32)
 #include <ws2tcpip.h>
@@ -264,7 +265,9 @@ public:
 			throw ProtocolException("readString8 failed..");
 		return str;
 	}
-	
+		
+	std::string readString(size_t size);
+
 public:
 	size_t totalSize();
 	size_t remainingSize();
@@ -273,6 +276,8 @@ public:
 
 	const void * basePtr();
 	const void * currentPtr();
+	std::string toStringFromBasePtr();
+	std::string toStringFromCurrentPtr();
 
 	void clear();
 	void rewind(size_t size);
