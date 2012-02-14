@@ -39,18 +39,30 @@
 #include <vector>
 #include "HttpRequest.h"
 #include "HttpRequestImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventHttpRequestImpl : public HttpRequestImpl {
+class LibeventHttpRequestImpl 
+				: public HttpRequestImpl 
+				, public BaseObjectAllocator<LibeventHttpRequestImpl>
+{
 public:
+	LibeventHttpRequestImpl()
+		: owner_(NULL)
+		, req_(NULL)
+		, evuri_(NULL)
+	{
+		_LOG_TRACE("LibeventHttpRequestImpl() : %p", this);
+	}
+
 	LibeventHttpRequestImpl(HttpRequest *owner) 
 		: owner_(owner)
 		, req_(NULL)
 		, evuri_(NULL)
 	{
 		req_ = (struct evhttp_request *)owner_->nativeHandle();
-		_LOG_TRACE("LibeventHttpRequestImpl() : %p", this);
+		_LOG_TRACE("LibeventHttpRequestImpl() : this = %p, req = %p", this, req_);
 	}
 
 	~LibeventHttpRequestImpl() {
@@ -59,6 +71,11 @@ public:
 			evuri_ = NULL;
 		}
 		_LOG_TRACE("~LibeventHttpRequestImpl() : %p", this);
+	}
+
+	void initialize(HttpRequest *owner) {
+		owner_ = owner;
+		req_ = (struct evhttp_request *)owner_->nativeHandle();
 	}
 
 	const char *uri() {

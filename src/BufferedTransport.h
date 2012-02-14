@@ -39,10 +39,14 @@
 #else
 #include <arpa/inet.h>
 #endif
+#include "BaseObjectAllocator.h"
 
 namespace coconut { 
 
-class COCONUT_API BufferedTransport : public BaseVirtualTransport {
+class COCONUT_API BufferedTransport 
+				: public BaseVirtualTransport 
+				, public BaseObjectAllocator<BufferedTransport>
+{
 public:
 	BufferedTransport();
 	~BufferedTransport();

@@ -29,6 +29,8 @@
 
 #pragma once
 
+//#include "BaseObjectAllocator.h"
+
 namespace coconut {
 
 class TcpSocketImpl {
@@ -38,6 +40,7 @@ public:
 public:
 	virtual coconut_socket_t socketFD() = 0;
 
+	virtual void initialize(TcpSocket *owner) = 0;
 	virtual void connect() = 0;
 	virtual void connect(const char *host, int port, int timeout = 0) = 0;
 	virtual void connectUnix(const char *path, int timeout = 0) = 0;

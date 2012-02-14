@@ -35,6 +35,7 @@ class HttpRequestImpl {
 public:
 	virtual ~HttpRequestImpl() { }
 
+	virtual void initialize(HttpRequest *owner) = 0;
 	virtual const char * uri() = 0;
 	virtual const char * path() = 0;
 	virtual const char * findParameter(const char *key) = 0;

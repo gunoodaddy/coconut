@@ -34,12 +34,19 @@
 #include "IPv4Address.h"
 #include "InternalLogger.h"
 #include "UdpSocketImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 
-UdpSocket::UdpSocket(boost::shared_ptr<IOService> ioService, int port) : BaseSocket(ioService, UDP) {
-	impl_ = IOSystemFactory::instance()->createUdpSocketImpl(this, port);
+UdpSocket::UdpSocket() : BaseSocket(UDP) {
+	impl_ = BaseIOSystemFactory::instance()->createUdpSocketImpl();
+}
+
+UdpSocket::UdpSocket(boost::shared_ptr<IOService> ioService, int port) : BaseSocket(UDP) {
+	ioService_ = ioService;
+
+	impl_ = BaseIOSystemFactory::instance()->createUdpSocketImpl();
+	impl_->initialize(this, port);
 }
 
 UdpSocket::~UdpSocket() {
@@ -47,6 +54,11 @@ UdpSocket::~UdpSocket() {
 
 coconut_socket_t UdpSocket::socketFD() {
 	return impl_->socketFD();
+}
+
+void UdpSocket::initialize(boost::shared_ptr<IOService> ioService, int port) {
+	ioService_ = ioService;
+	impl_->initialize(this, port);
 }
 
 void UdpSocket::connect() {

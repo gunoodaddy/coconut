@@ -34,7 +34,7 @@
 #include "IOService.h"
 
 namespace coconut {
-
+	
 ClientController::~ClientController() {
 	_LOG_TRACE("~ClientController() : %p\n", this);
 }

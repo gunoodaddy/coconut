@@ -33,12 +33,15 @@
 #include <map>
 #include "Timer.h"
 #include "TimerImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventTimerImpl : public TimerImpl {
+class LibeventTimerImpl : public TimerImpl 
+						, public BaseObjectAllocator<LibeventTimerImpl>
+{
 public:
-	LibeventTimerImpl(Timer *owner) : owner_(owner) { }
+	LibeventTimerImpl() : owner_(NULL) { }
 	~LibeventTimerImpl() { 
 		std::map<int, struct timer_context_t *>::iterator it = mapTimers_.begin();
 
@@ -47,6 +50,10 @@ public:
 			event_free(context->timer);
 			free(context);
 		}
+	}
+
+	void initialize(Timer *owner) {
+		owner_ = owner;
 	}
 
 private:

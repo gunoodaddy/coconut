@@ -33,11 +33,13 @@
 #include "Exception.h"
 #include "InternalLogger.h"
 #include "LibeventSystemFactory.h"
+#include "DefaultCoconutObjectAllocator.h"
 
 namespace coconut {
 
 extern bool _activateMultithreadMode_on;
 extern void activateMultithreadMode();
+
 
 IOServiceContainer::~IOServiceContainer() {
 	_LOG_TRACE("~IOServiceContainer() : %p", this);
@@ -65,7 +67,9 @@ void IOServiceContainer::initialize() {
 		new Exception("thread cound is invalid.");
 	}
 
-	IOSystemFactory::setInstance(boost::shared_ptr<IOSystemFactory>(new LibeventSystemFactory));
+	BaseIOSystemFactory::setInstance(boost::shared_ptr<BaseIOSystemFactory>(new LibeventSystemFactory));
+
+	//default_allocator::doInstall();
 
 #if defined(WIN32) 
 	if(iocpEnabled_) {

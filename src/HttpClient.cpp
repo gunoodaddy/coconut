@@ -33,12 +33,13 @@
 #include "Exception.h"
 #include "InternalLogger.h"
 #include "HttpClientImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService) {
-	impl_ = IOSystemFactory::instance()->createHttpClientImpl(this, ioService);
+	impl_ = BaseIOSystemFactory::instance()->createHttpClientImpl();
+	impl_->initialize(this, ioService);
 }
 
 HttpClient::HttpClient(boost::shared_ptr<IOService> ioService, 
@@ -46,7 +47,8 @@ HttpClient::HttpClient(boost::shared_ptr<IOService> ioService,
 						 const char *uri, 
 						 const HttpParameter *param, 
 						 int timeout) {
-	impl_ = IOSystemFactory::instance()->createHttpClientImpl(this, ioService, method, uri, param, timeout);
+	impl_ = BaseIOSystemFactory::instance()->createHttpClientImpl();
+	impl_->initialize(this, ioService, method, uri, param, timeout);
 }
 
 HttpClient::~HttpClient() {

@@ -37,6 +37,9 @@ class ConnectionListenerImpl {
 public:
 	virtual ~ConnectionListenerImpl(void) { }
 
+	virtual void initialize(ConnectionListener *owner, int port) = 0;
+	virtual void initialize(ConnectionListener *owner, const char* path) = 0;
+
 	virtual void listen() = 0;
 	virtual const std::string & listeningPath() = 0;
 };

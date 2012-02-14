@@ -32,23 +32,26 @@
 #include "ClientController.h"
 #include "BaseProtocol.h"
 #include "FileDescriptorProtocol.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class COCONUT_API FileDescriptorController : public ClientController { 
+class COCONUT_API FileDescriptorController 
+			: public ClientController 
+{
 public:
-	class COCONUT_API FDProtocolFactory : public protocol::BaseProtocolFactory {
+	class FDProtocolFactory 
+			: public protocol::BaseProtocolFactory 
+			, public BaseObjectAllocator<FDProtocolFactory>
+	{
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
-			boost::shared_ptr<protocol::FileDescriptorProtocol> protocol(new protocol::FileDescriptorProtocol);
-			return protocol;
+			return protocol::FileDescriptorProtocol::makeSharedPtr();
 		}
 	};
 private:
 	void _onPreInitialized() {
-		boost::shared_ptr<FDProtocolFactory> factory(new FDProtocolFactory);
-		setProtocolFactory(factory);
-		
+		setProtocolFactory(FDProtocolFactory::makeSharedPtr());
 		BaseController::_onPreInitialized();
 	}
 

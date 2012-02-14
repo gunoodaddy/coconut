@@ -32,23 +32,27 @@
 #include "ClientController.h"
 #include "BaseProtocol.h"
 #include "LineProtocol.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class COCONUT_API LineController : public ClientController {
+class COCONUT_API LineController 
+			: public ClientController 
+{
 public:
-	class LineProtocolFactory : public protocol::BaseProtocolFactory {
+	class LineProtocolFactory 
+			: public protocol::BaseProtocolFactory
+			, public BaseObjectAllocator<LineProtocolFactory>
+	{
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
-			boost::shared_ptr<protocol::LineProtocol> line(new protocol::LineProtocol);
-			return line;
+			return protocol::LineProtocol::makeSharedPtr();
 		}
 	};
 
 private:
 	void _onPreInitialized() {
-		boost::shared_ptr<LineProtocolFactory> factory(new LineProtocolFactory);
-		setProtocolFactory(factory);
+		setProtocolFactory(LineProtocolFactory::makeSharedPtr());
 		
 		BaseController::_onPreInitialized();
 	}

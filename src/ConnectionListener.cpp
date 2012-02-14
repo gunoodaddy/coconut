@@ -33,22 +33,41 @@
 #include "Exception.h"
 #include "InternalLogger.h"
 #include "ConnectionListenerImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
+
+ConnectionListener::ConnectionListener()
+	: ioService_(), handler_(NULL) {
+	impl_ = BaseIOSystemFactory::instance()->createConnectionListenerImpl();
+}
 
 ConnectionListener::ConnectionListener(boost::shared_ptr<IOService> ioService, int port)
 	: ioService_(ioService), handler_(NULL) {
 
-	impl_ = IOSystemFactory::instance()->createConnectionListenerImpl(this, port);
+	impl_ = BaseIOSystemFactory::instance()->createConnectionListenerImpl();
+	impl_->initialize(this, port);
 }
 
 ConnectionListener::ConnectionListener(boost::shared_ptr<IOService> ioService, const char* path)
 	: ioService_(ioService), handler_(NULL) {
-	impl_ = IOSystemFactory::instance()->createConnectionListenerImpl(this, path);
+
+	impl_ = BaseIOSystemFactory::instance()->createConnectionListenerImpl();
+	impl_->initialize(this, path);
 }
 
 ConnectionListener::~ConnectionListener(void) {
+}
+
+
+void ConnectionListener::initialize(boost::shared_ptr<IOService> ioService, int port) {
+	ioService_ = ioService;
+	impl_->initialize(this, port);
+}
+
+void ConnectionListener::initialize(boost::shared_ptr<IOService> ioService, const char* path) {
+	ioService_ = ioService;
+	impl_->initialize(this, path);
 }
 
 void ConnectionListener::listen() {

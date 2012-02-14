@@ -29,8 +29,6 @@
 
 #pragma once
 
-#include "config.h"
-
 namespace coconut {
 
 class COCONUT_API BaseVirtualTransport {

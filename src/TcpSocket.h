@@ -30,17 +30,20 @@
 #pragma once
 
 #include "BaseSocket.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
 class IOService;
 class TcpSocketImpl;
 
-class COCONUT_API TcpSocket : public BaseSocket {
+class COCONUT_API TcpSocket : public BaseSocket, public BaseObjectAllocator<TcpSocket>
+{
 public:
-	TcpSocket(boost::shared_ptr<IOService> ioService);
+	TcpSocket();
 	~TcpSocket();
 
+	void initialize(boost::shared_ptr<IOService> ioService);
 public:
 	coconut_socket_t socketFD();
 	void connect();

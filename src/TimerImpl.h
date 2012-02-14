@@ -41,11 +41,14 @@
 
 namespace coconut {
 
+class Timer;
+
 class TimerImpl {
 public:
 	virtual ~TimerImpl() { }
 
 public:
+	virtual void initialize(Timer *owner) = 0;
 	virtual void setTimer(int id, unsigned int msec, bool repeat = true) = 0;
 	virtual void killTimer(int id) = 0;
 };

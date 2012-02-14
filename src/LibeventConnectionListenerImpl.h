@@ -37,26 +37,58 @@
 #include <event2/listener.h>
 #include "ConnectionListener.h"
 #include "ConnectionListenerImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventConnectionListenerImpl : public ConnectionListenerImpl {
+class LibeventConnectionListenerImpl 
+				: public ConnectionListenerImpl 
+				, public BaseObjectAllocator<LibeventConnectionListenerImpl>
+{
 public:
+	LibeventConnectionListenerImpl()
+		: owner_(NULL)
+		, listener_(NULL)
+		, path_("")
+		, port_(0) 
+	{ 
+		_LOG_TRACE("LibeventConnectionListenerImpl() : this=%p, default", this);
+	}
+
 	LibeventConnectionListenerImpl(ConnectionListener *owner, int port) 
 		: owner_(owner)
 		, listener_(NULL)
 		, path_("")
-		, port_(port) { }
+		, port_(port)
+	{ 
+		_LOG_TRACE("LibeventConnectionListenerImpl() : this=%p, port=%d", this, port);
+	}
 
 	LibeventConnectionListenerImpl(ConnectionListener *owner, const char* path)
 		: owner_(owner)
 		, listener_(NULL)
 		, path_(path)
-		, port_(0) { }
+		, port_(0) 
+	{ 
+		_LOG_TRACE("LibeventConnectionListenerImpl() : this=%p, path=%s", this, path);
+	}
 
 	~LibeventConnectionListenerImpl(void) {
-		if(listener_)
+		_LOG_TRACE("~LibeventConnectionListenerImpl() : this=%p, listener=%p, path=%s, port=%d"
+			, this, listener_, path_.c_str(), port_);
+		if(listener_) {
 			evconnlistener_free(listener_);
+		}
+	}
+
+	void initialize(ConnectionListener *owner, int port) {
+		owner_ = owner;
+		port_ = port;
+	}
+
+	void initialize(ConnectionListener *owner, const char* path) {
+		owner_ = owner;
+		path_ = path;
 	}
 
 private:

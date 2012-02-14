@@ -42,7 +42,8 @@ volatile bool gEngineLogEnable_ = true;	// extern
 
 namespace coconut { namespace logger {
 
-static LogLevel gCurrentLogLevel_ = LEVEL_TRACE;
+//static LogLevel gCurrentLogLevel_ = LEVEL_TRACE;
+static LogLevel gCurrentLogLevel_ = LEVEL_INFO;
 static LogHookCallback gLogHookCallback;
 static Mutex gLogLock;
 

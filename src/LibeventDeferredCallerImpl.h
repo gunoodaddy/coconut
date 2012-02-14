@@ -36,10 +36,14 @@
 #include <event2/event.h>
 #include <vector>
 #include "DeferredCallerImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventDeferredCallerImpl : public DeferredCallerImpl {
+class LibeventDeferredCallerImpl 
+				: public DeferredCallerImpl
+				, public BaseObjectAllocator<LibeventDeferredCallerImpl>
+{
 public:
 	LibeventDeferredCallerImpl() : DeferredCallerImpl() { }
 
@@ -52,6 +56,11 @@ public:
 	~LibeventDeferredCallerImpl() { 
 		_LOG_TRACE("~LibeventDeferredCallerImpl %p %p\n", this, eventDeferred_);
 		destroyHandle();
+	}
+
+	void initialize(boost::shared_ptr<IOService> ioService) {
+		ioService_ = ioService;
+		createHandle();
 	}
 
 	void createHandle() {

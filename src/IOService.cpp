@@ -35,7 +35,7 @@
 #include "BaseIOServiceContainer.h"
 #include "ThreadUtil.h"
 #include "IOServiceImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 #include "LibeventSystemFactory.h"
 
 namespace coconut {
@@ -91,7 +91,7 @@ public:
 	virtual boost::shared_ptr<IOService> ioServiceByIndex(size_t index) { return ioService_; }
 	
 	void initialize() {
-		IOSystemFactory::setInstance(boost::shared_ptr<IOSystemFactory>(new LibeventSystemFactory));
+		BaseIOSystemFactory::setInstance(boost::shared_ptr<BaseIOSystemFactory>(new LibeventSystemFactory));
 	}
 	void run() {
 		assert(false && "never call this function : run()");
@@ -118,7 +118,8 @@ IOService::IOService() {
 	int key = gKeyMaker_.makeKey();
 
 	BaseIOServiceContainer *ioServiceContainer = DefaultIOServiceContainer::instance(shared_from_this());
-	impl_ = IOSystemFactory::instance()->createIOServiceImpl(key, ioServiceContainer, false);
+	impl_ = BaseIOSystemFactory::instance()->createIOServiceImpl();
+	impl_->initialize(key, ioServiceContainer, false);
 }
 
 IOService::IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode) {
@@ -126,7 +127,8 @@ IOService::IOService(BaseIOServiceContainer *ioServiceContainer, bool threadMode
 		ioServiceContainer = DefaultIOServiceContainer::instance(shared_from_this());
 		
 	int key = gKeyMaker_.makeKey();
-	impl_ = IOSystemFactory::instance()->createIOServiceImpl(key, ioServiceContainer, threadMode);
+	impl_ = BaseIOSystemFactory::instance()->createIOServiceImpl();
+	impl_->initialize(key, ioServiceContainer, threadMode);
 }
 
 IOService::~IOService() {

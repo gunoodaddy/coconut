@@ -34,22 +34,26 @@
 #include "ClientController.h"
 #include "BaseProtocol.h"
 #include "JSONProtocol.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class COCONUT_API JSONController : public ClientController {
+class COCONUT_API JSONController 
+			: public ClientController
+{
 public:
-	class JSONProtocolFactory : public protocol::BaseProtocolFactory {
+	class JSONProtocolFactory 
+			: public protocol::BaseProtocolFactory
+			, public BaseObjectAllocator<JSONProtocolFactory>
+	{
 	public:
 		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
-			boost::shared_ptr<protocol::JSONProtocol> json(new protocol::JSONProtocol);
-			return json;
+			return protocol::JSONProtocol::makeSharedPtr();
 		}
 	};
 private:
 	void _onPreInitialized() {
-		boost::shared_ptr<JSONProtocolFactory> factory(new JSONProtocolFactory);
-		setProtocolFactory(factory);
+		setProtocolFactory(JSONProtocolFactory::makeSharedPtr());
 		BaseController::_onPreInitialized();
 	}
 

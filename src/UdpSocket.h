@@ -36,6 +36,7 @@
 #else
 #include <arpa/inet.h>
 #endif
+#include "BaseObjectAllocator.h"
 
 #define UDP_BUF_SIZE	8096
 
@@ -44,11 +45,14 @@ namespace coconut {
 class IOService;
 class UdpSocketImpl;
 
-class COCONUT_API UdpSocket : public BaseSocket {
+class COCONUT_API UdpSocket : public BaseSocket, public BaseObjectAllocator<UdpSocket>
+	{
 public:
+	UdpSocket();
 	UdpSocket(boost::shared_ptr<IOService> ioService, int port);
 	~UdpSocket();
 	
+	void initialize(boost::shared_ptr<IOService> ioService, int port);
 public:
 	coconut_socket_t socketFD();
 	void connect();

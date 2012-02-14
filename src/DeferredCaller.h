@@ -33,12 +33,15 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #endif
+#include "BaseObjectAllocator.h"
+
 namespace coconut {
 
 class IOService;
 class DeferredCallerImpl;
 
-class COCONUT_API DeferredCaller {
+class COCONUT_API DeferredCaller : public BaseObjectAllocator<DeferredCaller>
+{
 public:
 	DeferredCaller();
 	DeferredCaller(boost::shared_ptr<IOService> ioService); 

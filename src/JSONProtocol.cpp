@@ -44,7 +44,10 @@ namespace coconut { namespace protocol {
 class JSONProtocolImpl {
 public:
 	JSONProtocolImpl(JSONProtocol *owner) : owner_(owner), readComplete_(false), stream_(NULL), remainStreamPos_(0) {
+	}
 
+	~JSONProtocolImpl() {
+		_deleteStream();
 	}
 
 	bool isReadComplete() {
@@ -111,6 +114,13 @@ private:
 	void _makeStream() {
 		if(NULL == stream_) {
 			stream_ = new ::JSONStream(Callback, errorCallback, this);
+		}
+	}
+
+	void _deleteStream() {
+		if(stream_) {
+			delete stream_;
+			stream_ = NULL;
 		}
 	}
 

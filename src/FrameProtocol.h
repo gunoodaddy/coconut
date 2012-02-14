@@ -38,6 +38,7 @@
 #include "VirtualTransportHelper.h"
 #include "BufferedTransport.h"
 #include "BaseProtocol.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut { namespace protocol {
 
@@ -96,7 +97,10 @@ private:
 };
 
 
-class COCONUT_API FrameProtocol : public BaseProtocol {
+class COCONUT_API FrameProtocol 
+				: public BaseProtocol
+				, public BaseObjectAllocator<FrameProtocol>
+{
 public:
 	enum State{
 		Init,

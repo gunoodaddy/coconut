@@ -36,15 +36,21 @@
 #include "Exception.h"
 #include <string>
 #include "TcpSocketImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 	
-TcpSocket::TcpSocket(boost::shared_ptr<IOService> ioService) : BaseSocket(ioService, TCP) {
-	impl_ = IOSystemFactory::instance()->createTcpSocketImpl(this);
+TcpSocket::TcpSocket() : BaseSocket(TCP) {
+	impl_ = BaseIOSystemFactory::instance()->createTcpSocketImpl();
+	impl_->initialize(this);
 }
 
 TcpSocket::~TcpSocket() {
+}
+
+void TcpSocket::initialize(boost::shared_ptr<IOService> ioService) {
+	ioService_ = ioService;
+	impl_->initialize(this);
 }
 
 coconut_socket_t TcpSocket::socketFD() {

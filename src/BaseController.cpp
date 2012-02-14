@@ -47,7 +47,8 @@ void BaseController::killTimer(short id) {
 
 void BaseController::_makeTimer() {
 	if(NULL == timerObj_) {
-		timerObj_ = new Timer(ioService());
+		timerObj_ = Timer::make();
+		timerObj_->initialize(ioService());
 		timerObj_->setEventHandler(this);
 	}
 }

@@ -36,6 +36,14 @@ public:
 	virtual ~HttpClientImpl() { }
 
 public:
+	virtual void initialize(
+				HttpClient *owner, 
+				boost::shared_ptr<IOService> ioService, 
+				HttpMethodType method = HTTP_GET, 
+				const char *uri = "", 
+				const HttpParameter *param = NULL, 
+				int timeout = 0) = 0;
+	
 	virtual boost::shared_ptr<IOService> ioService() = 0;
 
 	virtual void cleanUp(bool deleteReqFlag) = 0;

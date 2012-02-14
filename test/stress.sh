@@ -8,7 +8,7 @@ rm -rf *.log.*
 
 while :
 do
-	./unittest
+	./unittest $1
 	if [ $? != 0 ]; then
 		echo "Your program has problems..."
 		exit 0

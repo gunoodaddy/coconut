@@ -36,10 +36,14 @@
 #include "BaseProtocol.h"
 #include "BaseVirtualTransport.h"
 #include "Exception.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut { namespace protocol {
 
-class COCONUT_API FileDescriptorProtocol : public ProtocolDecorator {
+class COCONUT_API FileDescriptorProtocol 
+				: public ProtocolDecorator 
+				, public BaseObjectAllocator<FileDescriptorProtocol>
+{
 public:
 	FileDescriptorProtocol() : fd_(0), readComplete_(false) { }
 

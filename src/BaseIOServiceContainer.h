@@ -29,7 +29,6 @@
 
 #pragma once
 
-#include "config.h"
 #include <signal.h>
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>

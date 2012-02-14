@@ -90,7 +90,8 @@ void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
 
 	// Caution! *MUST* call Reactor::ioService()
 	boost::shared_ptr<IOService> ioService = ioServiceContainer()->ioServiceByRoundRobin();
-	boost::shared_ptr<TcpSocket> newTcpSocket(new TcpSocket(ioService));
+	boost::shared_ptr<TcpSocket> newTcpSocket = TcpSocket::makeSharedPtr();
+	newTcpSocket->initialize(ioService);
 
 	// onAccept emitted..
 	boost::shared_ptr<ClientController> newController = onAccept(newTcpSocket);

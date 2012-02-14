@@ -29,10 +29,10 @@
 
 #include "CoconutLib.h"
 #include <boost/shared_ptr.hpp>
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 
-boost::shared_ptr<IOSystemFactory> IOSystemFactory::factory_;
+boost::shared_ptr<BaseIOSystemFactory> BaseIOSystemFactory::factory_;
 
 }

@@ -6,6 +6,7 @@ AC_INIT([coconut], [0.0.1], [gunoodaddy@gmail.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
+AC_LANG(C++)
 
 # Checks for programs.
 AC_PROG_CXX
@@ -19,6 +20,9 @@ AC_PROG_LIBTOOL
 AX_BOOST_BASE([1.32.0], , [AC_MSG_ERROR([Boost C++ Libraries are not installed, but are required by libbgpparser])])
 AX_LIB_EVENT([2.0.15], , [AC_MSG_ERROR([libevent not found])])
 
+AC_LANG(C++)
+#AC_CHECK_LIB(jemalloc, malloc_stats_print, [], [])
+AC_CHECK_LIB(tcmalloc, tc_cfree , [], [])
 AC_CHECK_LIB(event, event_base_dispatch, [], AC_MSG_ERROR([event library not found]))
 AC_CHECK_LIB(event_pthreads, evthread_use_pthreads, [], AC_MSG_ERROR([event_pthread library not found]))
 AC_CHECK_LIB(hiredis, redisAsyncConnect, [], AC_MSG_ERROR([hiredis library not found]))

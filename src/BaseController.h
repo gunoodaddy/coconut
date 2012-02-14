@@ -28,7 +28,6 @@
 */
 
 #pragma once
-#include "config.h"
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -62,9 +61,9 @@ public:
 		delete controllerEvent_OccuredError_;
 		delete controllerEvent_ClosedConnection_;
 		if(timerObj_)
-			delete timerObj_;
+			Timer::destroy(timerObj_);
 		if(deferredCaller_)
-			delete deferredCaller_;
+			DeferredCaller::destroy(deferredCaller_);
 	}
 
 public:
@@ -92,7 +91,8 @@ protected:
 	void _makeTimer();
 
 	virtual void _onPreInitialized() {
-		deferredCaller_ = new DeferredCaller(ioService());
+		deferredCaller_ = DeferredCaller::make();
+		deferredCaller_->setIOService(ioService());
 
 		controllerEvent_ClosedConnection_->setDeferredCaller(deferredCaller_);	
 		controllerEvent_OccuredError_->setDeferredCaller(deferredCaller_);	

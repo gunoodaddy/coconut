@@ -29,7 +29,6 @@
 
 #pragma once
 
-#include "config.h"
 #include <string>
 #include <vector>
 #if ! defined(COCONUT_USE_PRECOMPILE)
@@ -44,8 +43,8 @@ namespace coconut { namespace protocol {
 class COCONUT_API BaseProtocol {
 public:
 	BaseProtocol() : parent_protocol_(NULL), turnOnWrite_(true), ownerKey_(0) {
-		readBuffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
-		writebuffer_ = boost::shared_ptr<BufferedTransport>(new BufferedTransport);
+		readBuffer_ = BufferedTransport::makeSharedPtr();
+		writebuffer_ = BufferedTransport::makeSharedPtr();
 	}
 	virtual ~BaseProtocol() { 
 	}

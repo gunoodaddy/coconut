@@ -36,6 +36,7 @@ public:
 	virtual ~UdpSocketImpl() { }
 	
 public:
+	virtual void initialize(UdpSocket *owner, int port) = 0;
 	virtual coconut_socket_t socketFD() = 0;
 	virtual void connect() = 0;
 	virtual void bind() = 0;

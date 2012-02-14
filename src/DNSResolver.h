@@ -33,14 +33,17 @@
 #else
 #include <netdb.h>
 #endif
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
 class IOService;
 class DNSResolverImpl;
 
-class DNSResolver {
+class DNSResolver : public BaseObjectAllocator<DNSResolver>
+{
 public:
+	DNSResolver();
 	DNSResolver(boost::shared_ptr<IOService> ioService);
 	~DNSResolver();
 
@@ -51,6 +54,7 @@ public:
 	};
 
 public:
+	void initialize(boost::shared_ptr<IOService> ioService);
 	void cleanUp();
 	bool resolve(const char *host, struct sockaddr_in *sin, EventHandler* handler, void *ptr);
 

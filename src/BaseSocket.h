@@ -28,7 +28,6 @@
 */
 
 #pragma once
-#include "config.h"
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>
 #endif
@@ -55,7 +54,7 @@ class IOService;
 
 class COCONUT_API BaseSocket : public BaseVirtualTransport {
 public:
-	BaseSocket(boost::shared_ptr<IOService> ioService, SocketType type) : ioService_(ioService)
+	BaseSocket(SocketType type) : ioService_()
 		, type_(type)
 		, state_(Disconnected)
 		, handler_(NULL) { }
@@ -70,7 +69,6 @@ public:
 		virtual void onSocket_Connected() { }
 		virtual void onSocket_Error(int error, const char *strerror) { }
 		virtual void onSocket_ReadEvent(int fd) { }
-		//virtual void onSocket_Read(const void *data, int size) { }
 		virtual void onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) { }
 		virtual void onSocket_Close() { }
 	};

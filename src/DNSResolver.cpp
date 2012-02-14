@@ -31,7 +31,7 @@
 #include "IOService.h"
 #include "DNSResolver.h"
 #include "DNSResolverImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 #if defined(WIN32)
 #define STRDUP _strdup
@@ -41,13 +41,21 @@
 
 namespace coconut { 
 
+DNSResolver::DNSResolver() {
+	impl_ = BaseIOSystemFactory::instance()->createDNSResolverImpl();
+}
+
 DNSResolver::DNSResolver(boost::shared_ptr<IOService> ioService) {
-	impl_ = IOSystemFactory::instance()->createDNSResolverImpl(ioService);
+	impl_ = BaseIOSystemFactory::instance()->createDNSResolverImpl();
+	impl_->initialize(ioService);
 }
 
 DNSResolver::~DNSResolver() {
 }
 
+void DNSResolver::initialize(boost::shared_ptr<IOService> ioService) {
+	impl_->initialize(ioService);
+}
 
 void DNSResolver::cleanUp()	{	
 	impl_->cleanUp();

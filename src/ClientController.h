@@ -125,11 +125,12 @@ protected:
 protected:
 	BaseIOServiceContainer *ioServiceContainer_;
 	boost::shared_ptr<BaseSocket> socket_;
-	boost::shared_ptr<protocol::BaseProtocolFactory> protocolFactory_;
 	boost::shared_ptr<protocol::BaseProtocol> protocol_;
 	bool reconnectable_;
 	bool initFlag_;
 	int retryConnectCnt_;
+
+	boost::shared_ptr<protocol::BaseProtocolFactory> protocolFactory_;
 };
 
 class COCONUT_API BinaryController : public ClientController {	// TODO : divide this class COCONUT_API to another file..

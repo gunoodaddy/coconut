@@ -33,12 +33,13 @@
 #include "Exception.h"
 #include "InternalLogger.h"
 #include "HttpServerImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 
 HttpServer::HttpServer(boost::shared_ptr<IOService> ioService, int port) {
-	impl_ = IOSystemFactory::instance()->createHttpServerImpl(this, ioService, port);
+	impl_ = BaseIOSystemFactory::instance()->createHttpServerImpl();
+	impl_->initialize(this, ioService, port);
 }
 
 HttpServer::~HttpServer() {

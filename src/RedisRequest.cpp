@@ -88,6 +88,8 @@ public:
 	~RedisRequestImpl() {
 		// TODO redis gracefully close test need..
 		close(false);
+		if(timerObj_)
+			Timer::destroy(timerObj_);
 		_LOG_TRACE("~RedisRequestImpl() : %p", this);
 	}
 
@@ -240,7 +242,8 @@ private:
 
 	void _makeTimer() {
 		if(NULL == timerObj_) {
-			timerObj_ = new Timer(ioService());
+			timerObj_ = Timer::make();
+			timerObj_->initialize(ioService());
 			timerObj_->setEventHandler(this);
 		}
 	}

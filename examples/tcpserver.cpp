@@ -29,11 +29,20 @@
 
 #include "Coconut.h"
 
+//#define USE_LINE_CONTROLLER
+#ifdef USE_LINE_CONTROLLER
+class MyClientController : public coconut::LineController {
+	virtual void onLineReceived(const char *line) {
+		writeLine(line);
+	}
+};
+#else
 class MyClientController : public coconut::BinaryController {
 	virtual void onReceivedData(const void *data, int size) {
 		socket()->write(data, size);	
 	}
 };
+#endif
 
 class MyServerController : public coconut::ServerController {
 	virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
@@ -49,8 +58,10 @@ int main(int argc, char **argv) {
 	}
 	int port = atoi(argv[1]);
 	int threadCount = atoi(argv[2]);
-	if(argc > 3 && atoi(argv[3]) == 1)
+	if(argc > 3 && atoi(argv[3]) == 1) {
+		coconut::logger::setLogLevel(coconut::logger::LEVEL_TRACE);
 		coconut::setEnableDebugMode();
+	}
 
 	coconut::IOServiceContainer ioServiceContainer(threadCount);
 	ioServiceContainer.initialize();

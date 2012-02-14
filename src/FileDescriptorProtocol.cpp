@@ -57,6 +57,7 @@ bool FileDescriptorProtocol::processWrite(boost::shared_ptr<BaseVirtualTransport
 	} control_un;
 	struct cmsghdr  *cmptr;
 
+	memset(&msg, 0, sizeof(struct msghdr));
 	msg.msg_control = control_un.control;
 	msg.msg_controllen = sizeof(control_un.control);
 

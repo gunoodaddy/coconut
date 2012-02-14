@@ -39,7 +39,7 @@ libcoconut_la_SOURCES = \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
                        NetworkHelper.cpp \
-					   IOSystemFactory.cpp
+					   BaseIOSystemFactory.cpp
 
 include_coconutdir = $(includedir)/coconut
 include_coconut_HEADERS = \
@@ -78,7 +78,8 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          NetworkHelper.h \
-						 IOSystemFactory.h \
+						 BaseObjectAllocator.h \
+						 BaseIOSystemFactory.h \
 						 ../config.h
 
 CLEANFILES=core* tag cscope.* .*.sw*

@@ -37,7 +37,20 @@ namespace coconut {
 
 class IOServiceImpl {
 public:
-	IOServiceImpl(int id, BaseIOServiceContainer *ioServiceContainer, bool threadMode) : ioServiceContainer_(ioServiceContainer)
+	IOServiceImpl() 
+		: ioServiceContainer_(NULL)
+		, id_(0)
+		, multithread_(false)
+		, finalizedFlag_(false)
+		, joinedThreadFlag_(false)
+#if defined(WIN32)
+		, cpuCnt_(0)
+		, enabledIOCP_(false)
+#endif
+		, thread_() { }
+
+	IOServiceImpl(int id, BaseIOServiceContainer *ioServiceContainer, bool threadMode) 
+		: ioServiceContainer_(ioServiceContainer)
 		, id_(id)
 		, multithread_(threadMode)
 		, finalizedFlag_(false)
@@ -146,6 +159,7 @@ public:
 		destoryHandle();
 	}
 
+	virtual void initialize(int id, BaseIOServiceContainer *ioServiceContainer, bool threadMode) = 0;
 	virtual coconut_io_handle_t coreHandle() = 0;
 	virtual void stop() = 0;
 	virtual void dispatchEvent() = 0;

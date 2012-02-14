@@ -30,12 +30,13 @@
 #include "CoconutLib.h"
 #include "HttpRequest.h"
 #include "HttpRequestImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 
 HttpRequest::HttpRequest(coconut_http_request_handle_t req) : native_handle_(req) { 
-	impl_ = IOSystemFactory::instance()->createHttpRequestImpl(this);
+	impl_ = BaseIOSystemFactory::instance()->createHttpRequestImpl();
+	impl_->initialize(this);
 }
 
 const char * HttpRequest::uri() {

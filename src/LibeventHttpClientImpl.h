@@ -42,17 +42,20 @@
 #endif
 #include "HttpClient.h"
 #include "HttpClientImpl.h"
+#include "BaseObjectAllocator.h"
 
 static std::string gNullStr("");
 
 namespace coconut {
 
-class LibeventHttpClientImpl : public HttpClientImpl {
+class LibeventHttpClientImpl 
+			: public HttpClientImpl 
+			, public BaseObjectAllocator<LibeventHttpClientImpl>
+{
 public:
-	LibeventHttpClientImpl(HttpClient *owner, 
-					boost::shared_ptr<IOService> ioService) 
-		: owner_(owner)
-		, ioService_(ioService)
+	LibeventHttpClientImpl()
+		: owner_(NULL)
+		, ioService_()
 		, state_(HttpClient::Prepare)
 		, evcon_(NULL)
 		, dnsbase_(NULL)
@@ -92,6 +95,21 @@ public:
 	~LibeventHttpClientImpl() {
 		_LOG_TRACE("~LibeventHttpClientImpl : %p", this);
 		cleanUp(true);
+	}
+
+	void initialize(
+				HttpClient *owner, 
+				boost::shared_ptr<IOService> ioService, 
+				HttpMethodType method, 
+				const char *uri, 
+				const HttpParameter *param, 
+				int timeout) {
+		owner_ = owner;
+		ioService_ = ioService;
+		method_ = method;
+		uri_ = uri;
+		paramTemp_ = param;
+		timeout_ = timeout;
 	}
 
 public:

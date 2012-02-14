@@ -31,7 +31,7 @@
 
 #include "Defines.h"
 
-#if defined(COCONUT_USE_PRECOMPILE)
+//#if defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
@@ -40,7 +40,7 @@
 #include <boost/interprocess/detail/atomic.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
-#endif
+//#endif
 
 namespace coconut {
 
@@ -51,3 +51,4 @@ COCONUT_API bool enableDebugMode();
 COCONUT_API void setUseLittleEndianForNetwork(bool littenEndian /* default is falese */);
 
 } // end of namespace coconut
+

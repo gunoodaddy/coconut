@@ -39,15 +39,20 @@
 #include "DNSResolver.h"
 #include "UdpSocket.h"
 #include "UdpSocketImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventUdpSocketImpl : public UdpSocketImpl, private DNSResolver::EventHandler {
+class LibeventUdpSocketImpl 
+			: public UdpSocketImpl
+			, private DNSResolver::EventHandler 
+			, public BaseObjectAllocator<LibeventUdpSocketImpl>
+{
 public:
-	LibeventUdpSocketImpl(UdpSocket *owner, int port) 
-		: owner_(owner)
+	LibeventUdpSocketImpl()
+		: owner_(NULL)
 		, ev_(NULL)
-		, port_(port)
+		, port_(0)
 		, dnsReolver_(NULL) {
 
 		_LOG_TRACE("LibeventUdpSocketImpl() : %p", this);
@@ -57,9 +62,14 @@ public:
 		close();
 
 		if(dnsReolver_)
-			delete dnsReolver_;
+			DNSResolver::destroy(dnsReolver_);
 
 		_LOG_TRACE("~LibeventUdpSocketImpl() : %p", this);
+	}
+
+	void initialize(UdpSocket *owner, int port) {
+		owner_ = owner;
+		port_ = port;
 	}
 
 private:
@@ -221,8 +231,10 @@ public:
 			writeTo(data, size, &sin);
 		} else {
 			ScopedIOServiceLock(owner_->ioService());
-			if(NULL == dnsReolver_)
-				dnsReolver_ = new DNSResolver(owner_->ioService());
+			if(NULL == dnsReolver_) {
+				dnsReolver_ = DNSResolver::make();
+				dnsReolver_->initialize(owner_->ioService());
+			}
 
 			struct write_context_t *context = (struct write_context_t*)malloc(sizeof(struct write_context_t));
 			context->data_alloc = malloc(size);

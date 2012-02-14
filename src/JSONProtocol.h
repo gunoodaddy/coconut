@@ -36,12 +36,16 @@
 #include <boost/shared_ptr.hpp>
 #endif
 #include "BaseProtocol.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut { namespace protocol {
 
 class JSONProtocolImpl;
 
-class COCONUT_API JSONProtocol : public ProtocolDecorator {
+class COCONUT_API JSONProtocol 
+				: public ProtocolDecorator
+				, public BaseObjectAllocator<JSONProtocol>
+{
 public:
 	JSONProtocol();
 	JSONProtocol(BaseProtocol *protocol);

@@ -36,6 +36,7 @@ public:
 	virtual ~DNSResolverImpl() { }
 
 public:
+	virtual void initialize(boost::shared_ptr<IOService> ioService) = 0;
 	virtual void cleanUp() = 0;
 	virtual bool resolve(const char *host, struct sockaddr_in *sin, DNSResolver::EventHandler* handler, void *ptr) = 0;
 };

@@ -38,6 +38,7 @@ public:
 	virtual ~HttpServerImpl() { }
 
 public:
+	virtual void initialize(HttpServer *owner, boost::shared_ptr<IOService> ioService, int port) = 0;
 	virtual boost::shared_ptr<IOService> ioService() = 0;
 
 	virtual void setEventHandler(HttpServer::EventHandler *handler) = 0;

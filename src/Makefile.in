@@ -83,7 +83,7 @@ am_libcoconut_la_OBJECTS = kbuffer.lo CoconutLib.lo Logger.lo \
 	BaseControllerEvent.lo ClientController.lo ServerController.lo \
 	LineController.lo JSONController.lo FrameController.lo \
 	FileDescriptorController.lo NetworkHelper.lo \
-	IOSystemFactory.lo
+	BaseIOSystemFactory.lo
 libcoconut_la_OBJECTS = $(am_libcoconut_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -274,7 +274,7 @@ libcoconut_la_SOURCES = \
                        FrameController.cpp \
                        FileDescriptorController.cpp \
                        NetworkHelper.cpp \
-					   IOSystemFactory.cpp
+					   BaseIOSystemFactory.cpp
 
 include_coconutdir = $(includedir)/coconut
 include_coconut_HEADERS = \
@@ -313,7 +313,8 @@ include_coconut_HEADERS = \
                          FileDescriptorController.h \
                          ServerController.h \
                          NetworkHelper.h \
-						 IOSystemFactory.h \
+						 BaseObjectAllocator.h \
+						 BaseIOSystemFactory.h \
 						 ../config.h
 
 CLEANFILES = core* tag cscope.* .*.sw*
@@ -394,6 +395,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseControllerEvent.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseIOSystemFactory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BaseSocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BufferedTransport.Plo@am__quote@
@@ -411,7 +413,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HttpServer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOService.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOServiceContainer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOSystemFactory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/JSONProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineController.Plo@am__quote@

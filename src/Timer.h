@@ -32,6 +32,7 @@
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>
 #endif
+#include "BaseObjectAllocator.h"
 
 #if defined(_MSC_VER)
 #pragma warning ( disable: 4231 4251 4275 4786 )
@@ -44,10 +45,16 @@ namespace coconut {
 class IOService;
 class TimerImpl;
 
-class COCONUT_API Timer {
+class COCONUT_API Timer : public BaseObjectAllocator<Timer>
+{
 public:
+	Timer();
 	Timer(boost::shared_ptr<IOService> ioService);
 	~Timer();
+
+	void initialize(boost::shared_ptr<IOService> ioService) {
+		ioService_ = ioService;
+	}
 
 	class EventHandler {
 	public:

@@ -43,16 +43,22 @@
 #include "IPv4Address.h"
 #include "TcpSocket.h"
 #include "TcpSocketImpl.h"
+#include "BaseObjectAllocator.h"
 
 #define _KBUFFER_ 1
 
 namespace coconut {
 
-class LibeventTcpSocketImpl : public TcpSocketImpl, private Timer::EventHandler {
+class LibeventTcpSocketImpl 
+			: public TcpSocketImpl
+			, private Timer::EventHandler 
+			, public BaseObjectAllocator<LibeventTcpSocketImpl>
+{
 public:
 	static const int TIMERID_CONNECT = (1|INTERNAL_TIMER_BIT);
 
-	LibeventTcpSocketImpl(TcpSocket *owner) : owner_(owner)
+	LibeventTcpSocketImpl() 
+		: owner_(NULL)
 		, expired_(false)
 		, errorDetected_(false)
 		, pendingWriteSupported_(true)
@@ -87,6 +93,10 @@ public:
 			write_kbuffer_ = NULL;
 		}
 		_close();
+	}
+
+	void initialize(TcpSocket *owner) {
+		owner_ = owner;
 	}
 
 	static void bufevent_cb(struct bufferevent *bev, short events, void *ptr) {
@@ -178,14 +188,15 @@ public:
 
 	void _makeTimer() {
 		if(NULL == conn_timer_) {
-			conn_timer_ = new Timer(owner_->ioService());
+			conn_timer_ = Timer::make();
+			conn_timer_->initialize(owner_->ioService());
 			conn_timer_->setEventHandler(this);
 		}
 	}
 
 	void _deleteTimer() {
 		if(conn_timer_) {
-			delete conn_timer_;
+			Timer::destroy(conn_timer_);
 			conn_timer_ = NULL;
 		}
 	}
@@ -514,8 +525,8 @@ public:
 	void _close() {
 		ScopedIOServiceLock(owner_->ioService());
 
-		_LOG_DEBUG("close() this=%p threadid=%p >> %d %p %p %p\n", 
-				this, owner_->ioService()->nativeThreadHandle(), socketFD(),
+		_LOG_DEBUG("close() this=%p, port=%d, threadid=%p >> %d %p %p %p\n", 
+				this, port_, owner_->ioService()->nativeThreadHandle(), socketFD(),
 				bev_, ev_read_, ev_write_);
 
 		if(dnsbase_) {

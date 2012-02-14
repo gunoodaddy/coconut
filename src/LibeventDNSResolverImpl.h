@@ -33,6 +33,7 @@
 #include <event2/dns.h>
 #include "DNSResolver.h"
 #include "DNSResolverImpl.h"
+#include "BaseObjectAllocator.h"
 
 #if defined(WIN32)
 #define STRDUP _strdup
@@ -42,11 +43,27 @@
 
 namespace coconut { 
 
-class LibeventDNSResolverImpl : public DNSResolverImpl {
+class LibeventDNSResolverImpl 
+				: public DNSResolverImpl 
+				, public BaseObjectAllocator<LibeventDNSResolverImpl>
+{
 public:
-	LibeventDNSResolverImpl(boost::shared_ptr<IOService> ioService) : ioService_(ioService), dnsbase_(NULL) { }
+	LibeventDNSResolverImpl()
+		: ioService_()
+		, dnsbase_(NULL)
+		, gotResult_(false) { }
+
+	LibeventDNSResolverImpl(boost::shared_ptr<IOService> ioService) 
+		: ioService_(ioService)
+		, dnsbase_(NULL)
+		, gotResult_(false) { }
+
 	~LibeventDNSResolverImpl() {
 		cleanUp();
+	}
+
+	void initialize(boost::shared_ptr<IOService> ioService) {
+		ioService_ = ioService;
 	}
 
 private:
@@ -61,8 +78,15 @@ private:
 		struct dns_context_t *context = (struct dns_context_t*)ptr;
 		context->self->fire_onDnsResolveResult(errcode, context->host_alloc, addr, context);
 
-		free(context->host_alloc);
-		free(context);
+		_freeContext(context);
+	}
+
+	static void _freeContext(struct dns_context_t *context) {
+		if(context) {
+			if(context->host_alloc) 
+				free(context->host_alloc);
+			free(context);
+		}
 	}
 
 public:
@@ -75,8 +99,7 @@ public:
 
 		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.begin();
 		for(; it != mapcontext_.end(); it++) {
-			free(it->second->host_alloc);
-			free(it->second);
+			_freeContext(it->second);
 		}
 
 		mapcontext_.clear();
@@ -104,22 +127,28 @@ public:
 		if (!(context = (struct dns_context_t *)malloc(sizeof(struct dns_context_t)))) {
 			return false;
 		}
+		memset(context, 0, sizeof(struct dns_context_t));
 		if (!(context->host_alloc = STRDUP(host))) {
-			free(context);
+			_freeContext(context);
 			return false;
 		}
-		context->host_alloc = STRDUP("localhost");
 		context->self = this;
 		context->handler = handler;
 		context->ptr = ptr;
 
+		gotResult_ = false;
 		req = evdns_getaddrinfo(
 				dnsbase_, host, NULL /* no service name given */,
 				&hints, callback, context);
 
 		if (req == NULL) {
-			// request for this host returned immediately
-			// called callback function already.. check it out!
+			if(gotResult_) {
+				// request for this host returned immediately
+				// called callback function already.. check it out!
+				// DO NOT free context!
+			} else {
+				_freeContext(context);
+			}
 			return true;
 		}
 
@@ -129,6 +158,7 @@ public:
 
 private:
 	void fire_onDnsResolveResult(int errcode, const char *host, struct addrinfo *addr, dns_context_t *context) {
+		gotResult_ = true;
 		context->handler->onDnsResolveResult(errcode, host, addr, context->ptr);
 
 		std::map<std::string, struct dns_context_t *>::iterator it = mapcontext_.find(host);
@@ -141,6 +171,7 @@ private:
 	DNSResolver *owner_;
 	boost::shared_ptr<IOService> ioService_;	
 	struct evdns_base *dnsbase_;
+	volatile bool gotResult_;
 
 	std::map<std::string, struct dns_context_t *> mapcontext_;
 };

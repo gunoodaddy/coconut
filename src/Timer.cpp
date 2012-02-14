@@ -33,12 +33,18 @@
 #include "InternalLogger.h"
 #include "ThreadUtil.h"
 #include "TimerImpl.h"
-#include "IOSystemFactory.h"
+#include "BaseIOSystemFactory.h"
 
 namespace coconut {
 	
+Timer::Timer() : ioService_(), handler_(NULL) { 
+	impl_ = BaseIOSystemFactory::instance()->createTimerImpl();
+	impl_->initialize(this);
+}
+
 Timer::Timer(boost::shared_ptr<IOService> ioService) : ioService_(ioService), handler_(NULL) { 
-	impl_ = IOSystemFactory::instance()->createTimerImpl(this);
+	impl_ = BaseIOSystemFactory::instance()->createTimerImpl();
+	impl_->initialize(this);
 }
 
 Timer::~Timer() {

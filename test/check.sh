@@ -1,4 +1,4 @@
 #!/bin/bash
 
-#valgrind --tool=memcheck --leak-check=yes $1
-valgrind --tool=memcheck --leak-check=yes --show-reachable=yes $1
+rm -rf result.valgrind*
+valgrind -v --tool=memcheck --leak-check=yes  --show-reachable=yes  --log-file=result.valgrind $*

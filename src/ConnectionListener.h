@@ -28,17 +28,23 @@
 */
 
 #pragma once
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
 class IOService;
 class ConnectionListenerImpl;
 
-class COCONUT_API ConnectionListener {
+class COCONUT_API ConnectionListener : public BaseObjectAllocator<ConnectionListener>
+{
 public:
+	ConnectionListener();
 	ConnectionListener(boost::shared_ptr<IOService> ioService, int port);
 	ConnectionListener(boost::shared_ptr<IOService> ioService, const char* path);
 	~ConnectionListener(void);
+
+	void initialize(boost::shared_ptr<IOService> ioService, int port);
+	void initialize(boost::shared_ptr<IOService> ioService, const char* path);
 
 	class COCONUT_API EventHandler {
 	public:

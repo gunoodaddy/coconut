@@ -9,6 +9,8 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <vector>
 
+using namespace coconut;
+
 typedef boost::function< void () > func_t;
 typedef boost::function< void (int) > argfunc_t;
 
@@ -121,10 +123,68 @@ namespace ThreadTest {
 	}
 }
 
+namespace templatefunc  {
+	int * doSomething() {
+		printf("doSomething\n");
+		return new int;
+	}
+
+	template <class T>
+	class BaseObjectAllocator
+	{
+	public:
+		BaseObjectAllocator() { }
+		~BaseObjectAllocator() { }
+		typedef T * (*allocatorFunc_t)();
+		typedef boost::shared_ptr<T> (*allocatorSharedFunc_t)();
+		typedef void (*destorySharedFunc_t)(T *);
+
+		static void setAllocator(allocatorFunc_t func) {
+			allocator_ = func;	
+		}
+		static void setSharedAllocator(allocatorSharedFunc_t func) {
+			allocatorShared_ = func;	
+		}
+
+		static void setSharedDestoryer(destorySharedFunc_t func) {
+			destoryShared_ = func;
+		}
+
+		static boost::shared_ptr<T> makeSharedObject() {
+			if(allocatorShared_)
+				return allocatorShared_();
+			return boost::shared_ptr<T>(new T, destoryShared_);
+		}
+
+		static T makeObject() {
+			if(allocator_)
+				return allocator_();
+			return new T();
+		}
+
+	private:
+		static allocatorFunc_t allocator_;
+		static allocatorSharedFunc_t allocatorShared_;
+		static destorySharedFunc_t destoryShared_;
+	};
+
+	template <class T> typename BaseObjectAllocator<T>::allocatorFunc_t         BaseObjectAllocator<T>::allocator_;
+	template <class T> typename BaseObjectAllocator<T>::allocatorSharedFunc_t   BaseObjectAllocator<T>::allocatorShared_; 
+	template <class T> typename BaseObjectAllocator<T>::destorySharedFunc_t     BaseObjectAllocator<T>::destoryShared_;
+
+	void doTest() {
+		BaseObjectAllocator<int>::setAllocator(&doSomething);
+//		BaseObjectAllocator<int>::makeObject();
+	}
+}
+
+
 int main() {
 	// BLOCK START
 	{
+		templatefunc::doTest();
 		boost::shared_ptr<UpperTest> null;
+		return 1;
 		if(null) {
 			printf("shared_ptr not null\n");
 		} else {

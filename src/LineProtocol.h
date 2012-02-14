@@ -34,10 +34,14 @@
 #include <boost/shared_ptr.hpp>
 #endif
 #include "BaseProtocol.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut { namespace protocol {
 
-class COCONUT_API LineProtocol : public ProtocolDecorator {
+class COCONUT_API LineProtocol 
+				: public ProtocolDecorator
+				, public BaseObjectAllocator<LineProtocol>
+{
 public:
 	LineProtocol();
 	LineProtocol(BaseProtocol *protocol);

@@ -38,7 +38,7 @@ using namespace coconut;
 using namespace coconut::protocol;
 
 static const char *REDIS_ADDRESS = "61.247.198.102";
-static int gPortBase = 8100;
+static int gPortBase = 5100;
 
 namespace TestUDPAndLineProtocol {
 	static const int UDP_PORT = 1234;
@@ -229,7 +229,7 @@ namespace TestLineProtocol {
 			ioServiceContainer->run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -309,7 +309,7 @@ namespace TestJSONProtocol {
 			ioServiceContainer->run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -393,10 +393,101 @@ namespace TestFrameProtocol {
 			boost::shared_ptr<TestClientController> clientController(new TestClientController);
 			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase++, clientController);
 
+			gPortBase++;
+
 			ioServiceContainer->run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
+		}
+		return false;
+	}
+}
+
+
+namespace TestFrameAndLineProtocol {
+	static const int COMMAND = 813;
+
+	class TestClientController : public FrameController {
+
+		virtual void onConnected() {
+			LOG_DEBUG("onConnected called");
+			recvedLine_ = 0;
+
+			boost::shared_ptr<LineProtocol> lprot(new LineProtocol);
+			lprot->setLine("LINE");
+			lprot->processSerialize();
+
+			FrameHeader header(COMMAND, 0);
+			writeFrame(header, lprot);
+			writeFrame(header, lprot);
+		}
+
+		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
+			LOG_DEBUG("[CLIENT] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+			
+			boost::shared_ptr<LineProtocol> lprot(new LineProtocol(prot));
+			lprot->processReadFromPayloadBuffer();
+
+			assert(lprot->isReadComplete());
+			LOG_DEBUG("[CLIENT] line string = %s\n", lprot->linePtr());
+
+			recvedLine_++;
+			if(recvedLine_ == 2) {
+				LOG_INFO("************ Test Success ************");
+				ioServiceContainer()->stop();	// test success
+			}
+		}
+
+		private:
+		int recvedLine_;
+	};
+
+	class TestServerClientController : public FrameController {
+		virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
+			LOG_DEBUG("[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
+
+			boost::shared_ptr<LineProtocol> lprot(new LineProtocol(prot));
+			lprot->processReadFromPayloadBuffer();
+
+			assert(lprot->isReadComplete());
+			assert(strcmp(lprot->linePtr(), "LINE") == 0);
+
+			lprot->processSerialize();
+			FrameHeader header(prot->header().command() + 1, 2);
+			writeFrame(header, lprot->writingBuffer());
+		}
+	};
+
+	class TestServerController : public ServerController {
+		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
+			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController); 
+			return newController;
+		}
+	};
+
+	bool doTest() {
+		LOG_INFO("=====================================================================");
+		LOG_INFO("Frame And Line Protocol Test");
+		LOG_INFO("=====================================================================");
+
+		boost::shared_ptr<BaseIOServiceContainer> ioServiceContainer;
+		ioServiceContainer = boost::shared_ptr<BaseIOServiceContainer>(new IOServiceContainer);
+		ioServiceContainer->initialize();
+
+		try {
+			boost::shared_ptr<TestServerController> serverController(new TestServerController);
+			NetworkHelper::listenTcp(ioServiceContainer.get(), gPortBase, serverController);
+
+			boost::shared_ptr<TestClientController> clientController(new TestClientController);
+			NetworkHelper::connectTcp(ioServiceContainer.get(), "localhost", gPortBase, clientController);
+
+			gPortBase++;
+
+			ioServiceContainer->run();
+			return true;
+		} catch(Exception &e) {
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -486,7 +577,7 @@ namespace TestFrameAndJSONProtocol {
 			ioServiceContainer->run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -591,7 +682,7 @@ namespace TestFrameAndStringListProtocol {
 			ioServiceContainer->run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -735,7 +826,7 @@ namespace TestFrameAndStringListAndLineProtocol {
 			ioServiceContainer->run();
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -962,7 +1053,7 @@ namespace TestRedisRequest {
 			LOG_INFO("Test OK");
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -1000,6 +1091,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 	static int gLoginUserCnt = 0;
 	static int gRecvMemoCnt = 0;
 	static int gErrorCnt = 0;
+	static volatile boost::uint32_t gLoginOKCnt;
 
 	class TestLoginClientController : public FrameController {
 		public:
@@ -1079,6 +1171,8 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				if(id == TIMER_ID_CHECK_LOGIN_WAIT_PATIENCE) {
 					if(gLoginUserCnt != LOGIN_USER_COUNT) {
 						// run out of patience 
+						LOG_ERROR("Current login-res recved user count = %d, login req succ cnt = %d, login ok cnt = %d"
+							, gLoginUserCnt, gUserMap.size(), gLoginOKCnt);
 						assert(false && "run out of patience with waiting login");
 					}
 					return;
@@ -1198,7 +1292,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 								const struct RedisRequest::requestContext *context, 
 								boost::shared_ptr<RedisResponse> response) { 
 				LOG_DEBUG("[SERVER] REDIS RESULT : %s, ticket %d, %d, loginUser : %d\n", 
-						response->resultData()->strValue.c_str(), response->ticket(), ticketLogin_, loginOKCnt_);
+						response->resultData()->strValue.c_str(), response->ticket(), ticketLogin_, gLoginOKCnt);
 
 				if(response->ticket() == ticketLogin_) {
 					// doing login progress..
@@ -1206,7 +1300,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 					LineProtocol lprot;
 					lprot.setLine("LOGIN OK");
 					writeFrame(headerLogin_, &lprot);
-					coconut::atomicIncreaseInt32(&loginOKCnt_);
+					coconut::atomicIncreaseInt32(&gLoginOKCnt);
 					return;
 				}
 
@@ -1236,14 +1330,11 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 		private:
 			boost::shared_ptr<RedisRequest> redisRequest_;
 			int recvedRedisResultCnt_;
-			static volatile boost::uint32_t loginOKCnt_;
 			int ticketLogin_;
 			FrameHeader headerLogin_;
 			FrameHeader headerSendMemo_;
 			std::string payloadSendMemo_;
 	};
-	 volatile boost::uint32_t TestServerClientController::loginOKCnt_;
-
 
 	class TestServerController : public ServerController {
 		virtual void onInitialized() {
@@ -1296,7 +1387,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 			LOG_INFO("Test OK");
 			return true;
 		} catch(Exception &e) {
-			printf("Exception emitted : %s\n", e.what());
+			printf("Exception emitted : %s, port : %d\n", e.what(), gPortBase);
 		}
 		return false;
 	}
@@ -1326,18 +1417,19 @@ int main(int argc, char **argv) {
 
 	LOG_INFO("Entering protocol test");
 	assert(TestRedisRequest::doTest());
+	assert(TestFrameAndJSONProtocol::doTest());
+	assert(TestFrameAndStringListAndLineProtocolAndRedis::doTest());
+	assert(TestFrameProtocol::doTest());
 	assert(TestUDPAndLineProtocol::doTest());
 	assert(TestHttpClientGet::doTest());
 	assert(TestLineProtocol::doTest());
 	assert(TestJSONProtocol::doTest());
-	assert(TestFrameProtocol::doTest());
-	assert(TestFrameAndJSONProtocol::doTest());
+	assert(TestFrameAndLineProtocol::doTest());
 	assert(TestFrameAndStringListProtocol::doTest());
 	assert(TestFrameAndStringListAndLineProtocol::doTest());
 #if ! defined(WIN32)
 	assert(TestFileDescriptorProtocol::doTest());
 #endif
-	assert(TestFrameAndStringListAndLineProtocolAndRedis::doTest());
 
 	LOG_INFO("Leaving protocol test");
 

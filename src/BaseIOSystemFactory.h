@@ -52,51 +52,40 @@ class HttpRequestImpl;
 class IOServiceImpl;
 class BaseIOServiceContainer;
 
-class IOSystemFactory {
+class BaseIOSystemFactory {
 public:
-	virtual ~IOSystemFactory() { }
+	virtual ~BaseIOSystemFactory() { }
 
-	virtual boost::shared_ptr<ConnectionListenerImpl> createConnectionListenerImpl(ConnectionListener *owner, int port) = 0;
-	virtual boost::shared_ptr<ConnectionListenerImpl> createConnectionListenerImpl(ConnectionListener *owner, const char *path) = 0;
+	virtual boost::shared_ptr<ConnectionListenerImpl> createConnectionListenerImpl() = 0;
 
-	virtual boost::shared_ptr<DNSResolverImpl> createDNSResolverImpl(boost::shared_ptr<IOService> ioService) = 0;
+	virtual boost::shared_ptr<DNSResolverImpl> createDNSResolverImpl() = 0;
 	
-	virtual boost::shared_ptr<TimerImpl> createTimerImpl(Timer *owner) = 0;
+	virtual boost::shared_ptr<TimerImpl> createTimerImpl() = 0;
 	
 	virtual boost::shared_ptr<DeferredCallerImpl> createDeferredCallerImpl() = 0;
-	virtual boost::shared_ptr<DeferredCallerImpl> createDeferredCallerImpl(boost::shared_ptr<IOService> ioService) = 0;
 
-	virtual boost::shared_ptr<TcpSocketImpl> createTcpSocketImpl(TcpSocket *owner) = 0;
+	virtual boost::shared_ptr<TcpSocketImpl> createTcpSocketImpl() = 0;
 
-	virtual boost::shared_ptr<UdpSocketImpl> createUdpSocketImpl(UdpSocket *owner, int port) = 0;
+	virtual boost::shared_ptr<UdpSocketImpl> createUdpSocketImpl() = 0;
 	
-	virtual boost::shared_ptr<IOServiceImpl> createIOServiceImpl(int id, BaseIOServiceContainer *container, bool threadMode) = 0;
+	virtual boost::shared_ptr<IOServiceImpl> createIOServiceImpl() = 0;
 
-	virtual boost::shared_ptr<HttpRequestImpl> createHttpRequestImpl(HttpRequest *owner) = 0;
+	virtual boost::shared_ptr<HttpRequestImpl> createHttpRequestImpl() = 0;
 
-	virtual boost::shared_ptr<HttpServerImpl> createHttpServerImpl(
-							HttpServer *owner, 
-							boost::shared_ptr<IOService> ioService, 
-							int port) = 0;
+	virtual boost::shared_ptr<HttpServerImpl> createHttpServerImpl() = 0;
 
-	virtual boost::shared_ptr<HttpClientImpl> createHttpClientImpl(
-							HttpClient *owner, 
-							boost::shared_ptr<IOService> ioService, 
-							HttpMethodType method = HTTP_GET,
-							const char *uri = "",
-							const HttpParameter *param = NULL,
-							int timeout = 0) = 0;
+	virtual boost::shared_ptr<HttpClientImpl> createHttpClientImpl() = 0;
 
 public:
-	static boost::shared_ptr<IOSystemFactory> instance() {
+	static boost::shared_ptr<BaseIOSystemFactory> instance() {
 		return factory_;
 	}
-	static void setInstance(boost::shared_ptr<IOSystemFactory> factory) {
+	static void setInstance(boost::shared_ptr<BaseIOSystemFactory> factory) {
 		factory_ = factory;
 	}
 
 private:
-	static boost::shared_ptr<IOSystemFactory> factory_;
+	static boost::shared_ptr<BaseIOSystemFactory> factory_;
 };
 
 }

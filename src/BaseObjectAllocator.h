@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 * Copyright (c) 2012, Eunhyuk Kim(gunoodaddy) 
 * All rights reserved.
@@ -27,45 +29,61 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
-#pragma once
-
-#include "ClientController.h"
-#include "BaseProtocol.h"
-#include "FrameProtocol.h"
-#include "BaseObjectAllocator.h"
-
 namespace coconut {
 
-class COCONUT_API FrameController 
-			: public ClientController 
+template <class T>
+class COCONUT_API BaseObjectAllocator
 {
 public:
-	class FrameProtocolFactory 
-			: public protocol::BaseProtocolFactory
-			, public BaseObjectAllocator<FrameProtocolFactory>
-	{
+	BaseObjectAllocator() { }
+	~BaseObjectAllocator() { }
+
+	class Allocator {
 	public:
-		boost::shared_ptr<protocol::BaseProtocol> makeProtocol() {
-			return protocol::FrameProtocol::makeSharedPtr();
-		}
+		Allocator() {}
+		virtual ~Allocator() {}
+
+		virtual T* make() = 0;
+		virtual void destroy(T *p) = 0;
+		virtual boost::shared_ptr<T> makeSharedPtr() = 0;
 	};
-private:
-	void _onPreInitialized() {
-		setProtocolFactory(FrameProtocolFactory::makeSharedPtr());
-		BaseController::_onPreInitialized();
+	
+	typedef boost::shared_ptr<Allocator> ALLOCATOR;
+	typedef boost::function< void (T *) > DESTRUCTOR_FUNC;
+
+	static inline void setAllocator(boost::shared_ptr<Allocator> alloc) {
+		allocator_ = alloc;	
+		destructSharedPtr_ = boost::bind(&Allocator::destroy, allocator_, _1);
 	}
 
-	void onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol);
+	static inline boost::shared_ptr<T> makeSharedPtr() {
+		if(allocator_)
+			return allocator_->makeSharedPtr();
+		return boost::shared_ptr<T>(new T);
+	}
 
-public:
-	void writeFrame(const protocol::FrameHeader &header, boost::shared_ptr<protocol::BaseProtocol> protocol);
-	void writeFrame(const protocol::FrameHeader &header, protocol::BaseProtocol *protocol);
-	void writeFrame(const protocol::FrameHeader &header, boost::shared_ptr<BufferedTransport> buffer);
-	void writeFrame(const protocol::FrameHeader &header, const void *payload, size_t size);
+	static inline T* make() {
+		if(allocator_)
+			return allocator_->make();
+		return new T();
+	}
 
-protected:
-	// FrameController callback event
-	virtual void onFrameReceived(boost::shared_ptr<protocol::FrameProtocol> prot) = 0;
+	static inline void destroy(T *p) {
+		if(allocator_)
+			return allocator_->destroy(p);
+		delete p;
+	}
+
+	static inline DESTRUCTOR_FUNC destroyFunction() {
+		return destructSharedPtr_;
+	}
+
+private:
+	static ALLOCATOR allocator_;
+	static DESTRUCTOR_FUNC destructSharedPtr_;
 };
 
-} // end of namespace coconut
+template <class T> typename BaseObjectAllocator<T>::ALLOCATOR BaseObjectAllocator<T>::allocator_;
+template <class T> typename BaseObjectAllocator<T>::DESTRUCTOR_FUNC BaseObjectAllocator<T>::destructSharedPtr_;
+
+}

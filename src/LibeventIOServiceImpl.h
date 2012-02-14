@@ -34,11 +34,21 @@
 #include <boost/bind.hpp>
 #endif
 #include "IOServiceImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventIOServiceImpl : public IOServiceImpl {
+class LibeventIOServiceImpl : public IOServiceImpl 
+							, public BaseObjectAllocator<LibeventIOServiceImpl>
+{
 public:
+	LibeventIOServiceImpl()
+		: IOServiceImpl()
+		, loopExitFlag_(false)
+		, base_cfg_(NULL)
+		, base_(NULL)
+		, event_(NULL) { }
+
 	LibeventIOServiceImpl(int id, BaseIOServiceContainer *ioServiceContainer, bool threadMode) 
 		: IOServiceImpl(id, ioServiceContainer, threadMode)
 		, loopExitFlag_(false)
@@ -49,6 +59,12 @@ public:
 	~LibeventIOServiceImpl() {
 		finalize();
 		_LOG_TRACE("~LibeventIOServiceImpl() this = %p", this);
+	}
+
+	void initialize(int id, BaseIOServiceContainer *ioServiceContainer, bool threadMode) {
+		id_ = id;
+		ioServiceContainer_ = ioServiceContainer;
+		multithread_ = threadMode;
 	}
 
 public:

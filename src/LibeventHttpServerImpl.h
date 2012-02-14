@@ -39,11 +39,25 @@
 #include <vector>
 #include "HttpRequest.h"
 #include "HttpServerImpl.h"
+#include "BaseObjectAllocator.h"
 
 namespace coconut {
 
-class LibeventHttpServerImpl : public HttpServerImpl {
+class LibeventHttpServerImpl 
+				: public HttpServerImpl 
+				, public BaseObjectAllocator<LibeventHttpServerImpl>
+{
 public:
+	LibeventHttpServerImpl()
+		: owner_(NULL)
+		, ioService_()
+		, http_(NULL)
+		, handle_(NULL)
+		, port_(0)
+	{
+		_LOG_TRACE("LibeventHttpServerImpl() : %p", this);
+	}
+
 	LibeventHttpServerImpl(HttpServer *owner, 
 				   boost::shared_ptr<IOService> ioService,
 				   int port)
@@ -64,6 +78,12 @@ public:
 			http_ = NULL;
 			handle_ = NULL;
 		}
+	}
+
+	void initialize(HttpServer *owner, boost::shared_ptr<IOService> ioService, int port) {
+		owner_ = owner;
+		ioService_ = ioService;
+		port_ = port;
 	}
 
 private:
