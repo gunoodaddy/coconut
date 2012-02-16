@@ -70,7 +70,7 @@ bool LineProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transport
 		return false;
 
 	try {
-		char buffer[BUFFER_SIZE] = {0, };
+		char buffer[BUFFER_SIZE];
 		int nread = transport->read(buffer, BUFFER_SIZE);	
 		
 		for(int i = 0; i < nread; i++) {

@@ -28,29 +28,22 @@
 */
 
 #include "Coconut.h"
-#include <event2/http.h>
-#include <event2/buffer.h>
 
 class HttpServerHandler : public coconut::HttpServer::EventHandler {
 	virtual void onHttpServer_DocumentRequest(coconut::HttpServer *server, boost::shared_ptr<coconut::HttpRequest> request) { 
+		LOG_INFO("onHttpServer_DocumentRequest emitted.. uri = %s, path = %s", request->uri(), request->path());
 
-		// directly using libevent-http api
-		{
-			struct evhttp_request *req = (struct evhttp_request*)request->nativeHandle();
-			const char *uri = evhttp_request_get_uri(req);
-			LOG_INFO("onHttpServer_DocumentRequest emitted.. uri = %s", uri);
+		request->dumpRequest(stdout);
 
-			struct evbuffer *evb = NULL;
-			evb = evbuffer_new();
-			evbuffer_add_printf(evb, 
-					"<html>\n <head>\n"
-					"<title>%s</title>\n"
-					"</head>\n"
-					"<body>\n"
-					"<h1>hello workd : hi~ [%s]</h1>\n"
-					"<ul>\n", uri, uri);
-			evhttp_send_reply(req, 200, "OK", evb);
-		}
+		char res[1024];
+		sprintf(res, "<html>\n <head>\n"
+				"<title>%s</title>\n"
+				"</head>\n"
+				"<body>\n"
+				"<h1>hello world : hi~ [%s]</h1>\n"
+				"<ul>\n", request->uri(), request->uri());
+		
+		request->sendReplyString(200, "OK", res);
 	}
 };
 
@@ -78,3 +71,5 @@ int main(int argc, char **argv) {
 	}
 	return 0;
 }
+
+

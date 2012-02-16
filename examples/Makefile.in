@@ -36,8 +36,8 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = tcpserver$(EXEEXT) tcpclient$(EXEEXT) \
 	udpserver$(EXEEXT) udpclient$(EXEEXT) udsserver$(EXEEXT) \
-	udsclient$(EXEEXT) httpserver$(EXEEXT) fdserver$(EXEEXT) \
-	fdclient$(EXEEXT)
+	udsclient$(EXEEXT) httpserver$(EXEEXT) httpclient$(EXEEXT) \
+	fdserver$(EXEEXT) fdclient$(EXEEXT)
 subdir = examples
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -59,6 +59,10 @@ am_fdserver_OBJECTS = fdserver.$(OBJEXT)
 fdserver_OBJECTS = $(am_fdserver_OBJECTS)
 fdserver_LDADD = $(LDADD)
 fdserver_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
+httpclient_SOURCES = httpclient.c
+httpclient_OBJECTS = httpclient.$(OBJEXT)
+httpclient_LDADD = $(LDADD)
+httpclient_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_httpserver_OBJECTS = httpserver.$(OBJEXT)
 httpserver_OBJECTS = $(am_httpserver_OBJECTS)
 httpserver_LDADD = $(LDADD)
@@ -90,6 +94,15 @@ udsserver_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -99,11 +112,11 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) \
+SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) httpclient.c \
 	$(httpserver_SOURCES) $(tcpclient_SOURCES) \
 	$(tcpserver_SOURCES) $(udpclient_SOURCES) $(udpserver_SOURCES) \
 	$(udsclient_SOURCES) $(udsserver_SOURCES)
-DIST_SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) \
+DIST_SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) httpclient.c \
 	$(httpserver_SOURCES) $(tcpclient_SOURCES) \
 	$(tcpserver_SOURCES) $(udpclient_SOURCES) $(udpserver_SOURCES) \
 	$(udsclient_SOURCES) $(udsserver_SOURCES)
@@ -270,7 +283,7 @@ DISTCLEANFILES = $(CLEANFILES)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .cpp .lo .o .obj
+.SUFFIXES: .c .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -316,6 +329,9 @@ fdclient$(EXEEXT): $(fdclient_OBJECTS) $(fdclient_DEPENDENCIES)
 fdserver$(EXEEXT): $(fdserver_OBJECTS) $(fdserver_DEPENDENCIES) 
 	@rm -f fdserver$(EXEEXT)
 	$(CXXLINK) $(fdserver_OBJECTS) $(fdserver_LDADD) $(LIBS)
+httpclient$(EXEEXT): $(httpclient_OBJECTS) $(httpclient_DEPENDENCIES) 
+	@rm -f httpclient$(EXEEXT)
+	$(LINK) $(httpclient_OBJECTS) $(httpclient_LDADD) $(LIBS)
 httpserver$(EXEEXT): $(httpserver_OBJECTS) $(httpserver_DEPENDENCIES) 
 	@rm -f httpserver$(EXEEXT)
 	$(CXXLINK) $(httpserver_OBJECTS) $(httpserver_LDADD) $(LIBS)
@@ -346,6 +362,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdserver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpserver.Po@am__quote@
@@ -353,6 +370,27 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udpserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udsclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udsserver.Po@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

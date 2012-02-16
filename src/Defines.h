@@ -95,7 +95,8 @@ enum SocketType{
 
 enum HttpMethodType {
 	HTTP_POST,
-	HTTP_GET
+	HTTP_GET,
+	HTTP_UNKNOWN
 };
 
 #ifndef TAILQ_INIT

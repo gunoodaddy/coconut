@@ -37,7 +37,7 @@ class MyFDController : public coconut::FileDescriptorController {
 			return;
 
 		while(true) {
-			char buff[1024] = {0, };
+			char buff[1024];// = {0, };
 			if(read(fd, buff, sizeof(buff)) > 0) {
 				printf("%s", buff);
 				continue;

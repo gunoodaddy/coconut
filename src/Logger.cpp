@@ -128,7 +128,7 @@ LogLevel currentLogLevel() {
 }
 
 void logprintf(bool internalLog, const char *file, const char *function, int line, LogLevel level, const char * format, ...) {
-	char log[4096] = {0, };
+	char log[4096];
 	va_list args;
 	va_start(args, format);
 	vsprintf(log, format, args);

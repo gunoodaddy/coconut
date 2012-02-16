@@ -297,14 +297,14 @@ public:
 	}
 
 	void _makeContentLengthHeader(int size) {
-		char contentlengthStr[20] = {0, };
+		char contentlengthStr[20];// = {0, };
 		sprintf(contentlengthStr, "%d", size);
 		evhttp_add_header(req_->output_headers, "Content-Length", contentlengthStr); 
 	}
 
 	void _makePostHeader() {
 		if(multipart_) {
-			char header[1024] = {0, };
+			char header[1024];// = {0, };
 			sprintf(header, "multipart/form-data; boundary=%s", boundary_.c_str());
 			evhttp_add_header(req_->output_headers, "Content-Type", header);
 		} else {
@@ -313,7 +313,7 @@ public:
 	}
 
 	void _makeMultipartBoundary() {
-		char temp[1024] = {0, };
+		char temp[1024];// = {0, };
 		srand((unsigned int)time(NULL));
 		sprintf(temp, "--%x%x%x%x%x%x%x%x%x%x%x%x%x",
 				rand() % 16, rand() % 16, rand() % 16, rand() % 16, rand() % 16,

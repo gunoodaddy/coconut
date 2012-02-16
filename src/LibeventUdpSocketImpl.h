@@ -85,7 +85,7 @@ private:
 		CHECK_IOSERVICE_STOP_VOID_RETURN(SELF->ioService());
 
 		if(what & EV_READ) {
-			char buf[UDP_BUF_SIZE] = {0, };
+			char buf[UDP_BUF_SIZE];// = {0, };
 			struct sockaddr_in client_addr;
 			socklen_t sizeaddr = sizeof(client_addr);
 

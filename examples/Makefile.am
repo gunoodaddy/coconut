@@ -15,6 +15,7 @@ noinst_PROGRAMS = \
 	udsserver \
 	udsclient \
 	httpserver \
+	httpclient \
 	fdserver \
 	fdclient
 

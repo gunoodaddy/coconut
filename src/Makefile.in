@@ -73,12 +73,12 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(include_coconutdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcoconut_la_DEPENDENCIES =
-am_libcoconut_la_OBJECTS = kbuffer.lo CoconutLib.lo Logger.lo \
-	IOService.lo IOServiceContainer.lo DeferredCaller.lo Timer.lo \
-	DNSResolver.lo BufferedTransport.lo BaseSocket.lo TcpSocket.lo \
-	UdpSocket.lo ConnectionListener.lo RedisRequest.lo \
-	RedisResponse.lo HttpClient.lo HttpRequest.lo HttpServer.lo \
-	BaseProtocol.lo FrameProtocol.lo LineProtocol.lo \
+am_libcoconut_la_OBJECTS = kbuffer.lo Exception.lo Field.lo Parser.lo \
+	CoconutLib.lo Logger.lo IOService.lo IOServiceContainer.lo \
+	DeferredCaller.lo Timer.lo DNSResolver.lo BufferedTransport.lo \
+	BaseSocket.lo TcpSocket.lo UdpSocket.lo ConnectionListener.lo \
+	RedisRequest.lo RedisResponse.lo HttpClient.lo HttpRequest.lo \
+	HttpServer.lo BaseProtocol.lo FrameProtocol.lo LineProtocol.lo \
 	JSONProtocol.lo FileDescriptorProtocol.lo BaseController.lo \
 	BaseControllerEvent.lo ClientController.lo ServerController.lo \
 	LineController.lo JSONController.lo FrameController.lo \
@@ -243,6 +243,9 @@ AM_LDFLAGS = $(BOOST_LDFLAGS)
 libcoconut_la_LIBADD = -lboost_thread -ljson
 libcoconut_la_SOURCES = \
                        dep/kbuffer.c \
+                       dep/MPFDParser/Exception.cpp \
+                       dep/MPFDParser/Field.cpp \
+                       dep/MPFDParser/Parser.cpp \
                        CoconutLib.cpp \
                        Logger.cpp \
                        IOService.cpp \
@@ -404,6 +407,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConnectionListener.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DNSResolver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DeferredCaller.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Exception.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Field.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileDescriptorController.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileDescriptorProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FrameController.Plo@am__quote@
@@ -419,6 +424,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Logger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NetworkHelper.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Parser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RedisRequest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RedisResponse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ServerController.Plo@am__quote@
@@ -475,6 +481,27 @@ kbuffer.lo: dep/kbuffer.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+Exception.lo: dep/MPFDParser/Exception.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Exception.lo -MD -MP -MF $(DEPDIR)/Exception.Tpo -c -o Exception.lo `test -f 'dep/MPFDParser/Exception.cpp' || echo '$(srcdir)/'`dep/MPFDParser/Exception.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/Exception.Tpo $(DEPDIR)/Exception.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dep/MPFDParser/Exception.cpp' object='Exception.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Exception.lo `test -f 'dep/MPFDParser/Exception.cpp' || echo '$(srcdir)/'`dep/MPFDParser/Exception.cpp
+
+Field.lo: dep/MPFDParser/Field.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Field.lo -MD -MP -MF $(DEPDIR)/Field.Tpo -c -o Field.lo `test -f 'dep/MPFDParser/Field.cpp' || echo '$(srcdir)/'`dep/MPFDParser/Field.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/Field.Tpo $(DEPDIR)/Field.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dep/MPFDParser/Field.cpp' object='Field.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Field.lo `test -f 'dep/MPFDParser/Field.cpp' || echo '$(srcdir)/'`dep/MPFDParser/Field.cpp
+
+Parser.lo: dep/MPFDParser/Parser.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT Parser.lo -MD -MP -MF $(DEPDIR)/Parser.Tpo -c -o Parser.lo `test -f 'dep/MPFDParser/Parser.cpp' || echo '$(srcdir)/'`dep/MPFDParser/Parser.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/Parser.Tpo $(DEPDIR)/Parser.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dep/MPFDParser/Parser.cpp' object='Parser.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o Parser.lo `test -f 'dep/MPFDParser/Parser.cpp' || echo '$(srcdir)/'`dep/MPFDParser/Parser.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo

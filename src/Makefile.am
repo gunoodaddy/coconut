@@ -8,6 +8,9 @@ libcoconut_la_LIBADD = -lboost_thread -ljson
 
 libcoconut_la_SOURCES = \
                        dep/kbuffer.c \
+                       dep/MPFDParser/Exception.cpp \
+                       dep/MPFDParser/Field.cpp \
+                       dep/MPFDParser/Parser.cpp \
                        CoconutLib.cpp \
                        Logger.cpp \
                        IOService.cpp \

@@ -74,7 +74,7 @@ public:
 		parameters_.push_back(param);
 	}
 	void addParameter(const char *key, int value) {
-		char buffer[256] = {0, };
+		char buffer[256];// = {0, };
 		sprintf(buffer, "%d", value);
 		addParameter(key, buffer);
 	}

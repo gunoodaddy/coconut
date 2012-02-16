@@ -389,16 +389,7 @@ public:
 	}
 
 	int read(std::string &data, size_t size) {
-		if(bev_) {
-			struct evbuffer *readBuffer = bufferevent_get_input(bev_);
-			const char *pulled_data = (const char *)_readBufferEvent(readBuffer, size);
-			if(pulled_data)
-				data.assign(pulled_data, size);
-			else
-				return -1;
-			evbuffer_drain(readBuffer, size);
-			return size;
-		} else {
+		if(NULL == bev_) {
 			char *p = (char *)malloc(size);
 			if(NULL == p) 
 				return -1;
@@ -413,20 +404,20 @@ public:
 				checkResponseSocket(res);
 			free(p);
 			return res;
+		} else {
+			struct evbuffer *readBuffer = bufferevent_get_input(bev_);
+			const char *pulled_data = (const char *)_readBufferEvent(readBuffer, size);
+			if(pulled_data)
+				data.assign(pulled_data, size);
+			else
+				return -1;
+			evbuffer_drain(readBuffer, size);
+			return size;
 		}
 	}
 
 	int read(void *data, size_t size) {
-		if(bev_) {
-			struct evbuffer *readBuffer = bufferevent_get_input(bev_);
-			const char *pulled_data = (const char *)_readBufferEvent(readBuffer, size);
-			if(pulled_data)
-				memcpy(data, pulled_data, size);
-			else 
-				return -1;
-			evbuffer_drain(readBuffer, size);
-			return size;
-		} else {
+		if(!bev_) {
 #if defined(WIN32)
 			int res = ::recv(socketFD(), (char *)data, size, 0);
 #else
@@ -435,6 +426,15 @@ public:
 			if(res <= 0)
 				checkResponseSocket(res);
 			return res;
+		} else {
+			struct evbuffer *readBuffer = bufferevent_get_input(bev_);
+			const char *pulled_data = (const char *)_readBufferEvent(readBuffer, size);
+			if(pulled_data)
+				memcpy(data, pulled_data, size);
+			else 
+				return -1;
+			evbuffer_drain(readBuffer, size);
+			return size;
 		}
 	}
 

@@ -45,11 +45,18 @@ public:
 		return native_handle_;
 	}
 
+	bool isValidRequest();
+	HttpMethodType methodType();
 	const char * uri();
 	const char * path();
+	const char * findHeader(const char *key);
 	const char * findParameter(const char *key);
+	const char * findParameterOf(const char *key, size_t index);
+	size_t parameterCountOf(const char *key);
+	const std::string & requestBody();
 	void sendReplyString(int code, const char *reason, const std::string &str);
 	void sendReplyData(int code, const char *reason, const char* data, size_t size);
+	void dumpRequest(FILE *fp);
 
 private:
 	coconut_http_request_handle_t native_handle_;

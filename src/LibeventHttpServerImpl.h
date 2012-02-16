@@ -98,16 +98,9 @@ private:
 		boost::shared_ptr<HttpRequest> request 
 				= boost::shared_ptr<HttpRequest>(new HttpRequest((coconut_http_request_handle_t)req));
 
-		handler_->onHttpServer_DocumentRequest(owner_, request);
-/*
-		const char *uri = evhttp_request_get_uri(req);
-		mapcallback_t::iterator it = mapCallback_.find(uri);
-		if(it != mapCallback_.end()) {
-			it->second();
-		} else {
-    		evhttp_send_error(req, 404, "Document was not found");
+		if(request->isValidRequest()) {
+			handler_->onHttpServer_DocumentRequest(owner_, request);
 		}
-*/
 	}
 
 public:

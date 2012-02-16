@@ -36,10 +36,17 @@ public:
 	virtual ~HttpRequestImpl() { }
 
 	virtual void initialize(HttpRequest *owner) = 0;
+	virtual bool isValidRequest() = 0;
+	virtual HttpMethodType methodType() = 0;
 	virtual const char * uri() = 0;
 	virtual const char * path() = 0;
+	virtual const char * findHeader(const char *key) = 0;
 	virtual const char * findParameter(const char *key) = 0;
+	virtual const char * findParameterOf(const char *key, size_t index) = 0;
+	virtual size_t parameterCountOf(const char *key) = 0;
+	virtual const std::string & requestBody() = 0;
 	virtual void sendReplyData(int code, const char *reason, const char* data, size_t size) = 0;
+	virtual void dumpRequest(FILE *fp) = 0;
 };
 
 }

@@ -33,7 +33,9 @@
 #include "Exception.h"
 #include "InternalLogger.h"
 #include "LibeventSystemFactory.h"
+#ifdef USE_DEFAULT_OBJECT_ALLOCATOR
 #include "DefaultCoconutObjectAllocator.h"
+#endif
 
 namespace coconut {
 
@@ -69,7 +71,9 @@ void IOServiceContainer::initialize() {
 
 	BaseIOSystemFactory::setInstance(boost::shared_ptr<BaseIOSystemFactory>(new LibeventSystemFactory));
 
-	//default_allocator::doInstall();
+#ifdef USE_DEFAULT_OBJECT_ALLOCATOR
+	default_allocator::doInstall();
+#endif
 
 #if defined(WIN32) 
 	if(iocpEnabled_) {

@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "HttpRequestImpl.h"
 #include "BaseObjectAllocator.h"
+#include "dep/MPFDParser/Parser.h"
 
 namespace coconut {
 
@@ -52,6 +53,7 @@ public:
 		: owner_(NULL)
 		, req_(NULL)
 		, evuri_(NULL)
+		, parseDone_(false)
 	{
 		_LOG_TRACE("LibeventHttpRequestImpl() : %p", this);
 	}
@@ -60,6 +62,7 @@ public:
 		: owner_(owner)
 		, req_(NULL)
 		, evuri_(NULL)
+		, parseDone_(false)
 	{
 		req_ = (struct evhttp_request *)owner_->nativeHandle();
 		_LOG_TRACE("LibeventHttpRequestImpl() : this = %p, req = %p", this, req_);
@@ -78,24 +81,230 @@ public:
 		req_ = (struct evhttp_request *)owner_->nativeHandle();
 	}
 
+	bool isValidRequest() {
+		if( !req_ ) return false;
+		_parseUri();
+		if( NULL == evuri_ ) return false;
+
+		return true;
+	}
+
+	HttpMethodType methodType() {
+		assert(req_ && "LibeventHttpRequestImpl is not initialized");
+		if( evhttp_request_get_command(req_) & EVHTTP_REQ_GET) 
+			return HTTP_GET;
+		if( evhttp_request_get_command(req_) & EVHTTP_REQ_POST) 
+			return HTTP_POST;
+		return HTTP_UNKNOWN;
+	}
+
+	void dumpRequest(FILE *fp) {
+		if(!req_) {
+			fprintf(fp, "http request is not initialized\n");
+			return;
+		}
+		const char *cmdtype;
+		struct evkeyvalq *headers;
+		struct evkeyval *header;
+
+		switch (evhttp_request_get_command(req_)) {
+			case EVHTTP_REQ_GET: cmdtype = "GET"; break;
+			case EVHTTP_REQ_POST: cmdtype = "POST"; break;
+			case EVHTTP_REQ_HEAD: cmdtype = "HEAD"; break;
+			case EVHTTP_REQ_PUT: cmdtype = "PUT"; break;
+			case EVHTTP_REQ_DELETE: cmdtype = "DELETE"; break;
+			case EVHTTP_REQ_OPTIONS: cmdtype = "OPTIONS"; break;
+			case EVHTTP_REQ_TRACE: cmdtype = "TRACE"; break;
+			case EVHTTP_REQ_CONNECT: cmdtype = "CONNECT"; break;
+			case EVHTTP_REQ_PATCH: cmdtype = "PATCH"; break;
+			default: cmdtype = "unknown"; break;
+		}
+
+		fprintf(fp, "Received a %s request for %s\nHeaders:\n",
+				cmdtype, evhttp_request_get_uri(req_));
+
+		headers = evhttp_request_get_input_headers(req_);
+		TAILQ_FOREACH(header, headers, next) {
+			fprintf(fp, "  %s: %s\n", header->key, header->value);
+		}
+
+		fprintf(fp, "Input data: <<<\n");
+		_storeRequestBody();
+		fprintf(fp, "%s\n", reqBody_.c_str());
+
+		fprintf(fp, "Input parameter: <<<\n");
+		_parseParmeter();
+		MapParameter_t::iterator it = parameters_.begin();
+		for(; it != parameters_.end(); it++) {
+			for(size_t j = 0; j < it->second.size(); j++) {
+				fprintf(fp, "%s => %s\n", it->first.c_str(), it->second[j].c_str());
+			}
+		}
+	}
+
+	void _storeRequestBody() {
+		if(reqBody_.size() > 0) {
+			// already stored..
+			return;
+		}
+		struct evbuffer *buf;
+		buf = evhttp_request_get_input_buffer(req_);
+		while (evbuffer_get_length(buf)) {
+			int n;
+			char cbuf[128];
+			n = evbuffer_remove(buf, cbuf, sizeof(buf)-1);
+			if (n > 0)
+				reqBody_.append(cbuf, n);
+		}
+	}
+
+	void _parseUri() {
+		if(NULL == evuri_) {
+			evuri_ = evhttp_uri_parse_with_flags (uri(), 0);
+			if(NULL == evuri_) {
+				evuri_ = evhttp_uri_parse_with_flags (uri(), 1);
+			}
+		}
+	}
+
+	void _parseParmeter() {
+		if(!req_) return;
+		if(parseDone_) return;
+		if(methodType() == HTTP_POST) {
+			try {
+				MPFD::Parser parser;
+				parser.SetContentType(findHeader("Content-Type"));
+				parser.AcceptSomeData(requestBody().c_str(), requestBody().size());
+				const MPFD::Parser::ListParameter_t &reqMPFDs = parser.GetFields();
+				MPFD::Parser::ListParameter_t::const_iterator it = reqMPFDs.begin();
+				for(; it != reqMPFDs.end(); it++) {
+					MPFD::Field *f = (*it);
+					if(f->GetType() != MPFD::Field::TextType)
+						continue;
+
+					MapParameter_t::iterator itV = parameters_.find(f->key());
+					if(itV == parameters_.end()) {
+						// first insert
+						std::vector<std::string> vec;
+						vec.push_back(f->GetTextTypeContent());
+						parameters_.insert(MapParameter_t::value_type(f->key(), vec));
+					} else {
+						itV->second.push_back(f->GetTextTypeContent());
+					}
+				}
+			} catch (...) {
+				// nothing.. skip error!
+			}
+		} else {
+			const char *theUri = uri();
+			struct evkeyvalq headers;
+			struct evkeyval *header;
+			TAILQ_INIT(&headers);
+			int ret = evhttp_parse_query(theUri, &headers);
+			if(ret != 0) {
+				ret = evhttp_parse_query_str(theUri, &headers);
+			}
+			if(ret == 0) {
+				bool bfirst = true;
+				TAILQ_FOREACH(header, &headers, next) {
+					std::string key = header->key;
+					if(bfirst) {
+						if(key.size() > 0) {
+							size_t pos = key.find("?");
+							if(pos != std::string::npos) {
+								key.erase(0, pos+1);
+							}
+						}
+						bfirst = false;
+					}
+					MapParameter_t::iterator itV = parameters_.find(key);
+					if(itV == parameters_.end()) {
+						// first insert
+						std::vector<std::string> vec;
+						vec.push_back(header->value);
+						parameters_.insert(MapParameter_t::value_type(key, vec));
+					} else {
+						itV->second.push_back(header->value);
+					}
+				}
+			}
+		}
+		parseDone_ = true;
+	}
+
 	const char *uri() {
 		return evhttp_request_get_uri(req_);
 	}
 
 	const char *path() {
 		if(NULL == evuri_) {
-			evuri_ = evhttp_uri_parse_with_flags (uri(), 0);
+			return NULL;
 		}
 		return evhttp_uri_get_path(evuri_);
 	}
 
-	const char *findParameter(const char *key) {
-		const char *theUri = uri();
-		struct evkeyvalq headers;
-		TAILQ_INIT(&headers);
-		evhttp_parse_query(theUri, &headers);
+	const char *findHeader(const char *key) {
+		if(!req_) {
+			return NULL;
+		}
 
-		return evhttp_find_header(&headers, key);
+		struct evkeyvalq *headers;
+		struct evkeyval *header;
+		headers = evhttp_request_get_input_headers(req_);
+		for (header = headers->tqh_first; header; header = header->next.tqe_next) {
+			if(strcmp(key, header->key) == 0)
+				return header->value;
+		}
+		return NULL;
+	}
+
+	std::string _convertKeyArrayStyle(const char *key) {
+		std::string theKey(key);
+		size_t pos = theKey.find("[]");
+		if(pos != theKey.size() - 2) {
+			theKey += "[]";
+		}
+		return theKey;
+	}
+
+	size_t parameterCountOf(const char *key) {
+		if(!key) return 0;
+		std::string theKey = _convertKeyArrayStyle(key);
+		MapParameter_t::iterator it = parameters_.find(theKey);
+		if(parameters_.end() != it) {
+			return it->second.size();
+		}
+		return 0;
+	}
+
+	const char *findParameterOf(const char *key, size_t index) {
+		if(!key) return 0;
+		std::string theKey = _convertKeyArrayStyle(key);
+		MapParameter_t::iterator it = parameters_.find(theKey);
+		if(parameters_.end() != it) {
+			if(index < it->second.size())
+				return it->second[index].c_str();
+		}
+		return NULL;
+	}
+
+	const char *findParameter(const char *key) {
+		if( !parseDone_ ) _parseParmeter();
+
+		MapParameter_t::iterator it = parameters_.find(key);
+		if(parameters_.end() != it) {
+			if(it->second.size() > 0)
+				return it->second[0].c_str();
+		}
+		return NULL;
+	}
+
+	const std::string & requestBody() {
+		if(!req_) {
+			return reqBody_;
+		}
+		_storeRequestBody();
+		return reqBody_;
 	}
 
 	void sendReplyData(int code, const char *reason, const char* data, size_t size) {
@@ -108,6 +317,10 @@ private:
 	HttpRequest *owner_;
 	struct evhttp_request *req_;
 	struct evhttp_uri* evuri_;
+	std::string reqBody_;
+	typedef std::map<std::string, std::vector<std::string> > MapParameter_t;
+	MapParameter_t parameters_;
+	volatile bool parseDone_;
 };
 
 }

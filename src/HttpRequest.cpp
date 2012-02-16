@@ -39,6 +39,10 @@ HttpRequest::HttpRequest(coconut_http_request_handle_t req) : native_handle_(req
 	impl_->initialize(this);
 }
 
+bool HttpRequest::isValidRequest() {
+	return impl_->isValidRequest();
+}
+
 const char * HttpRequest::uri() {
 	return impl_->uri();
 }
@@ -47,8 +51,28 @@ const char * HttpRequest::path() {
 	return impl_->path();
 }
 
+HttpMethodType HttpRequest::methodType() {
+	return impl_->methodType();
+}
+
+const char * HttpRequest::findHeader(const char *key) {
+	return impl_->findHeader(key);
+}
+
 const char * HttpRequest::findParameter(const char *key) {
 	return impl_->findParameter(key);
+}
+
+size_t HttpRequest::parameterCountOf(const char *key) {
+	return impl_->parameterCountOf(key);
+}
+
+const char * HttpRequest::findParameterOf(const char *key, size_t index) {
+	return impl_->findParameterOf(key, index);
+}
+
+const std::string & HttpRequest::requestBody() {
+	return impl_->requestBody();
 }
 
 void HttpRequest::sendReplyString(int code, const char *reason, const std::string &str) {
@@ -57,6 +81,10 @@ void HttpRequest::sendReplyString(int code, const char *reason, const std::strin
 
 void HttpRequest::sendReplyData(int code, const char *reason, const char* data, size_t size) {
 	impl_->sendReplyData(code, reason, data, size);
+}
+
+void HttpRequest::dumpRequest(FILE *fp) {
+	impl_->dumpRequest(fp);
 }
 
 }
