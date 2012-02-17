@@ -28,22 +28,8 @@
 */
 #include "Coconut.h"
 
-class MyFDController;
-typedef std::vector<boost::shared_ptr<MyFDController> > VectorUnixClient_t;
+typedef std::vector<boost::shared_ptr<coconut::FileDescriptorController> > VectorUnixClient_t;
 VectorUnixClient_t gUnixClients;
-
-
-class MyFDController : public coconut::FileDescriptorController {
-public:
-	MyFDController() { }
-	virtual void onClosed() { 
-		LOG_INFO("MyFDController::onClosed()\n");
-	}
-	virtual void onDescriptorReceived(int fd) {
-		LOG_INFO("MyFDController::onDescriptorReceived emitted.. %d\n", fd);
-	}
-private:
-};
 
 class MyUnixServerController : public coconut::ServerController {
 	public:
@@ -60,7 +46,7 @@ class MyUnixServerController : public coconut::ServerController {
 
 		virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
 			LOG_ERROR("MyUnixServerController::onAccept emitted..");
-			boost::shared_ptr<MyFDController> newController(new MyFDController); 
+			boost::shared_ptr<coconut::FileDescriptorController> newController(new coconut::FileDescriptorController); 
 			gUnixClients.push_back(newController);
 		return newController;
 	}
@@ -76,7 +62,7 @@ public:
 
 		if(currIndex_ >= gUnixClients.size()) currIndex_ = 0;
 
-		boost::shared_ptr<MyFDController> ctrl = gUnixClients[currIndex_];
+		boost::shared_ptr<coconut::FileDescriptorController> ctrl = gUnixClients[currIndex_];
 		ctrl->writeDescriptor(newSocket);
 
 		currIndex_++;

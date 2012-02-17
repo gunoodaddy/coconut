@@ -17,8 +17,9 @@ noinst_PROGRAMS = \
 	httpserver \
 	httpclient \
 	fdserver \
+	fdclient \
 	fdbroker \
-	fdclient
+	tcpserver_with_fdbroker
 
 tcpserver_SOURCES = \
 	tcpserver.cpp
@@ -46,6 +47,9 @@ fdbroker_SOURCES = \
 
 fdclient_SOURCES = \
 	fdclient.cpp
+
+tcpserver_with_fdbroker_SOURCES= \
+	tcpserver_with_fdbroker.cpp
 
 httpserver_SOURCES = \
 	httpserver.cpp
