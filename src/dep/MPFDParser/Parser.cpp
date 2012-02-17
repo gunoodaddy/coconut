@@ -124,7 +124,10 @@ bool MPFD::Parser::ProcessContentOfTheField() {
         DataLengthToSendToField = BoundaryPosition - 2;
     } else {
         // We need to save +2 chars for \r\n chars before boundary
-        DataLengthToSendToField = DataCollectorLength - 2;//(Boundary.length() + 2);
+		if(DataCollectorLength < (long)(Boundary.length() + 2))
+        	DataLengthToSendToField = DataCollectorLength - 2;							// bug fixed by gunoodaddy
+		else
+        	DataLengthToSendToField = DataCollectorLength - (Boundary.length() + 2);	// this author's thinking...
     }
 
     if (DataLengthToSendToField > 0) {
