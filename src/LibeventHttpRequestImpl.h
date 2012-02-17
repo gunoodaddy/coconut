@@ -100,7 +100,7 @@ public:
 
 	void dumpRequest(FILE *fp) {
 		if(!req_) {
-			fprintf(fp, "http request is not initialized\n");
+			if(fp) fprintf(fp, "http request is not initialized\n");
 			return;
 		}
 		const char *cmdtype;
@@ -120,24 +120,24 @@ public:
 			default: cmdtype = "unknown"; break;
 		}
 
-		fprintf(fp, "Received a %s request for %s\nHeaders:\n",
+		if(fp) fprintf(fp, "Received a %s request for %s\nHeaders:\n",
 				cmdtype, evhttp_request_get_uri(req_));
 
 		headers = evhttp_request_get_input_headers(req_);
 		TAILQ_FOREACH(header, headers, next) {
-			fprintf(fp, "  %s: %s\n", header->key, header->value);
+			if(fp) fprintf(fp, "  %s: %s\n", header->key, header->value);
 		}
 
-		fprintf(fp, "Input data: <<<\n");
+		if(fp) fprintf(fp, "Input data: <<<\n");
 		_storeRequestBody();
-		fprintf(fp, "%s\n", reqBody_.c_str());
+		if(fp) fprintf(fp, "%s\n", reqBody_.c_str());
 
-		fprintf(fp, "Input parameter: <<<\n");
+		if(fp) fprintf(fp, "Input parameter: <<<\n");
 		_parseParmeter();
 		MapParameter_t::iterator it = parameters_.begin();
 		for(; it != parameters_.end(); it++) {
 			for(size_t j = 0; j < it->second.size(); j++) {
-				fprintf(fp, "%s => %s\n", it->first.c_str(), it->second[j].c_str());
+				if(fp) fprintf(fp, "%s => %s\n", it->first.c_str(), it->second[j].c_str());
 			}
 		}
 	}
