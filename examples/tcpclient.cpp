@@ -41,6 +41,7 @@ coconut::Mutex gLock;
 
 std::vector<double> g_resultList;
 boost::uint32_t gRecvedCount = 0;
+struct timeval gStartTime_;
 
 static void showResult() {
 	double avgSec = 0.0f;
@@ -69,6 +70,10 @@ public:
 	virtual void onLineReceived(const char *line) {
 		recvLineCount_++;
 		coconut::atomicIncreaseInt32(&gRecvedCount);
+		if(gRecvedCount == 1) {
+			// for the first time...
+			gettimeofday(&gStartTime_, NULL);
+		}
 
 		LOG_DEBUG("LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
 
@@ -76,10 +81,10 @@ public:
 		if(curProg >= gNextProg) {
 			struct timeval tvEnd;
 			gettimeofday(&tvEnd, NULL);
-			double diffSec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
+			double diffSec = (double)tvEnd.tv_sec - gStartTime_.tv_sec + ((tvEnd.tv_usec - gStartTime_.tv_usec) / 1000000.);
 			int tps = (int)(gRecvedCount / diffSec);
 
-			printf("\r%.2f%%, %d tps", curProg, tps);
+			printf("\r%.2f%%, %d tps, total = %d/%d", curProg, tps, sendCount_, gRecvedCount);
 			fflush(stdout);
 			gNextProg += 0.1f;
 			if(gNextProg > 100)
@@ -92,7 +97,7 @@ public:
 			struct timeval tvEnd;
 			gettimeofday(&tvEnd, NULL);
 
-			double diffSec = (double)tvEnd.tv_sec - tvStart_.tv_sec + ((tvEnd.tv_usec - tvStart_.tv_usec) / 1000000.);
+			double diffSec = (double)tvEnd.tv_sec - gStartTime_.tv_sec + ((tvEnd.tv_usec - gStartTime_.tv_usec) / 1000000.);
 			LOG_DEBUG("[%d:%p] Test OK! %f msec\n", id_, (void *)pthread_self(), diffSec);
 
 			gLock.lock();
@@ -121,7 +126,6 @@ public:
 	virtual void onConnected() {
 		LOG_DEBUG("onConnected emitted..\n");
 
-		gettimeofday(&tvStart_, NULL);
 		sendMessage();
 	}
 
@@ -134,7 +138,6 @@ private:
 	int sendCount_;
 	int currSentCount_;
 	int recvLineCount_;
-	struct timeval tvStart_;
 };
 
 
