@@ -35,6 +35,8 @@
 
 namespace coconut {
 
+boost::shared_ptr<ClientController> ServerController::NULL_CLIENT;
+
 ServerController::~ServerController() {
 	_LOG_TRACE("~ServerController() : %p\n", this);
 }
@@ -87,25 +89,30 @@ void ServerController::processDelayedRemoveClientFromSet() {
 }
 
 void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
+	if(onHookAccept(newSocket) == true) {
+		return;
+	}
 
-	// Caution! *MUST* call Reactor::ioService()
+	// Caution! *MUST* call IOServiceContainer::ioServiceByRoundRobin()
 	boost::shared_ptr<IOService> ioService = ioServiceContainer()->ioServiceByRoundRobin();
 	boost::shared_ptr<TcpSocket> newTcpSocket = TcpSocket::makeSharedPtr();
 	newTcpSocket->initialize(ioService);
 
 	// onAccept emitted..
 	boost::shared_ptr<ClientController> newController = onAccept(newTcpSocket);
-	clients_.insert(newController);
+	if(newController) {
+		clients_.insert(newController);
 
-	newController->setSocket(newTcpSocket);
-	newController->setReconnectable(false);
-	newTcpSocket->setEventHandler(newController.get());
+		newController->setSocket(newTcpSocket);
+		newController->setReconnectable(false);
+		newTcpSocket->setEventHandler(newController.get());
 
-	// for client event..
-	newController->eventClosedConnection()->registerObserver(this);
+		// for client event..
+		newController->eventClosedConnection()->registerObserver(this);
 
-	newTcpSocket->attachSocketHandle(newSocket, false);
-	newTcpSocket->install();	// for multithreading.. this method call last!
+		newTcpSocket->attachSocketHandle(newSocket, false);
+		newTcpSocket->install();	// for multithreading.. this method call last!
+	}
 }	
 
 void ServerController::onConnectionListener_Error(int error) { 

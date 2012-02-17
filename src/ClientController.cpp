@@ -77,25 +77,26 @@ void ClientController::onSocket_Connected() {
 	onConnected();
 }
 
-void ClientController::onSocket_Error(int error, const char*strerror) {
-	onError(error, strerror);
-
-	processReconnect();
-
-	eventClosedConnection()->fireObservers(shared_from_this(), error);
+void ClientController::fire_onError(int error, std::string strerror) {
+	onError(error, strerror.c_str());
 }
 
 void ClientController::fire_onClosed() {
 	onClosed();
 }
 
-void ClientController::onSocket_Close() {
-
-	ioService()->deferredCall(boost::bind(&ClientController::fire_onClosed, this));
-
+void ClientController::onSocket_Error(int error, const char*strerror) {
+	boost::shared_ptr<ClientController> THIS = sharedMyself();
+	ioService()->deferredCall(boost::bind(&ClientController::fire_onError, THIS, error, std::string(strerror)));
 	processReconnect();
+	eventClosedConnection()->fireObservers(shared_from_this(), error);
+}
 
-	eventClosedConnection()->fireObservers(shared_from_this(), 0);
+void ClientController::onSocket_Close() {
+	boost::shared_ptr<ClientController> THIS = sharedMyself();
+	ioService()->deferredCall(boost::bind(&ClientController::fire_onClosed, THIS));
+	processReconnect();
+	eventClosedConnection()->fireObservers(THIS, 0);
 }
 
 void ClientController::onSocket_ReadEvent(int fd) { 
@@ -193,12 +194,16 @@ void ClientController::onSocket_ReadFrom(const void *data, int size, struct sock
 
 void ClientController::onTimer_Timer(int id) {
 	if(id == TIMERID_RECONNECT) {
-		timerObj_->killTimer(id);
-
 		// TODO : retry max check..
 		retryConnectCnt_++;
 
-		tcpSocket()->connect();
+		try {
+			tcpSocket()->connect();
+			timerObj_->killTimer(id);
+		} catch(...) {
+			// retry!
+		}
+		
 		return;
 	}
 

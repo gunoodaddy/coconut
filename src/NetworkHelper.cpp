@@ -65,6 +65,19 @@ void NetworkHelper::connectUnix( BaseIOServiceContainer *ioServiceContainer,
 	tcpSocket->connectUnix(path, timeout);
 }
 
+void NetworkHelper::attachTcp( boost::shared_ptr<IOService> ioService,
+							   coconut_socket_t sock, 
+							   boost::shared_ptr<ClientController> controller) {
+
+	boost::shared_ptr<TcpSocket> tcpSocket = TcpSocket::makeSharedPtr();
+	tcpSocket->initialize(ioService);
+	tcpSocket->setEventHandler(controller.get());
+	controller->setSocket(tcpSocket);
+	controller->setReconnectable(false);
+	tcpSocket->attachSocketHandle(sock);
+}
+
+
 void NetworkHelper::listenTcp( BaseIOServiceContainer *ioServiceContainer,
                                int port, 
                                boost::shared_ptr<ServerController> controller) {

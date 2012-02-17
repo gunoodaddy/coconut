@@ -43,6 +43,7 @@ class COCONUT_API ServerController : public BaseController
                                    , private ConnectionListener::EventHandler {
 private:
 	static const int TIMERID_DELAYED_REMOVE = (1|INTERNAL_TIMER_BIT);
+	static boost::shared_ptr<ClientController> NULL_CLIENT;
 
 public:
 	ServerController() : ioServiceContainer_(NULL) {
@@ -86,7 +87,8 @@ private:
 					int error);
 protected:
 	// ServerController callback event
-	virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) = 0;
+	virtual bool onHookAccept(coconut_socket_t newSocket) { return false; }	// if true returned, do not called onAccept()
+	virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) { return NULL_CLIENT; }
 	virtual void onError(int error) { }
 
 private:

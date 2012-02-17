@@ -305,6 +305,7 @@ public:
 
 		if(::connect(sock, (struct sockaddr *)&sun, sizeof(sun)) < 0) {
 			_close();
+			owner_->setState(BaseSocket::Disconnected);
 			throw SocketException("Error starting connection");
 		}
 #else
@@ -313,6 +314,7 @@ public:
 	}
 
 	void _createEvent(coconut_socket_t fd) {
+		_LOG_TRACE("LibeventTcpSocketImpl::_createEvent() : fd = %d, this = %p", fd, this);
 		if(NULL == ev_read_)
 			ev_read_ = event_new((struct event_base *)owner_->ioService()->coreHandle(), fd, EV_READ|EV_PERSIST, event_cb, this);
 		if(NULL == ev_write_)
