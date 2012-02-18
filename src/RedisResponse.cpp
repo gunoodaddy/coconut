@@ -28,7 +28,7 @@
 */
 
 #include "CoconutLib.h"
-#ifndef COCONUT_REDIS_DISABLE
+#ifdef HAVE_LIBHIREDIS
 #include "IOService.h"
 #include "RedisResponse.h"
 #include <vector>

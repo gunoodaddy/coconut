@@ -32,6 +32,11 @@
 #include "Defines.h"
 
 //#if defined(COCONUT_USE_PRECOMPILE)
+#include <set>
+#include <map>
+#include <string>
+#include <list>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>

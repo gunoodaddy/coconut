@@ -72,7 +72,7 @@ public:
 
 public:
 	void setTimer(unsigned short id, unsigned int msec, bool repeat);
-	void killTimer(short id);
+	void killTimer(unsigned short id);
 
 	GotResponseControllerEvent *eventGotResponse() {
 		return controllerEvent_GotResponse_;

@@ -29,41 +29,76 @@
 
 #include "Coconut.h"
 
+#define USE_PENDING_RESPONSE
+
 class HttpServerHandler : public coconut::HttpServer::EventHandler {
-	virtual void onHttpServer_DocumentRequest(coconut::HttpServer *server, boost::shared_ptr<coconut::HttpRequest> request) { 
-		LOG_INFO("onHttpServer_DocumentRequest emitted.. uri = %s, path = %s", request->uri(), request->path());
-
-		request->dumpRequest(stdout);
-
+	typedef std::list<boost::shared_ptr<coconut::HttpRequest> > ListRequest_t;	
+	
+	void sendResponse(boost::shared_ptr<coconut::HttpRequest> request) {
+		static int tick_ = 0;
 		char res[1024];
 		sprintf(res, "<html>\n <head>\n"
 				"<title>%s</title>\n"
 				"</head>\n"
 				"<body>\n"
-				"<h1>hello world : hi~ [%s]</h1>\n"
-				"<ul>\n", request->uri(), request->uri());
-		
+				"<h1>hello world : hi~ [%s:%d]</h1>\n"
+				"<ul>\n", request->uri(), request->uri(), tick_);
+	
+		LOG_DEBUG("onHttpServer_Timer emitted : sendReplyString for %s\n", request->uri());
+
 		request->sendReplyString(200, "OK", res);
+		tick_++;
 	}
+
+#ifdef USE_PENDING_RESPONSE
+	virtual void onHttpServer_Timer(unsigned short id) {
+		if(pendingRequests_.size() <= 0)
+			return;
+
+		boost::shared_ptr<coconut::HttpRequest> request = *pendingRequests_.begin();
+		sendResponse(request);
+		pendingRequests_.pop_front();
+	}
+#endif
+
+	virtual void onHttpServer_DocumentRequest(boost::shared_ptr<coconut::HttpRequest> request) { 
+		LOG_DEBUG("onHttpServer_DocumentRequest emitted.. uri = %s, path = %s", request->uri(), request->path());
+
+		request->dumpRequest(stdout);
+#ifdef USE_PENDING_RESPONSE
+		pendingRequests_.push_back(request);
+#else
+		sendResponse(request);
+#endif
+	}
+
+private:
+	ListRequest_t pendingRequests_;
 };
 
 
 int main(int argc, char **argv) {
 	if(argc < 2) {
-		printf("usage : %s [port]\n", argv[0]);
+		printf("usage : %s [port] [verbose:1,0]\n", argv[0]);
 		return -1;
 	}
 
 	int port = atoi(argv[1]);
+	if(argc > 2 && atoi(argv[2]) == 1) {
+		coconut::logger::setLogLevel(coconut::logger::LEVEL_TRACE);
+		coconut::setEnableDebugMode();
+	}
+
 	coconut::IOServiceContainer ioServiceContainer;
 	ioServiceContainer.initialize();
 	
 	try {
 		boost::shared_ptr<HttpServerHandler> handler(new HttpServerHandler);
-		coconut::HttpServer server(ioServiceContainer.ioServiceByRoundRobin(), port);
-		server.setEventHandler(handler.get());
-		server.start();
-
+		coconut::HttpServer server(ioServiceContainer.ioServiceByRoundRobin(), port, handler);
+		server.listen();
+#ifdef USE_PENDING_RESPONSE
+		server.setTimer(0xFFFF, 5000, true);
+#endif
 		LOG_INFO("httpserver started..");
 		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {

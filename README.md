@@ -66,7 +66,7 @@ https://github.com/antirez/hiredis
 * `3rdParty/src/hiredis` are based in git repository https://github.com/koenvandesande/hiredis.git.
 * We modified plus koenvandesande's sources following function `redisFormatCommandArgv`.
 * In win32, sprintf `%zu` format is not valid. so changed `%d` if Win32   
-* If you do not want to use redis, turn on `COCONUT_REDIS_DISABLE` macro.
+* If you do not want to use redis, run configure `--without-redis`
   
 
 ### libjson 7.4.1

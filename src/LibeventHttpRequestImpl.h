@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <map>
 #include <vector>
+#include "HttpServer.h"
 #include "HttpRequest.h"
 #include "HttpRequestImpl.h"
 #include "BaseObjectAllocator.h"
@@ -73,12 +74,31 @@ public:
 			evhttp_uri_free(evuri_);
 			evuri_ = NULL;
 		}
+		if(req_) {
+			evhttp_request_free(req_);
+		}
 		_LOG_TRACE("~LibeventHttpRequestImpl() : %p", this);
 	}
+
+#ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
+	static void request_free_cb(struct evhttp_request *req, void *arg) {
+		
+		LibeventHttpRequestImpl *SELF = (LibeventHttpRequestImpl *)arg;
+		SELF->fire_onHttpServer_DestroyRequest(req);
+	}
+
+	void fire_onHttpServer_DestroyRequest(struct evhttp_request *req) {
+		owner_->server()->fire_onHttpServer_DestroyRequest(owner_->sharedMyself());
+	}
+#endif
 
 	void initialize(HttpRequest *owner) {
 		owner_ = owner;
 		req_ = (struct evhttp_request *)owner_->nativeHandle();
+		evhttp_request_own(req_);
+#ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
+		evhttp_request_set_free_cb(req_, request_free_cb, this);
+#endif
 	}
 
 	bool isValidRequest() {
@@ -90,7 +110,7 @@ public:
 	}
 
 	HttpMethodType methodType() {
-		assert(req_ && "LibeventHttpRequestImpl is not initialized");
+		if(!req_) { return HTTP_UNKNOWN; }
 		if( evhttp_request_get_command(req_) & EVHTTP_REQ_GET) 
 			return HTTP_GET;
 		if( evhttp_request_get_command(req_) & EVHTTP_REQ_POST) 
@@ -233,20 +253,18 @@ public:
 	}
 
 	const char *uri() {
+		if(!req_) return "";
 		return evhttp_request_get_uri(req_);
 	}
 
 	const char *path() {
-		if(NULL == evuri_) {
-			return NULL;
-		}
+		if(!req_) return NULL;
+		if(!evuri_) return NULL;
 		return evhttp_uri_get_path(evuri_);
 	}
 
 	const char *findHeader(const char *key) {
-		if(!req_) {
-			return NULL;
-		}
+		if(!req_) return NULL;
 
 		struct evkeyvalq *headers;
 		struct evkeyval *header;
@@ -268,7 +286,10 @@ public:
 	}
 
 	size_t parameterCountOf(const char *key) {
+		if(!req_) return 0;
 		if(!key) return 0;
+		if(!parseDone_) _parseParmeter();
+
 		std::string theKey = _convertKeyArrayStyle(key);
 		MapParameter_t::iterator it = parameters_.find(theKey);
 		if(parameters_.end() != it) {
@@ -278,7 +299,10 @@ public:
 	}
 
 	const char *findParameterOf(const char *key, size_t index) {
+		if(!req_) return 0;
 		if(!key) return 0;
+		if(!parseDone_) _parseParmeter();
+
 		std::string theKey = _convertKeyArrayStyle(key);
 		MapParameter_t::iterator it = parameters_.find(theKey);
 		if(parameters_.end() != it) {
@@ -289,7 +313,9 @@ public:
 	}
 
 	const char *findParameter(const char *key) {
-		if( !parseDone_ ) _parseParmeter();
+		if(!req_) return 0;
+		if(!key) return 0;
+		if(!parseDone_) _parseParmeter();
 
 		MapParameter_t::iterator it = parameters_.find(key);
 		if(parameters_.end() != it) {
@@ -300,17 +326,20 @@ public:
 	}
 
 	const std::string & requestBody() {
-		if(!req_) {
-			return reqBody_;
-		}
+		if(!req_) return reqBody_;
+
 		_storeRequestBody();
 		return reqBody_;
 	}
 
-	void sendReplyData(int code, const char *reason, const char* data, size_t size) {
+	bool sendReplyData(int code, const char *reason, const char* data, size_t size) {
+		if(!req_) return false;
+
 		struct evbuffer *evb = evbuffer_new();
 		/*int ret =*/ evbuffer_add(evb, data, size);
 		evhttp_send_reply(req_, code, reason, evb);
+		req_ = NULL; // in libevent, automatically removed..
+		return true;
 	}
 
 private:

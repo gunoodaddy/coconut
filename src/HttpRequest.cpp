@@ -30,13 +30,24 @@
 #include "CoconutLib.h"
 #include "HttpRequest.h"
 #include "HttpRequestImpl.h"
+#include "InternalLogger.h"
 #include "BaseIOSystemFactory.h"
+#include "HttpServer.h"
 
 namespace coconut {
 
-HttpRequest::HttpRequest(coconut_http_request_handle_t req) : native_handle_(req) { 
+HttpRequest::HttpRequest(HttpServer *server, coconut_http_request_handle_t req) : serverInst_(server), native_handle_(req) { 
+	_LOG_TRACE("HttpRequest() : this = %p", this);
 	impl_ = BaseIOSystemFactory::instance()->createHttpRequestImpl();
 	impl_->initialize(this);
+}
+
+HttpRequest::~HttpRequest() {
+	_LOG_TRACE("~HttpRequest() : this = %p", this);
+}
+
+HttpServer *HttpRequest::server() {
+	return serverInst_;
 }
 
 bool HttpRequest::isValidRequest() {
@@ -75,12 +86,12 @@ const std::string & HttpRequest::requestBody() {
 	return impl_->requestBody();
 }
 
-void HttpRequest::sendReplyString(int code, const char *reason, const std::string &str) {
-	impl_->sendReplyData(code, reason, str.c_str(), str.size());
+bool HttpRequest::sendReplyString(int code, const char *reason, const std::string &str) {
+	return impl_->sendReplyData(code, reason, str.c_str(), str.size());
 }
 
-void HttpRequest::sendReplyData(int code, const char *reason, const char* data, size_t size) {
-	impl_->sendReplyData(code, reason, data, size);
+bool HttpRequest::sendReplyData(int code, const char *reason, const char* data, size_t size) {
+	return impl_->sendReplyData(code, reason, data, size);
 }
 
 void HttpRequest::dumpRequest(FILE *fp) {

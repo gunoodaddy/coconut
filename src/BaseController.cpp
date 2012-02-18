@@ -39,7 +39,7 @@ void BaseController::setTimer(unsigned short id, unsigned int msec, bool repeat)
 	timerObj_->setTimer(id, msec, repeat);
 }
 
-void BaseController::killTimer(short id) {
+void BaseController::killTimer(unsigned short id) {
 	ScopedIOServiceLock(ioService());
 	_makeTimer();
 	timerObj_->killTimer(id);

@@ -32,7 +32,9 @@
 #if ! defined(COCONUT_USE_PRECOMPILE)
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <set>
 #endif
+#include "Timer.h"
 
 typedef boost::function< void () > httpURICallback_t;
 
@@ -41,34 +43,52 @@ struct evhttp_request;
 namespace coconut {
 
 class IOService;
+class Timer;
 class HttpRequest;
 class HttpServerImpl;
 
-class COCONUT_API HttpServer {
+class COCONUT_API HttpServer : public Timer::EventHandler {
 public:
-	HttpServer(boost::shared_ptr<IOService> ioService, int port);
-	~HttpServer();
-
 	class EventHandler
 	{
 	public:
 		virtual ~EventHandler() { }
-		virtual void onHttpServer_Initialized(HttpServer *server) { }
-		virtual void onHttpServer_DocumentRequest(HttpServer *server, boost::shared_ptr<HttpRequest> request) { }
+		virtual void onHttpServer_Initialized() { }
+		virtual void onHttpServer_DocumentRequest(boost::shared_ptr<HttpRequest> request) { }
+		virtual void onHttpServer_Timer(unsigned short id) { }
+		virtual void onHttpServer_DestroyRequest(boost::shared_ptr<HttpRequest> request) { }
 		// maybe another callback added..
 		// if decided one callback count (like now), TODO replace boost::bind mechanism..
 	};
 
+	HttpServer(boost::shared_ptr<IOService> ioService, int port, boost::shared_ptr<EventHandler> handler);
+	virtual ~HttpServer();
 public:
 	boost::shared_ptr<IOService> ioService();
+	boost::shared_ptr<EventHandler> eventHandler();
 
-	void setEventHandler(EventHandler *handler);
-	EventHandler * eventHandler();
+	void listen();
 
-	void start();
+	void setTimer(unsigned short id, unsigned int msec, bool repeat);
+	void killTimer(unsigned short id);
+	
+public:
+	void fire_onHttpServer_Initialized();
+	void fire_onHttpServer_DestroyRequest(boost::shared_ptr<HttpRequest> request); 
+	void fire_onHttpServer_DocumentRequest(boost::shared_ptr<HttpRequest> request); 
+
+	// internal timer function
+private:
+	void _makeTimer();
+	void _removeTimer();
+	void onTimer_Timer(int id);
 
 private:
 	boost::shared_ptr<HttpServerImpl> impl_;
+	boost::shared_ptr<HttpServer::EventHandler> handler_;
+	Timer *timerObj_;
+	typedef std::set<boost::shared_ptr<HttpRequest> > SetHttpRequests_t;
+	SetHttpRequests_t requests_;
 };
 
 }

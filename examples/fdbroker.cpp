@@ -45,9 +45,9 @@ class MyUnixServerController : public coconut::ServerController {
 		}
 
 		virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
-			LOG_ERROR("MyUnixServerController::onAccept emitted..");
 			boost::shared_ptr<coconut::FileDescriptorController> newController(new coconut::FileDescriptorController); 
 			gUnixClients.push_back(newController);
+			LOG_ERROR("MyUnixServerController::onAccept emitted.. : count = %d", gUnixClients.size());
 		return newController;
 	}
 };

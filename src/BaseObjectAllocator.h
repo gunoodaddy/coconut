@@ -69,6 +69,7 @@ public:
 	}
 
 	static inline void destroy(T *p) {
+		if(!p) return;
 		if(allocator_)
 			return allocator_->destroy(p);
 		delete p;
