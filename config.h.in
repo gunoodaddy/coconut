@@ -24,6 +24,9 @@
 /* Define to 1 if you have the `event' library (-levent). */
 #undef HAVE_LIBEVENT
 
+/* define if libevent library fixed by gunoodaddy is available */
+#undef HAVE_LIBEVENT_GUNOODADDY_FIX
+
 /* Define to 1 if you have the `event_pthreads' library (-levent_pthreads). */
 #undef HAVE_LIBEVENT_PTHREADS
 

@@ -749,6 +749,7 @@ enable_libtool_lock
 with_boost
 with_boost_libdir
 with_libevent
+with_redis
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1410,6 +1411,7 @@ Optional Packages:
                           libraries are located.
   --with-libevent[=DIR]   use libevent (default is yes) - it is possible to
                           specify an alternate root directory for libevent
+  --without-redis         disable hiredis (default is no)
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -16012,13 +16014,13 @@ else
   as_fn_error $? "event_pthread library not found" "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for redisAsyncConnect in -lhiredis" >&5
-$as_echo_n "checking for redisAsyncConnect in -lhiredis... " >&6; }
-if ${ac_cv_lib_hiredis_redisAsyncConnect+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for evhttp_request_set_free_cb in -levent" >&5
+$as_echo_n "checking for evhttp_request_set_free_cb in -levent... " >&6; }
+if ${ac_cv_lib_event_evhttp_request_set_free_cb+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lhiredis  $LIBS"
+LIBS="-levent  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -16028,35 +16030,32 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char redisAsyncConnect ();
+char evhttp_request_set_free_cb ();
 int
 main ()
 {
-return redisAsyncConnect ();
+return evhttp_request_set_free_cb ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_hiredis_redisAsyncConnect=yes
+  ac_cv_lib_event_evhttp_request_set_free_cb=yes
 else
-  ac_cv_lib_hiredis_redisAsyncConnect=no
+  ac_cv_lib_event_evhttp_request_set_free_cb=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hiredis_redisAsyncConnect" >&5
-$as_echo "$ac_cv_lib_hiredis_redisAsyncConnect" >&6; }
-if test "x$ac_cv_lib_hiredis_redisAsyncConnect" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBHIREDIS 1
-_ACEOF
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_event_evhttp_request_set_free_cb" >&5
+$as_echo "$ac_cv_lib_event_evhttp_request_set_free_cb" >&6; }
+if test "x$ac_cv_lib_event_evhttp_request_set_free_cb" = xyes; then :
 
-  LIBS="-lhiredis $LIBS"
+$as_echo "#define HAVE_LIBEVENT_GUNOODADDY_FIX /**/" >>confdefs.h
 
 else
-  as_fn_error $? "hiredis library not found" "$LINENO" 5
+  as_fn_error $? "gunoodaddy libevent fixed version not found" "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
@@ -16106,6 +16105,65 @@ else
   as_fn_error $? "pthread library not found" "$LINENO" 5
 fi
 
+
+# Check for redis
+
+# Check whether --with-redis was given.
+if test "${with_redis+set}" = set; then :
+  withval=$with_redis; with_redis=no
+else
+  with_redis=yes
+fi
+
+if test "x$with_redis" != xno; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for redisAsyncConnect in -lhiredis" >&5
+$as_echo_n "checking for redisAsyncConnect in -lhiredis... " >&6; }
+if ${ac_cv_lib_hiredis_redisAsyncConnect+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lhiredis  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char redisAsyncConnect ();
+int
+main ()
+{
+return redisAsyncConnect ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_hiredis_redisAsyncConnect=yes
+else
+  ac_cv_lib_hiredis_redisAsyncConnect=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hiredis_redisAsyncConnect" >&5
+$as_echo "$ac_cv_lib_hiredis_redisAsyncConnect" >&6; }
+if test "x$ac_cv_lib_hiredis_redisAsyncConnect" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBHIREDIS 1
+_ACEOF
+
+  LIBS="-lhiredis $LIBS"
+
+else
+  as_fn_error $? "hiredis library not found" "$LINENO" 5
+fi
+
+fi
 
 # Checks for header files.
 
