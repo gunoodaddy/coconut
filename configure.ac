@@ -37,6 +37,12 @@ AC_ARG_WITH([redis],
 AS_IF([test "x$with_redis" != xno],
 		AC_CHECK_LIB(hiredis, redisAsyncConnect, [], AC_MSG_ERROR([hiredis library not found])))
 
+# Check for json
+AC_ARG_WITH([json],
+		AS_HELP_STRING([--without-json], [disable json feature with libjson (default is no)]),
+		[],
+		AC_DEFINE(HAVE_LIBJSON,,[define if --without-json option is not set]))
+
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in.h stdlib.h string.h sys/socket.h])
 

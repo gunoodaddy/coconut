@@ -33,6 +33,9 @@
 /* Define to 1 if you have the `hiredis' library (-lhiredis). */
 #undef HAVE_LIBHIREDIS
 
+/* define if --without-json option is not set */
+#undef HAVE_LIBJSON
+
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #undef HAVE_LIBPTHREAD
 

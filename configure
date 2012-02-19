@@ -750,6 +750,7 @@ with_boost
 with_boost_libdir
 with_libevent
 with_redis
+with_json
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1412,6 +1413,7 @@ Optional Packages:
   --with-libevent[=DIR]   use libevent (default is yes) - it is possible to
                           specify an alternate root directory for libevent
   --without-redis         disable hiredis (default is no)
+  --without-json          disable json feature with libjson (default is no)
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -16164,6 +16166,18 @@ else
 fi
 
 fi
+
+# Check for json
+
+# Check whether --with-json was given.
+if test "${with_json+set}" = set; then :
+  withval=$with_json;
+else
+
+$as_echo "#define HAVE_LIBJSON /**/" >>confdefs.h
+
+fi
+
 
 # Checks for header files.
 
