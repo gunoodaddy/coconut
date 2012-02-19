@@ -36,14 +36,13 @@ class MyUnixServerController : public coconut::ServerController {
 		virtual void onControllerEvent_ClosedConnection(
 				boost::shared_ptr<BaseController> controller,
 				int error) {
-			LOG_ERROR("MyUnixServerController client closed event emitted.. error = %d", error);
 			VectorUnixClient_t::iterator it = std::find(gUnixClients.begin(), gUnixClients.end(), controller);
 			if(it != gUnixClients.end()) {
-				LOG_ERROR("got it! remove that client controller!");
 				gUnixClients.erase(it);
 			}
+			LOG_ERROR("MyUnixServerController::onControllerEvent_ClosedConnection() emitted.. error = %d, count = %d"
+				, error, gUnixClients.size());
 		}
-
 		virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
 			boost::shared_ptr<coconut::FileDescriptorController> newController(new coconut::FileDescriptorController); 
 			gUnixClients.push_back(newController);
@@ -63,6 +62,8 @@ public:
 		if(currIndex_ >= gUnixClients.size()) currIndex_ = 0;
 
 		boost::shared_ptr<coconut::FileDescriptorController> ctrl = gUnixClients[currIndex_];
+
+		// send this fd to client!! (by round robin => currIndex_)
 		ctrl->writeDescriptor(newSocket);
 
 		currIndex_++;
@@ -103,7 +104,6 @@ int main(int argc, char **argv) {
 	} catch(coconut::Exception &e) {
 		printf("Exception emitted : %s\n", e.what());
 	}
-
 	// exit..
 }
 

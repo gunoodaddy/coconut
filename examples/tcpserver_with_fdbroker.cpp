@@ -26,7 +26,6 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include "Coconut.h"
 
 class MyClientController : public coconut::BinaryController {
@@ -34,7 +33,6 @@ class MyClientController : public coconut::BinaryController {
 		socket()->write(data, size);	
 	}
 };
-
 
 class MyTcpClientAcceptor : public coconut::FileDescriptorController {
 public:
@@ -52,7 +50,6 @@ public:
 			LOG_INFO("MyUnixServerController client find! erase it");
 		}
 	}
-
 	virtual void onDescriptorReceived(int fd) {
 		LOG_DEBUG("MyTcpClientAcceptor::onDescriptorReceived called : fd = %d", fd);
 
@@ -66,7 +63,6 @@ public:
 private:
 	SetClients_t clients_;
 };
-
 
 int main(int argc, char **argv) {
 	if(argc < 2) {
