@@ -53,7 +53,7 @@ https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 * Original libevent >= 2.0.15 has a bug in `evutil_tv_to_msec` function. (need to add *tv* pointer null check code) 
 * Or you should fix this bug in your own libevent source.
 * And we've added `free callback feature` for struct evhttp_request free callback feature to know which evhttp_request pointer will be freed. It needs if you should store http request and then later send responses. (like 'Commet'). You can see our fixed codes by finding `gunoodaddy` comment in `3rdParty/src/libevent.tgz`. 
-* By running `configure`, it will check our `free callboack feature` and mark `HAVE_LIBEVENT_GUNOODADDY_FIX` in config.h.
+* By running `configure`, it will check our `free callback feature` exists in your own libevent and then mark `HAVE_LIBEVENT_GUNOODADDY_FIX` in config.h.
 	
 ### boost 1.33.0 
 http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
