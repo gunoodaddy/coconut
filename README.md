@@ -60,7 +60,7 @@ http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/dow
 
 * You must build boost library (run b2), we need boost stage library for using boost::thread
 
-### hiredis
+### hiredis (option : --without-redis)
 https://github.com/antirez/hiredis
 
 * On Win32, you must use `3rdParty/src/hiredis` instead upper link so that the build is successful.
@@ -71,7 +71,7 @@ https://github.com/antirez/hiredis
 * If you do not want to use redis, run configure `--without-redis`.
   
 
-### libjson 7.4.1
+### libjson 7.4.1 (option : --without-json)
 http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
     
 * In order to build successful, you must use `3rdParty/src/libjson` instead upper link's libjson.
