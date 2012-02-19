@@ -29,7 +29,7 @@
 
 #pragma once
 
-#ifndef COCONUT_JSON_DISABLE
+#ifdef HAVE_LIBJSON
 
 #include "ClientController.h"
 #include "BaseProtocol.h"

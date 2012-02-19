@@ -29,7 +29,7 @@
 
 #pragma once
 
-#ifndef COCONUT_JSON_DISABLE
+#ifdef HAVE_LIBJSON
 
 #include <string>
 #if ! defined(COCONUT_USE_PRECOMPILE)

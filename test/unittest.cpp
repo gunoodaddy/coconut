@@ -37,7 +37,9 @@
 using namespace coconut;
 using namespace coconut::protocol;
 
+#ifdef HAVE_LIBHIREDIS
 static const char *REDIS_ADDRESS = "61.247.198.102";
+#endif
 static int gPortBase = 5100;
 
 namespace TestUDPAndLineProtocol {
@@ -236,6 +238,7 @@ namespace TestLineProtocol {
 }
 
 
+#ifdef HAVE_LIBJSON
 namespace TestJSONProtocol {
 	static const char *JSON_STR = "{\"RootA\":\"Value in parent\",\"ChildNode\":{\"ChildA\":\"String Value\",\"ChildB\":\"42\"}}";
 
@@ -314,6 +317,7 @@ namespace TestJSONProtocol {
 		return false;
 	}
 }
+#endif
 
 
 namespace TestFrameProtocol {
@@ -494,6 +498,7 @@ namespace TestFrameAndLineProtocol {
 }
 
 
+#ifdef HAVE_LIBJSON
 namespace TestFrameAndJSONProtocol {
 	static const int COMMAND = 813;
 	static const char *JSON_STR = "{\"RootA\":\"Value in parent\",\"ChildNode\":{\"ChildA\":\"String Value\",\"ChildB\":\"42\"}}";
@@ -582,6 +587,7 @@ namespace TestFrameAndJSONProtocol {
 		return false;
 	}
 }
+#endif
 
 
 namespace TestFrameAndStringListProtocol {
@@ -924,6 +930,7 @@ namespace TestFileDescriptorProtocol {
 #endif
 
 
+#ifdef HAVE_LIBHIREDIS
 namespace TestRedisRequest {
 	static const int TEST_COUNT = 100;
 
@@ -1058,6 +1065,7 @@ namespace TestRedisRequest {
 		return false;
 	}
 }
+#endif
 
 // Flow 
 // #. {LOGIN_USER_COUNT} user login
@@ -1215,10 +1223,15 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
 	class TestServerClientController : public FrameController {
 		public:
-			TestServerClientController(boost::shared_ptr<RedisRequest> request) 
-					: redisRequest_(request)
-					, recvedRedisResultCnt_(0)
+			TestServerClientController() 
+					: recvedRedisResultCnt_(0)
 					, ticketLogin_(0) { }
+
+#ifdef HAVE_LIBHIREDIS
+			void setRedisRequest(boost::shared_ptr<RedisRequest> request) {
+				redisRequest_ = request;
+			}
+#endif
 
 			virtual void onFrameReceived(boost::shared_ptr<FrameProtocol> prot) {
 				LOG_DEBUG("[SERVER] onFrameReceived called : %d:%d", prot->header().command(), prot->payloadSize());
@@ -1237,6 +1250,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 						gUserMap.insert(mapUser_t::value_type(lprot.linePtr(), shared_from_this()));
 						gLockMutex.unlock();
 
+#ifdef HAVE_LIBHIREDIS
 						// register location info.
 						char value[1024] = {0,};
 						sprintf(value, "127.0.0.1:8000, dummyid=%s", lprot.linePtr());// dummy location routing string.. (:
@@ -1251,6 +1265,14 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 														coconut::placeholders::requestContext,
 														coconut::placeholders::redisResponse)
 												);
+#else
+						// IF NOT USING REDIS, JUST SEND RES LOGIN-OK PACKET HERE..
+						// doing login progress..
+						// send login result..
+						lprot.setLine("LOGIN OK");
+						writeFrame(headerLogin_, &lprot);
+						coconut::atomicIncreaseInt32(&gLoginOKCnt);
+#endif
 						break;
 					}
 					case COMMAND_SEND_MEMO:
@@ -1267,6 +1289,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 							payloadSendMemo_ = lprot.linePtr();
 
 							for(size_t i = 0; i < slprot.listSize(); i++) {
+#ifdef HAVE_LIBHIREDIS
 								std::vector<std::string> args;
 								args.push_back("GET");
 								args.push_back(slprot.stringOf(i));
@@ -1277,6 +1300,9 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 														coconut::placeholders::requestContext,
 														coconut::placeholders::redisResponse)
 												);
+#else
+								findAndSendMemo(slprot.stringOf(i));
+#endif
 							}
 							break;
 						}
@@ -1288,6 +1314,7 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				}
 			}
 
+#ifdef HAVE_LIBHIREDIS
 			virtual void onRedisRequest_Response(
 								const struct RedisRequest::requestContext *context, 
 								boost::shared_ptr<RedisResponse> response) { 
@@ -1311,12 +1338,23 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				assert(find);
 				const char *userId = find + strlen(TOKEN);
 
-				gLockMutex.lock();
-				mapUser_t::iterator it = gUserMap.find(userId);
-				if(it == gUserMap.end()) {
+				if( !findAndSendMemo(userId, false) ) {
 					LOG_FATAL("gUserMap not found user session. %s, %s, %d\n", 
 							userId, response->resultData()->strValue.c_str(), gUserMap.size());
 					assert(false && "gUserMap not found user session");
+				}
+			}
+#endif
+			bool findAndSendMemo(std::string userId, bool logAndAssert = true) {
+				gLockMutex.lock();
+				mapUser_t::iterator it = gUserMap.find(userId);
+				if(it == gUserMap.end()) {
+					if(logAndAssert) {
+						LOG_FATAL("gUserMap not found user session. %s, %d\n", 
+								userId.c_str(), gUserMap.size());
+						assert(false && "gUserMap not found user session");
+					}
+					return false;
 				}
 				gLockMutex.unlock();
 
@@ -1325,10 +1363,13 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 				lprot.setLine(payloadSendMemo_);
 				boost::shared_ptr<FrameController> frameCtrl = boost::static_pointer_cast<FrameController>(it->second);
 				frameCtrl->writeFrame(headerSendMemo_, &lprot);
+				return true;
 			}
 
 		private:
+#ifdef HAVE_LIBHIREDIS
 			boost::shared_ptr<RedisRequest> redisRequest_;
+#endif
 			int recvedRedisResultCnt_;
 			int ticketLogin_;
 			FrameHeader headerLogin_;
@@ -1338,18 +1379,25 @@ namespace TestFrameAndStringListAndLineProtocolAndRedis {
 
 	class TestServerController : public ServerController {
 		virtual void onInitialized() {
+#ifdef HAVE_LIBHIREDIS
 			redisRequest_ = boost::shared_ptr<RedisRequest>(new RedisRequest(
 																ioServiceContainer()->ioServiceByRoundRobin(), 
 																REDIS_ADDRESS, 6379
                                                            ));
 			redisRequest_->connect();
+#endif
 		}
 		virtual boost::shared_ptr<ClientController> onAccept(boost::shared_ptr<TcpSocket> socket) {
-			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController(redisRequest_)); 
+			boost::shared_ptr<TestServerClientController> newController(new TestServerClientController());
+#ifdef HAVE_LIBHIREDIS
+			newController->setRedisRequest(redisRequest_);
+#endif
 			return newController;
 		}
+#ifdef HAVE_LIBHIREDIS
 		private:
 			boost::shared_ptr<RedisRequest> redisRequest_;
+#endif
 	};
 
 	bool doTest() {
@@ -1416,14 +1464,20 @@ int main(int argc, char **argv) {
 	}
 
 	LOG_INFO("Entering protocol test");
+#ifdef HAVE_LIBHIREDIS
 	assert(TestRedisRequest::doTest());
+#endif
+#ifdef HAVE_LIBJSON
 	assert(TestFrameAndJSONProtocol::doTest());
+#endif
 	assert(TestFrameAndStringListAndLineProtocolAndRedis::doTest());
 	assert(TestFrameProtocol::doTest());
 	assert(TestUDPAndLineProtocol::doTest());
 	assert(TestHttpClientGet::doTest());
 	assert(TestLineProtocol::doTest());
+#ifdef HAVE_LIBJSON
 	assert(TestJSONProtocol::doTest());
+#endif
 	assert(TestFrameAndLineProtocol::doTest());
 	assert(TestFrameAndStringListProtocol::doTest());
 	assert(TestFrameAndStringListAndLineProtocol::doTest());
