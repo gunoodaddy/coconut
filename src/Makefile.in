@@ -79,7 +79,8 @@ am_libcoconut_la_OBJECTS = kbuffer.lo Exception.lo Field.lo Parser.lo \
 	BaseSocket.lo TcpSocket.lo UdpSocket.lo ConnectionListener.lo \
 	RedisRequest.lo RedisResponse.lo HttpClient.lo HttpRequest.lo \
 	HttpServer.lo BaseProtocol.lo FrameProtocol.lo LineProtocol.lo \
-	JSONProtocol.lo FileDescriptorProtocol.lo BaseController.lo \
+	StringListProtocol.lo JSONProtocol.lo \
+	FileDescriptorProtocol.lo BaseController.lo \
 	BaseControllerEvent.lo ClientController.lo ServerController.lo \
 	LineController.lo JSONController.lo FrameController.lo \
 	FileDescriptorController.lo NetworkHelper.lo \
@@ -266,6 +267,7 @@ libcoconut_la_SOURCES = \
                        BaseProtocol.cpp \
                        FrameProtocol.cpp \
                        LineProtocol.cpp \
+                       StringListProtocol.cpp \
                        JSONProtocol.cpp \
                        FileDescriptorProtocol.cpp \
                        BaseController.cpp \
@@ -307,6 +309,7 @@ include_coconut_HEADERS = \
                          HttpServer.h \
 						 JSONProtocol.h \
 						 LineProtocol.h \
+                         StringListProtocol.h \
 						 FrameProtocol.h \
                          FileDescriptorProtocol.h \
                          ClientController.h \
@@ -428,6 +431,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RedisRequest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RedisResponse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ServerController.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StringListProtocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TcpSocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UdpSocket.Plo@am__quote@

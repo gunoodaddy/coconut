@@ -29,29 +29,56 @@
 
 #pragma once
 
-#include "CoconutLib.h"
-#include "Exception.h"
-#include "Logger.h"
-#include "ThreadUtil.h"
-#include "IOService.h"
-#include "IOServiceContainer.h"
-#include "HttpClient.h"
-#include "HttpServer.h"
-#include "HttpRequest.h"
-#include "RedisRequest.h"
-#include "RedisResponse.h"
-#include "PlaceHolders.h"
-#include "ClientController.h"
-#include "FileDescriptorController.h"
-#include "FrameController.h"
-#include "JSONController.h"
-#include "LineController.h"
-#include "ServerController.h"
 #include "BaseProtocol.h"
-#include "StringListProtocol.h"
-#include "BufferedTransport.h"
-#include "VirtualTransportHelper.h"
-#include "TcpSocket.h"
-#include "UdpSocket.h"
-#include "NetworkHelper.h"
+
+namespace coconut { namespace protocol {
+
+class COCONUT_API StringListProtocol : public ProtocolDecorator {
+public:
+	enum State{
+		Init,
+		Begin,
+		Contents,
+		End
+	};
+
+	StringListProtocol() : state_(Init), payload_pos_(0), listSize_(0) {}
+	StringListProtocol(BaseProtocol *protocol) : state_(Init), payload_pos_(0), listSize_(0) {
+		parent_protocol_ = protocol;
+	}
+	StringListProtocol(boost::shared_ptr<BaseProtocol> protocol) : state_(Init), payload_pos_(0), listSize_(0) {
+		parent_protocol_shared_ptr_ = protocol;
+	}
+
+	const char* className() {
+		return "StringListProtocol";
+	}
+	bool isReadComplete() {
+		return state_ == End;
+	}
+
+	bool processRead(boost::shared_ptr<BaseVirtualTransport> transport);
+	bool processSerialize(size_t bufferSize = 0);
+
+public:
+	void addString(std::string str) {
+		list_.push_back(str);
+	}
+
+	const std::string& stringOf(size_t index) {
+		return list_[index];
+	}
+
+	size_t listSize() {
+		return list_.size();
+	}
+
+private:
+	stringlist_t list_;
+	State state_;
+	int payload_pos_;
+	boost::int32_t listSize_;
+};
+
+} }
 

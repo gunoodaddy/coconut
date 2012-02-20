@@ -163,53 +163,6 @@ public:
 };
 
 
-class COCONUT_API StringListProtocol : public ProtocolDecorator {
-public:
-	enum State{
-		Init,
-		Begin,
-		Contents,
-		End
-	};
-
-	StringListProtocol() : state_(Init), payload_pos_(0), listSize_(0) {}
-	StringListProtocol(BaseProtocol *protocol) : state_(Init), payload_pos_(0), listSize_(0) {
-		parent_protocol_ = protocol;
-	}
-	StringListProtocol(boost::shared_ptr<BaseProtocol> protocol) : state_(Init), payload_pos_(0), listSize_(0) {
-		parent_protocol_shared_ptr_ = protocol;
-	}
-
-	const char* className() {
-		return "StringListProtocol";
-	}
-	bool isReadComplete() {
-		return state_ == End;
-	}
-
-	bool processRead(boost::shared_ptr<BaseVirtualTransport> transport);
-	bool processSerialize(size_t bufferSize = 0);
-
-public:
-	void addString(std::string str) {
-		list_.push_back(str);
-	}
-
-	const std::string& stringOf(size_t index) {
-		return list_[index];
-	}
-
-	size_t listSize() {
-		return list_.size();
-	}
-
-private:
-	stringlist_t list_;
-	State state_;
-	int payload_pos_;
-	boost::int32_t listSize_;
-};
-
 class COCONUT_API BaseProtocolFactory {
 public:
 	virtual ~BaseProtocolFactory() { }

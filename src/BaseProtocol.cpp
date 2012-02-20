@@ -101,53 +101,6 @@ void BaseProtocol::resetReadingBufferToRemainingBuffer() {
 	resetBuffer();
 	addToReadingBuffer(rest.c_str(), rest.size());
 }
-
-
-//------------------------------------------------------------------------------------------------
-
-bool StringListProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transport) {
-	if(callParentProcessRead(transport) == false)
-		return false;
-
-	try {
-		switch(state_) {
-			case Init:
-			case Begin:
-				payload_pos_ += VirtualTransportHelper::readInt32(transport, listSize_);
-				state_ = Contents;
-			case Contents:
-				do {
-					if(listSize_ > (int)list_.size()) {
-						std::string string;
-						payload_pos_ += VirtualTransportHelper::readString32(transport, string);
-						list_.push_back(string);
-						if(listSize_ == (int)list_.size()) {
-							state_ = End;
-							break;
-						}
-					} else {
-						state_ = End;
-						break;
-					}
-				} while(1);
-			case End:
-				return true;
-		}
-	} catch(SocketException &e) {
-		(void)e;	
-	} catch(ProtocolException &e) {
-		(void)e;	
-	}
-	return true;
-}
-
-bool StringListProtocol::processSerialize(size_t bufferSize) {
-	resetWritingBuffer();
-	VirtualTransportHelper::writeString32List(writebuffer_, list_);
-
-	return callParentProcessSerialize(writebuffer_->totalSize() + bufferSize);
-}
-
 	
 } }
 

@@ -31,6 +31,7 @@ libcoconut_la_SOURCES = \
                        BaseProtocol.cpp \
                        FrameProtocol.cpp \
                        LineProtocol.cpp \
+                       StringListProtocol.cpp \
                        JSONProtocol.cpp \
                        FileDescriptorProtocol.cpp \
                        BaseController.cpp \
@@ -72,6 +73,7 @@ include_coconut_HEADERS = \
                          HttpServer.h \
 						 JSONProtocol.h \
 						 LineProtocol.h \
+                         StringListProtocol.h \
 						 FrameProtocol.h \
                          FileDescriptorProtocol.h \
                          ClientController.h \
