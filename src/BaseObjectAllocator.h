@@ -29,6 +29,12 @@
 * POSSIBILITY OF SUCH DAMAGE.
 */
 
+#if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+#endif
+
 namespace coconut {
 
 template <class T>

@@ -30,6 +30,7 @@
 #pragma once
 
 #if ! defined(COCONUT_USE_PRECOMPILE)
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #endif
 

@@ -31,7 +31,7 @@
 
 #include "Defines.h"
 
-//#if defined(COCONUT_USE_PRECOMPILE)
+#if defined(COCONUT_USE_PRECOMPILE)
 #include <set>
 #include <map>
 #include <string>
@@ -45,7 +45,7 @@
 #include <boost/interprocess/detail/atomic.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
-//#endif
+#endif
 
 namespace coconut {
 
