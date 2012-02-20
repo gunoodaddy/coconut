@@ -1,7 +1,7 @@
 # Coconut
 C++ Simple & High Performance Network Opensource Framework Using libevent2
 
-* Available cross platform linux, win32
+* Available cross platform linux, windows
 * Tcp Socket
 * Unix Domain Socket(only tcp)
 * Udp Socket
@@ -9,7 +9,6 @@ C++ Simple & High Performance Network Opensource Framework Using libevent2
 * Http Client (GET, POST)
 * Simple Http Server
 * JSON Stream Protocol
-
 
 ## TCP Echo Server Example
 
