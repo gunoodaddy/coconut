@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\;..\;..\src;&quot;$(BOOST_HOME)&quot;;&quot;$(LIBEVENT_HOME)\include&quot;;&quot;$(LIBEVENT_HOME)\WIN32-Code&quot;;&quot;$(HIREDIS_HOME)&quot;;..\3rdParty\src\"
-				PreprocessorDefinitions="COCONUT_USE_PRECOMPILE;COCONUT_EXPORTS;HIREDIS_WIN;WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="COCONUT_USE_PRECOMPILE;COCONUT_EXPORTS;HIREDIS_WIN;WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -187,6 +187,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -199,6 +200,20 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\BaseIOSystemFactory.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -211,6 +226,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -223,6 +239,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -235,6 +252,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -247,6 +265,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -272,6 +291,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -284,6 +304,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -296,6 +317,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -308,6 +330,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -320,6 +343,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -332,6 +356,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -344,6 +369,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -356,6 +382,20 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+						PrecompiledHeaderThrough="CoconutLib.h"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\HttpRequest.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -368,6 +408,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -380,6 +421,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -392,6 +434,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -404,6 +447,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -416,19 +460,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="CoconutLib.h"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\src\dep\kbuffer.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -441,6 +473,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -453,6 +486,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -465,6 +499,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -477,6 +512,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -489,6 +525,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -501,6 +538,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -513,6 +551,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -525,6 +564,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -537,6 +577,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -549,6 +590,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
 						PrecompiledHeaderThrough="CoconutLib.h"
 					/>
 				</FileConfiguration>
@@ -560,6 +602,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\src\BaseAddress.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\BaseController.h"
 				>
 			</File>
@@ -569,6 +615,14 @@
 			</File>
 			<File
 				RelativePath="..\src\BaseIOServiceContainer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\BaseIOSystemFactory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\BaseObjectAllocator.h"
 				>
 			</File>
 			<File
@@ -604,11 +658,31 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\ConnectionListenerImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\DefaultCoconutObjectAllocator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\DeferredCaller.h"
 				>
 			</File>
 			<File
+				RelativePath="..\src\DeferredCallerImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Defines.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\DNSResolver.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\DNSResolverImpl.h"
 				>
 			</File>
 			<File
@@ -636,7 +710,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\HttpClientImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\HttpRequest.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\HttpRequestImpl.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\HttpServer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\HttpServerImpl.h"
 				>
 			</File>
 			<File
@@ -652,6 +742,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\IOServiceImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\IPv4Address.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\JSONController.h"
 				>
 			</File>
@@ -660,7 +758,47 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\dep\kbuffer.h"
+				RelativePath="..\src\LibeventConnectionListenerImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventDeferredCallerImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventDNSResolverImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventHttpClientImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventHttpRequestImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventHttpServerImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventIOServiceImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventSystemFactory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventTcpSocketImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventTimerImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\LibeventUdpSocketImpl.h"
 				>
 			</File>
 			<File
@@ -700,6 +838,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\TcpSocketImpl.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\ThreadUtil.h"
 				>
 			</File>
@@ -708,7 +850,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\TimerImpl.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\UdpSocket.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\UdpSocketImpl.h"
 				>
 			</File>
 			<File
@@ -725,6 +875,78 @@
 				RelativePath=".\coconut.def"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="dep"
+			>
+			<File
+				RelativePath="..\src\dep\kbuffer.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\dep\kbuffer.h"
+				>
+			</File>
+			<Filter
+				Name="MPFDParser"
+				>
+				<File
+					RelativePath="..\src\dep\MPFDParser\Exception.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\src\dep\MPFDParser\Exception.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\dep\MPFDParser\Field.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\src\dep\MPFDParser\Field.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\dep\MPFDParser\Parser.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\src\dep\MPFDParser\Parser.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

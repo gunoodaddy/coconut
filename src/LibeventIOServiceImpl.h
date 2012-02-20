@@ -38,6 +38,10 @@
 
 namespace coconut {
 
+#if defined(WIN32)
+extern void activateMultithreadMode();
+#endif
+
 class LibeventIOServiceImpl : public IOServiceImpl 
 							, public BaseObjectAllocator<LibeventIOServiceImpl>
 {

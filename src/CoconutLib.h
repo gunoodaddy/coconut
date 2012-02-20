@@ -49,6 +49,10 @@
 
 namespace coconut {
 
+#if defined(WIN32)
+extern bool _startUpWinSock;
+#endif
+
 extern bool _setLittleEndian_on;
 
 COCONUT_API void setEnableDebugMode();

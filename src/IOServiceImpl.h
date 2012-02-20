@@ -33,6 +33,10 @@
 #include <boost/bind.hpp>
 #endif
 
+#if defined(WIN32)
+#include <WinSock2.h>
+#endif
+
 namespace coconut {
 
 class IOServiceImpl {
@@ -139,10 +143,11 @@ public:
 
 	void initialize() {
 #if defined(WIN32)	
-		if(false == gStartUpWinSock) {
+		extern bool _startUpWinSock;
+		if(false == _startUpWinSock) {
 			WSADATA wsaData;
 			::WSAStartup(MAKEWORD(2, 2), &wsaData);
-			gStartUpWinSock = true;
+			_startUpWinSock = true;
 		}
 #endif
 		createHandle();

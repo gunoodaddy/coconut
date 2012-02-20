@@ -40,10 +40,6 @@
 
 namespace coconut {
 
-#if defined(WIN32)	
-static bool gStartUpWinSock = false;
-#endif
-
 extern void activateMultithreadMode();
 
 class UniqueIntKeyMaker {

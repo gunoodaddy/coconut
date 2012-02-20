@@ -35,6 +35,10 @@
 #endif
 #include "BaseObjectAllocator.h"
 
+#if defined(_MSC_VER)
+#pragma warning ( disable: 4251)
+#endif
+
 namespace coconut {
 
 class IOService;

@@ -32,7 +32,7 @@
 namespace coconut {
 
 template <class T>
-class COCONUT_API BaseObjectAllocator
+class BaseObjectAllocator
 {
 public:
 	BaseObjectAllocator() { }

@@ -34,6 +34,7 @@
 
 namespace coconut {
 
+bool _startUpWinSock = false;
 bool _activateMultithreadMode_on = false;
 bool _setLittleEndian_on = false;
 bool _setEnableDebugMode_on = false;

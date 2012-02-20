@@ -86,17 +86,17 @@ void ClientController::fire_onClosed() {
 }
 
 void ClientController::onSocket_Error(int error, const char*strerror) {
-	boost::shared_ptr<ClientController> THIS = sharedMyself();
-	ioService()->deferredCall(boost::bind(&ClientController::fire_onError, THIS, error, std::string(strerror)));
+	boost::shared_ptr<ClientController> SELF = sharedMyself();
+	ioService()->deferredCall(boost::bind(&ClientController::fire_onError, SELF, error, std::string(strerror)));
 	processReconnect();
 	eventClosedConnection()->fireObservers(shared_from_this(), error);
 }
 
 void ClientController::onSocket_Close() {
-	boost::shared_ptr<ClientController> THIS = sharedMyself();
-	ioService()->deferredCall(boost::bind(&ClientController::fire_onClosed, THIS));
+	boost::shared_ptr<ClientController> SELF = sharedMyself();
+	ioService()->deferredCall(boost::bind(&ClientController::fire_onClosed, SELF));
 	processReconnect();
-	eventClosedConnection()->fireObservers(THIS, 0);
+	eventClosedConnection()->fireObservers(SELF, 0);
 }
 
 void ClientController::onSocket_ReadEvent(int fd) { 

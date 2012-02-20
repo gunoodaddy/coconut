@@ -31,7 +31,9 @@
 
 #include "BaseAddress.h"
 #include <string>
-#if ! defined(WIN32)
+#if defined(WIN32)
+#include <WinSock2.h>
+#else
 #include <arpa/inet.h>
 #include <sys/un.h>
 #endif

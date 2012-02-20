@@ -33,6 +33,10 @@
 #include <boost/shared_ptr.hpp>
 #endif
 
+#if defined(_MSC_VER)
+#pragma warning ( disable: 4251)
+#endif
+
 namespace coconut {
 
 class IOService;

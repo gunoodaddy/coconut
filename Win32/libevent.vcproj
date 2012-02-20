@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\3rdParty\src\libevent\include;..\3rdParty\src\libevent\compat;&quot;..\3rdParty\src\libevent\WIN32-Code&quot;"
+				AdditionalIncludeDirectories="&quot;..\3rdParty\src\libevent\WIN32-Code&quot;;..\3rdParty\src\libevent\include;..\3rdParty\src\libevent\compat"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
