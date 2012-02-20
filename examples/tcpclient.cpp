@@ -29,16 +29,15 @@
 
 #include "Coconut.h"
 
-#define BIND_PORT	8765
-#define ECHO_DATA_SHORT	"get keh........................."
-#define ECHO_DATA_LONG	"get keh......................................................................................................................................................................................................................................................."
+#define ECHO_DATA_32BYTE	"echomsg........................."
+#define ECHO_DATA_256BYTE	"echomsg........................................................................................................................................................................................................................................................."
 
 size_t MAX_CLIENT_COUNT = 0;
 size_t MAX_SEND_COUNT = 0;
 int TOTAL_RECV_COUNT = 0;
+
 double gNextProg = 0;
 coconut::Mutex gLock;
-
 std::vector<double> g_resultList;
 boost::uint32_t gRecvedCount = 0;
 struct timeval gStartTime_;
@@ -59,20 +58,23 @@ static void showResult() {
 
 class MyClientController : public coconut::LineController {
 public:
-	MyClientController(int id, int sendCount) : id_(id), sendCount_(sendCount), currSentCount_(0), recvLineCount_(0) {
+	MyClientController(int id, int sendCount) 
+		: id_(id), sendCount_(sendCount), currSentCount_(0), recvLineCount_(0) 
+	{
 	}
 
-	void sendMessage() {
+	inline void sendMessage() {
 		if(++currSentCount_ <= sendCount_) {
-			writeLine(ECHO_DATA_LONG);
+			writeLine(ECHO_DATA_256BYTE);
 		}
 	}
+
 	virtual void onLineReceived(const char *line) {
 		recvLineCount_++;
 		coconut::atomicIncreaseInt32(&gRecvedCount);
 		LOG_DEBUG("LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
 
-		assert(strcmp(line, ECHO_DATA_LONG) == 0 || strcmp(line, "Hello") == 0);
+		assert(strcmp(line, ECHO_DATA_256BYTE) == 0 || strcmp(line, "Hello") == 0);
 
 		double curProg = gRecvedCount * 100 / (double)TOTAL_RECV_COUNT;
 		if(curProg >= gNextProg) {
@@ -83,7 +85,7 @@ public:
 
 			printf("\r%.2f%%, %d tps, total = %d/%d", curProg, tps, sendCount_, gRecvedCount);
 			fflush(stdout);
-			gNextProg += 0.1f;
+			gNextProg += 0.1f;	// <-- modify this!
 			if(gNextProg > 100)
 				gNextProg = 100.0f;
 		}
@@ -141,7 +143,6 @@ private:
 void coconutLog(coconut::logger::LogLevel level, const char *fileName, int fileLine, const char *functionName, const char *logmsg, bool internalLog) {
 	printf("[COCONUT] <%d> %s\n", level, logmsg);
 }
-
 
 int main(int argc, char **argv) {
 
