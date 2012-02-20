@@ -94,6 +94,7 @@ bool LineProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transport
 				return true;
 			}
 		}
+		line_.append(buffer, nread);
 	} catch (SocketException &e) {
 		(void)e;
 	} catch (ProtocolException &e) {

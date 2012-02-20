@@ -70,12 +70,9 @@ public:
 	virtual void onLineReceived(const char *line) {
 		recvLineCount_++;
 		coconut::atomicIncreaseInt32(&gRecvedCount);
-		if(gRecvedCount == 1) {
-			// for the first time...
-			gettimeofday(&gStartTime_, NULL);
-		}
-
 		LOG_DEBUG("LINE RECEIVED : [%s] TOTAL : %d\n", line, recvLineCount_);
+
+		assert(strcmp(line, ECHO_DATA_LONG) == 0 || strcmp(line, "Hello") == 0);
 
 		double curProg = gRecvedCount * 100 / (double)TOTAL_RECV_COUNT;
 		if(curProg >= gNextProg) {
@@ -205,6 +202,8 @@ int main(int argc, char **argv) {
 
 	coconut::IOServiceContainer ioServiceContainer(threadCount);
 	ioServiceContainer.initialize();
+
+	gettimeofday(&gStartTime_, NULL);
 
 	try {
 
