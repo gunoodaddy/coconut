@@ -50,6 +50,10 @@ public:
                              boost::shared_ptr<ClientController> controller, 
                              int timeout = 0);
 
+	static void attachTcp( boost::shared_ptr<IOService> ioService,
+						   coconut_socket_t sock, 
+						   boost::shared_ptr<ClientController> controller);
+
 	static void listenTcp( BaseIOServiceContainer *ioServiceContainer,
                            int port, 
                            boost::shared_ptr<ServerController> controller);

@@ -28,7 +28,7 @@
 */
 
 #include "CoconutLib.h"
-#ifndef COCONUT_JSON_DISABLE
+#ifdef HAVE_LIBJSON
 #include "JSONController.h"
 #include "InternalLogger.h"
 

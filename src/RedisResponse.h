@@ -29,7 +29,7 @@
 
 #pragma once
 
-#ifndef COCONUT_REDIS_DISABLE
+#ifdef HAVE_LIBHIREDIS
 
 namespace coconut {
 

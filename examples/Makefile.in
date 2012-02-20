@@ -37,7 +37,8 @@ host_triplet = @host@
 noinst_PROGRAMS = tcpserver$(EXEEXT) tcpclient$(EXEEXT) \
 	udpserver$(EXEEXT) udpclient$(EXEEXT) udsserver$(EXEEXT) \
 	udsclient$(EXEEXT) httpserver$(EXEEXT) httpclient$(EXEEXT) \
-	fdserver$(EXEEXT) fdclient$(EXEEXT)
+	fdserver$(EXEEXT) fdclient$(EXEEXT) fdbroker$(EXEEXT) \
+	tcpserver_with_fdbroker$(EXEEXT)
 subdir = examples
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -51,6 +52,10 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
+am_fdbroker_OBJECTS = fdbroker.$(OBJEXT)
+fdbroker_OBJECTS = $(am_fdbroker_OBJECTS)
+fdbroker_LDADD = $(LDADD)
+fdbroker_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
 am_fdclient_OBJECTS = fdclient.$(OBJEXT)
 fdclient_OBJECTS = $(am_fdclient_OBJECTS)
 fdclient_LDADD = $(LDADD)
@@ -75,6 +80,13 @@ am_tcpserver_OBJECTS = tcpserver.$(OBJEXT)
 tcpserver_OBJECTS = $(am_tcpserver_OBJECTS)
 tcpserver_LDADD = $(LDADD)
 tcpserver_DEPENDENCIES = $(top_builddir)/src/libcoconut.la
+am_tcpserver_with_fdbroker_OBJECTS =  \
+	tcpserver_with_fdbroker.$(OBJEXT)
+tcpserver_with_fdbroker_OBJECTS =  \
+	$(am_tcpserver_with_fdbroker_OBJECTS)
+tcpserver_with_fdbroker_LDADD = $(LDADD)
+tcpserver_with_fdbroker_DEPENDENCIES =  \
+	$(top_builddir)/src/libcoconut.la
 am_udpclient_OBJECTS = udpclient.$(OBJEXT)
 udpclient_OBJECTS = $(am_udpclient_OBJECTS)
 udpclient_LDADD = $(LDADD)
@@ -112,14 +124,16 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) httpclient.c \
-	$(httpserver_SOURCES) $(tcpclient_SOURCES) \
-	$(tcpserver_SOURCES) $(udpclient_SOURCES) $(udpserver_SOURCES) \
-	$(udsclient_SOURCES) $(udsserver_SOURCES)
-DIST_SOURCES = $(fdclient_SOURCES) $(fdserver_SOURCES) httpclient.c \
-	$(httpserver_SOURCES) $(tcpclient_SOURCES) \
-	$(tcpserver_SOURCES) $(udpclient_SOURCES) $(udpserver_SOURCES) \
-	$(udsclient_SOURCES) $(udsserver_SOURCES)
+SOURCES = $(fdbroker_SOURCES) $(fdclient_SOURCES) $(fdserver_SOURCES) \
+	httpclient.c $(httpserver_SOURCES) $(tcpclient_SOURCES) \
+	$(tcpserver_SOURCES) $(tcpserver_with_fdbroker_SOURCES) \
+	$(udpclient_SOURCES) $(udpserver_SOURCES) $(udsclient_SOURCES) \
+	$(udsserver_SOURCES)
+DIST_SOURCES = $(fdbroker_SOURCES) $(fdclient_SOURCES) \
+	$(fdserver_SOURCES) httpclient.c $(httpserver_SOURCES) \
+	$(tcpclient_SOURCES) $(tcpserver_SOURCES) \
+	$(tcpserver_with_fdbroker_SOURCES) $(udpclient_SOURCES) \
+	$(udpserver_SOURCES) $(udsclient_SOURCES) $(udsserver_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -272,8 +286,14 @@ udsclient_SOURCES = \
 fdserver_SOURCES = \
 	fdserver.cpp
 
+fdbroker_SOURCES = \
+	fdbroker.cpp
+
 fdclient_SOURCES = \
 	fdclient.cpp
+
+tcpserver_with_fdbroker_SOURCES = \
+	tcpserver_with_fdbroker.cpp
 
 httpserver_SOURCES = \
 	httpserver.cpp
@@ -323,6 +343,9 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+fdbroker$(EXEEXT): $(fdbroker_OBJECTS) $(fdbroker_DEPENDENCIES) 
+	@rm -f fdbroker$(EXEEXT)
+	$(CXXLINK) $(fdbroker_OBJECTS) $(fdbroker_LDADD) $(LIBS)
 fdclient$(EXEEXT): $(fdclient_OBJECTS) $(fdclient_DEPENDENCIES) 
 	@rm -f fdclient$(EXEEXT)
 	$(CXXLINK) $(fdclient_OBJECTS) $(fdclient_LDADD) $(LIBS)
@@ -341,6 +364,9 @@ tcpclient$(EXEEXT): $(tcpclient_OBJECTS) $(tcpclient_DEPENDENCIES)
 tcpserver$(EXEEXT): $(tcpserver_OBJECTS) $(tcpserver_DEPENDENCIES) 
 	@rm -f tcpserver$(EXEEXT)
 	$(CXXLINK) $(tcpserver_OBJECTS) $(tcpserver_LDADD) $(LIBS)
+tcpserver_with_fdbroker$(EXEEXT): $(tcpserver_with_fdbroker_OBJECTS) $(tcpserver_with_fdbroker_DEPENDENCIES) 
+	@rm -f tcpserver_with_fdbroker$(EXEEXT)
+	$(CXXLINK) $(tcpserver_with_fdbroker_OBJECTS) $(tcpserver_with_fdbroker_LDADD) $(LIBS)
 udpclient$(EXEEXT): $(udpclient_OBJECTS) $(udpclient_DEPENDENCIES) 
 	@rm -f udpclient$(EXEEXT)
 	$(CXXLINK) $(udpclient_OBJECTS) $(udpclient_LDADD) $(LIBS)
@@ -360,12 +386,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdbroker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpserver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpserver_with_fdbroker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udpclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udpserver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udsclient.Po@am__quote@

@@ -26,85 +26,70 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 * POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include "Coconut.h"
 
-#define USE_PENDING_RESPONSE
-
-class HttpServerHandler : public coconut::HttpServer::EventHandler {
-	typedef std::list<boost::shared_ptr<coconut::HttpRequest> > ListRequest_t;	
-	
-	void sendResponse(boost::shared_ptr<coconut::HttpRequest> request) {
-		static int tick_ = 0;
-		char res[1024];
-		sprintf(res, "<html>\n <head>\n"
-				"<title>%s</title>\n"
-				"</head>\n"
-				"<body>\n"
-				"<h1>hello world : hi~ [%s:%d]</h1>\n"
-				"<ul>\n", request->uri(), request->uri(), tick_);
-	
-		LOG_DEBUG("onHttpServer_Timer emitted : sendReplyString for %s\n", request->uri());
-
-		request->sendReplyString(200, "OK", res);
-		tick_++;
+class MyClientController : public coconut::BinaryController {
+	virtual void onReceivedData(const void *data, int size) {
+		socket()->write(data, size);	
 	}
+};
 
-#ifdef USE_PENDING_RESPONSE
-	virtual void onHttpServer_Timer(unsigned short id) {
-		if(pendingRequests_.size() <= 0)
-			return;
+class MyTcpClientAcceptor : public coconut::FileDescriptorController {
+public:
+	typedef std::set<boost::shared_ptr<BaseController> > SetClients_t;
 
-		boost::shared_ptr<coconut::HttpRequest> request = *pendingRequests_.begin();
-		sendResponse(request);
-		pendingRequests_.pop_front();
+	virtual void onConnected() {
+		LOG_INFO("MyUnixServerController::onConnected called");
 	}
-#endif
+	virtual void onControllerEvent_ClosedConnection( boost::shared_ptr<BaseController> controller, int error) {
+		LOG_ERROR("MyUnixServerController client closed event emitted.. error = %d", error);
 
-	virtual void onHttpServer_DocumentRequest(boost::shared_ptr<coconut::HttpRequest> request) { 
-		LOG_DEBUG("onHttpServer_DocumentRequest emitted.. uri = %s, path = %s", request->uri(), request->path());
+		SetClients_t::iterator it = clients_.find(controller);
+		if(clients_.end() != it) {
+			clients_.erase(it);
+			LOG_INFO("MyUnixServerController client find! erase it");
+		}
+	}
+	virtual void onDescriptorReceived(int fd) {
+		LOG_DEBUG("MyTcpClientAcceptor::onDescriptorReceived called : fd = %d", fd);
 
-		request->dumpRequest(stdout);
-#ifdef USE_PENDING_RESPONSE
-		pendingRequests_.push_back(request);
-#else
-		sendResponse(request);
-#endif
+		boost::shared_ptr<MyClientController> client = boost::shared_ptr<MyClientController>(new MyClientController);
+		coconut::NetworkHelper::attachTcp(ioService(), fd, client);
+		client->eventClosedConnection()->registerObserver(this);
+
+		clients_.insert(client);
 	}
 
 private:
-	ListRequest_t pendingRequests_;
+	SetClients_t clients_;
 };
-
 
 int main(int argc, char **argv) {
 	if(argc < 2) {
-		printf("usage : %s [port] [verbose:1,0]\n", argv[0]);
+		printf("usage : %s [thread-count] [verbose:1,0]\n", argv[0]);
 		return -1;
 	}
-
-	int port = atoi(argv[1]);
+	int threadCount = atoi(argv[1]);
+	if(threadCount <= 0) threadCount = 1;
 	if(argc > 2 && atoi(argv[2]) == 1) {
 		coconut::logger::setLogLevel(coconut::logger::LEVEL_TRACE);
 		coconut::setEnableDebugMode();
 	}
 
-	coconut::IOServiceContainer ioServiceContainer;
+	coconut::IOServiceContainer ioServiceContainer(threadCount);
 	ioServiceContainer.initialize();
-	
 	try {
-		boost::shared_ptr<HttpServerHandler> handler(new HttpServerHandler);
-		coconut::HttpServer server(ioServiceContainer.ioServiceByRoundRobin(), port, handler);
-		server.listen();
-#ifdef USE_PENDING_RESPONSE
-		server.setTimer(0xFFFF, 5000, true);
-#endif
-		LOG_INFO("httpserver started..");
+		std::vector<boost::shared_ptr<MyTcpClientAcceptor> > list;
+		for(int i = 0; i < threadCount; i++) {
+			boost::shared_ptr<MyTcpClientAcceptor> client = boost::shared_ptr<MyTcpClientAcceptor>(new MyTcpClientAcceptor);
+			coconut::NetworkHelper::connectUnix(&ioServiceContainer, "fdserver.sock", client);
+			list.push_back(client);
+		}
+
+		LOG_INFO("tcpserver started..");
 		ioServiceContainer.run();
 	} catch(coconut::Exception &e) {
 		LOG_FATAL("Exception emitted : %s\n", e.what());
 	}
 	return 0;
 }
-
-

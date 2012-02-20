@@ -80,7 +80,10 @@ public:
 		}
 	}
 
-	void initialize(HttpServer *owner, boost::shared_ptr<IOService> ioService, int port) {
+	void initialize(HttpServer *owner, 
+					boost::shared_ptr<IOService> ioService, 
+					int port) 
+	{
 		owner_ = owner;
 		ioService_ = ioService;
 		port_ = port;
@@ -96,10 +99,10 @@ private:
 		ScopedMutexLock(lock_);
 
 		boost::shared_ptr<HttpRequest> request 
-				= boost::shared_ptr<HttpRequest>(new HttpRequest((coconut_http_request_handle_t)req));
+				= boost::shared_ptr<HttpRequest>(new HttpRequest(owner_, (coconut_http_request_handle_t)req));
 
 		if(request->isValidRequest()) {
-			handler_->onHttpServer_DocumentRequest(owner_, request);
+			owner_->fire_onHttpServer_DocumentRequest(request);
 		}
 	}
 
@@ -108,16 +111,7 @@ public:
 		return ioService_;
 	}
 
-	void setEventHandler(HttpServer::EventHandler *handler) {
-		ScopedMutexLock(lock_);
-		handler_ = handler;
-	}
-
-	HttpServer::EventHandler * eventHandler() {
-		return handler_;
-	}
-
-	void start() {
+	void listen() {
 		if(NULL == http_) {
 			http_ = evhttp_new((struct event_base *)ioService_->coreHandle());
 		}
@@ -128,13 +122,12 @@ public:
 		if (!handle_) {
 			throw SocketException("couldn't bind to port for http server");
 		}
-		handler_->onHttpServer_Initialized(owner_);
+		owner_->fire_onHttpServer_Initialized();
 	}
 
 private:
 	HttpServer *owner_;
 	boost::shared_ptr<IOService> ioService_;
-	HttpServer::EventHandler *handler_;
 	struct evhttp *http_;
 	struct evhttp_bound_socket *handle_; // this is not valid after \a http is freed.
 	int port_;

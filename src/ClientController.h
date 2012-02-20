@@ -98,6 +98,7 @@ public:
 	}
 
 	void fire_onClosed();
+	void fire_onError(int error, std::string strerror);
 
 private:
 	void processReconnect();

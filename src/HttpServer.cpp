@@ -33,32 +33,90 @@
 #include "Exception.h"
 #include "InternalLogger.h"
 #include "HttpServerImpl.h"
+#include "HttpRequest.h"
 #include "BaseIOSystemFactory.h"
 
 namespace coconut {
 
-HttpServer::HttpServer(boost::shared_ptr<IOService> ioService, int port) {
+HttpServer::HttpServer(boost::shared_ptr<IOService> ioService, int port, boost::shared_ptr<HttpServer::EventHandler> handler) : timerObj_(NULL) {
+	LOG_TRACE("HttpServer() : this = %p", this);
 	impl_ = BaseIOSystemFactory::instance()->createHttpServerImpl();
 	impl_->initialize(this, ioService, port);
+	handler_ = handler;
 }
 
 HttpServer::~HttpServer() {
+	LOG_TRACE("~HttpServer() : this = %p", this);
+	_removeTimer();
 }
 
 boost::shared_ptr<IOService> HttpServer::ioService() {
 	return impl_->ioService();
 }
 
-void HttpServer::setEventHandler(HttpServer::EventHandler *handler) {
-	return impl_->setEventHandler(handler);
+boost::shared_ptr<HttpServer::EventHandler> HttpServer::eventHandler() {
+	return handler_;
 }
 
-HttpServer::EventHandler* HttpServer::eventHandler() {
-	return impl_->eventHandler();
+void HttpServer::listen() {
+	impl_->listen();
 }
 
-void HttpServer::start() {
-	impl_->start();
+void HttpServer::fire_onHttpServer_DestroyRequest(boost::shared_ptr<HttpRequest> request) {
+	LOG_DEBUG("fire_onHttpServer_DestroyRequest called : this = %p", this);
+	if(handler_)
+		handler_->onHttpServer_DestroyRequest(request);
+
+#ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
+	SetHttpRequests_t::iterator it = requests_.find(request);
+	if(it != requests_.end()) {
+		requests_.erase(it);
+	}
+#endif
+}
+
+void HttpServer::fire_onHttpServer_DocumentRequest(boost::shared_ptr<HttpRequest> request) {
+	LOG_DEBUG("fire_onHttpServer_DocumentRequest called : this = %p", this);
+	if(handler_)
+		handler_->onHttpServer_DocumentRequest(request);
+#ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
+	requests_.insert(request);
+#endif
+}
+
+void HttpServer::fire_onHttpServer_Initialized() {
+	if(handler_)
+		handler_->onHttpServer_Initialized();
+}
+
+void HttpServer::setTimer(unsigned short id, unsigned int msec, bool repeat) {
+	ScopedIOServiceLock(ioService());
+	_makeTimer();
+	timerObj_->setTimer(id, msec, repeat);
+}
+
+void HttpServer::killTimer(unsigned short id) {
+	ScopedIOServiceLock(ioService());
+	_makeTimer();
+	timerObj_->killTimer(id);
+}
+
+void HttpServer::_makeTimer() {
+	if(NULL == timerObj_) {
+		timerObj_ = Timer::make();
+		timerObj_->initialize(ioService());
+		timerObj_->setEventHandler(this);
+	}
+}
+
+void HttpServer::onTimer_Timer(int id) {
+	if(!(id & INTERNAL_TIMER_BIT)) {
+		handler_->onHttpServer_Timer(id);
+	}
+}
+
+void HttpServer::_removeTimer() {
+	Timer::destroy(timerObj_);
 }
 
 }

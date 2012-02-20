@@ -64,7 +64,7 @@ public:
 
 protected:
 	// DescriptorController callback event
-	virtual void onDescriptorReceived(int fd) = 0;
+	virtual void onDescriptorReceived(int fd) { }
 };
 
 } // end of namespace coconut

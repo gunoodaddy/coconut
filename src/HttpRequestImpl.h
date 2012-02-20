@@ -45,7 +45,7 @@ public:
 	virtual const char * findParameterOf(const char *key, size_t index) = 0;
 	virtual size_t parameterCountOf(const char *key) = 0;
 	virtual const std::string & requestBody() = 0;
-	virtual void sendReplyData(int code, const char *reason, const char* data, size_t size) = 0;
+	virtual bool sendReplyData(int code, const char *reason, const char* data, size_t size) = 0;
 	virtual void dumpRequest(FILE *fp) = 0;
 };
 

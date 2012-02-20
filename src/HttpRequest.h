@@ -36,15 +36,22 @@
 namespace coconut {
 
 class HttpRequestImpl;
+class HttpServer;
 
-class COCONUT_API HttpRequest {
+class COCONUT_API HttpRequest : public boost::enable_shared_from_this<HttpRequest> {
 public:
-	HttpRequest(coconut_http_request_handle_t req);
+	HttpRequest(HttpServer *server, coconut_http_request_handle_t req);
+	~HttpRequest();
 
 	coconut_http_request_handle_t nativeHandle() {
 		return native_handle_;
 	}
 
+	boost::shared_ptr<HttpRequest> sharedMyself() {
+		return shared_from_this();
+	}
+
+	HttpServer *server();
 	bool isValidRequest();
 	HttpMethodType methodType();
 	const char * uri();
@@ -54,11 +61,12 @@ public:
 	const char * findParameterOf(const char *key, size_t index);
 	size_t parameterCountOf(const char *key);
 	const std::string & requestBody();
-	void sendReplyString(int code, const char *reason, const std::string &str);
-	void sendReplyData(int code, const char *reason, const char* data, size_t size);
+	bool sendReplyString(int code, const char *reason, const std::string &str);
+	bool sendReplyData(int code, const char *reason, const char* data, size_t size);
 	void dumpRequest(FILE *fp);
 
 private:
+	HttpServer *serverInst_;
 	coconut_http_request_handle_t native_handle_;
 	boost::shared_ptr<HttpRequestImpl> impl_;
 };

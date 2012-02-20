@@ -24,11 +24,17 @@
 /* Define to 1 if you have the `event' library (-levent). */
 #undef HAVE_LIBEVENT
 
+/* define if libevent library fixed by gunoodaddy is available */
+#undef HAVE_LIBEVENT_GUNOODADDY_FIX
+
 /* Define to 1 if you have the `event_pthreads' library (-levent_pthreads). */
 #undef HAVE_LIBEVENT_PTHREADS
 
 /* Define to 1 if you have the `hiredis' library (-lhiredis). */
 #undef HAVE_LIBHIREDIS
+
+/* define if --without-json option is not set */
+#undef HAVE_LIBJSON
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #undef HAVE_LIBPTHREAD
