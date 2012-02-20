@@ -1,7 +1,7 @@
 # Coconut
 C++ Simple & High Performance Network Opensource Framework Using libevent2
 
-* Available cross platform linux, windows
+* Available cross platform linux, windows.
 * Tcp Socket
 * Unix Domain Socket(only tcp)
 * Udp Socket
