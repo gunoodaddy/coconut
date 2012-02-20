@@ -122,49 +122,47 @@ void ClientController::onSocket_ReadEvent(int fd) {
 			return;
 
 		if(!protocol_ || protocol_->isReadComplete()) {
-			_LOG_TRACE("New Protocol make #1 in %p\n", this);
+			_LOG_TRACE("New Protocol make #1 in this = %p\n", this);
 			protocol_ = protocolFactory_->makeProtocol();
 		}
 
 		_LOG_DEBUG("ClientController read socket fd = %d, readSize = %d in %p\n", socket()->socketFD(), nread, this); 
 		protocol_->addToReadingBuffer(chunk, nread);
-		do{
+		int index = -1;
+		while(true) {
+			index++;
 			if(protocol_->processReadFromReadingBuffer() == true) {
 				// fire!
 				onReceivedProtocol(protocol_);
 				eventGotProtocol()->fireObservers(shared_from_this(), protocol_);
 
-#define ALWAS_MAKE_PROTOCOL
-#ifdef ALWAS_MAKE_PROTOCOL
-				_LOG_TRACE("ClientController Protocol receved completed. readSize = %d, remainBufferSize = %d in %p\n", 
-							nread, protocol_->remainingBufferSize(), this);
+				_LOG_TRACE("ClientController Protocol receved completed. readSize = %d, remainBufferSize = %d in %p, index = %d\n", 
+							nread, protocol_->remainingBufferSize(), this, index);
 
 				if(protocol_->remainingBufferSize() > 0) {
+#define ALWAS_MAKE_PROTOCOL
+#ifdef ALWAS_MAKE_PROTOCOL
 					// new protocol
-					_LOG_TRACE("New Protocol make #2 in %p\n", this);
+					_LOG_TRACE("New Protocol make #2 in this = %p\n", this);
 					boost::shared_ptr<protocol::BaseProtocol> protocolTemp = protocolFactory_->makeProtocol();
 					protocolTemp->addToReadingBuffer(protocol_->remainingBufferPtr(), protocol_->remainingBufferSize());
 					protocol_ = protocolTemp;
 #else
 					protocol_->resetReadingBufferToRemainingBuffer();
 #endif
-					continue;
-				} else {
-					break;
+					continue;	// one more processing..
 				}
 			} 
 
-			// parsing failed..
-			
+			// --> parsing failed..
+
 			if(protocol_->isInvalidPacketReceived()) {
 				// this session close!
 				_LOG_ERROR("Invalid Packet Recved.. this = %p, size = \n", this, protocol_->payloadBuffer()->totalSize());
 				socket()->close();
-				break;
-			} else {
-				break;
 			}
-		}while(1);
+			break;
+		}
 #endif
 	} else {
 		char buffer[IOBUF_LEN];
