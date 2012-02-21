@@ -54,7 +54,7 @@ total 26 lines.
 linux, Intel(R) Xeon(R) CPU L5520  @ 2.27GHz 12 cpu core
 
 * All server sample codes are here : https://github.com/gunoodaddy/coconut/tree/master/test/echotest
-* client code are here : https://github.com/gunoodaddy/coconut/tree/master/example/tcpclient.cpp
+* client code are here : https://github.com/gunoodaddy/coconut/blob/master/examples/tcpclient.cpp
 
 ## Requirement
 
