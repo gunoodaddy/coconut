@@ -89,7 +89,7 @@ https://github.com/antirez/hiredis
 * And if you use linux 64bit os, must edit \<lib_json_root\>/makefile to add `-fPIC` to cxxflags_default.
 * If you do not want to use json feature, run configure `--without-json`.
 
-## Build / Installation 
+## Build / Installation on linux
 
     export BOOST_ROOT=<BOOST ROOT DIR>
     export LD_LIBRARY_PATH=<BOOST STAGE LIB DIR>:$LD_LIBRARY_PATH
@@ -99,6 +99,14 @@ https://github.com/antirez/hiredis
     cd tester
     unittest
 
+## Build / Installation on windows
+	
+	visual studio >= 2008 needs.
+
+	open `Win32/Coconut.sln`
+	build
+
+
 ## TODO before linux configuration
 
 	autoheader
@@ -106,3 +114,6 @@ https://github.com/antirez/hiredis
 	automake -a --copy
 	autoconf
 
+## TODO before windows configuration
+
+	copy libevent source to `3rdParty/src/libevent`
