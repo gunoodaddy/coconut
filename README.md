@@ -96,7 +96,7 @@ https://github.com/antirez/hiredis
 
     configure
     make
-    cd tester
+    cd test
     unittest
 
 ## Build / Installation on windows
