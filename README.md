@@ -95,7 +95,7 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
     cd tester
     unittest
 
-## Linux Configuration Preparing
+## TODO before linux configuration
 
 	autoheader
 	(optional) cp  /usr/share/libtool/config/ltmain.sh .
