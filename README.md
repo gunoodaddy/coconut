@@ -3,6 +3,7 @@ Coconut is C++ network framework with briefly, clearly, high performance.
 
 * Using libevent (available for switching another network library)
 * Available cross platform linux, windows (by using libevent)
+* Easy multithread service
 * Tcp Socket
 * Unix Domain Socket(only tcp)
 * Udp Socket
