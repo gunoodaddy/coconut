@@ -4,7 +4,11 @@
 Makefile
 Makefile.in
 ltmain.sh 
+dist.sh 
 depcomp
+install-sh 
+missing
+stamp-h.in
 
 # Libtool adds these, at least sometimes
 configure
