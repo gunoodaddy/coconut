@@ -1,14 +1,15 @@
 # Coconut
-C++ Simple & High Performance Network Opensource Framework Using libevent2
+Coconut is C++ network framework with briefly, clearly, high performance.
 
-* Available cross platform linux, windows
+* Using libevent (available for switching another network library)
+* Available cross platform linux, windows (by using libevent)
 * Tcp Socket
 * Unix Domain Socket(only tcp)
 * Udp Socket
-* Redis Request
 * Http Client (GET, POST)
 * Simple Http Server
-* JSON Stream Protocol
+* Redis Request (optional)
+* JSON Stream Protocol (optional)
 
 ## TCP Echo Server Example
 
@@ -94,10 +95,10 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
     cd tester
     unittest
 
-## Configuration autotools
+## Linux Configuration Preparing
 
 	autoheader
-	cp  /usr/share/libtool/config/ltmain.sh .
+	(optional) cp  /usr/share/libtool/config/ltmain.sh .
 	automake -a --copy
 	autoconf
 
