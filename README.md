@@ -72,7 +72,6 @@ http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/dow
 
 ### hiredis (option : --without-redis)
 https://github.com/antirez/hiredis
-https://github.com/gunoodaddy/hiredis
 
 * On Win32, you must use this [hiredis](https://github.com/gunoodaddy/hiredis) instead of orginal hiredis so that the build is successful.
 * We modified `redisFormatCommandArgv` function in koenvandesande's sources.
@@ -81,7 +80,7 @@ https://github.com/gunoodaddy/hiredis
   
 
 ### libjson 7.4.1 (option : --without-json)
-http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2
+[libjson 7.4.1 download](http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibjson%2F&ts=1327071561&use_mirror=cdnetworks-kr-2)
     
 * In order to build successful, you must use `3rdParty/src/libjson` instead upper link's libjson.
 * We modified JSONStream class to parse correctly. (7.4.1 libjson has a few bug in JSONStream)
