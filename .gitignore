@@ -8,4 +8,6 @@ Makefile.in
 TAGS
 
 # Libtool adds these, at least sometimes
-/configure
+configure
+*.cache
+*.m4
