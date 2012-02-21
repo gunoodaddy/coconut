@@ -57,8 +57,8 @@ total 26 lines.
 
 ## Requirement
 
-### libevent 2.0.15 
-https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
+### libevent >= 2.0.15
+http://libevent.org/
 
 * If you use Win32 IOCP, you must use this [libevent](https://github.com/gunoodaddy/Libevent).
 * Original libevent >= 2.0.15 has a bug in `evutil_tv_to_msec` function. (need to add *tv* pointer null check code) 
