@@ -13,7 +13,7 @@ stamp-h.in
 # Libtool adds these, at least sometimes
 configure
 *.cache
-*.m4
+#*.m4
 
 # ctags stuff
 TAGS
