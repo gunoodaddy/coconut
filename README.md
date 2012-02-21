@@ -115,6 +115,7 @@ https://github.com/antirez/hiredis
 	autoconf
 
 	DO NOT run aclocal
+	libtool 2.4.2, automake 1.11, autoconf 2.68 need
 
 ## TODO before windows configuration
 
