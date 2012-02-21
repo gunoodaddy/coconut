@@ -94,3 +94,10 @@ http://downloads.sourceforge.net/project/libjson/libjson_7.4.1.zip?r=http%3A%2F%
     cd tester
     unittest
 
+## Configuration autotools
+
+	autoheader
+	cp  /usr/share/libtool/config/ltmain.sh .
+	automake -a --copy
+	autoconf
+
