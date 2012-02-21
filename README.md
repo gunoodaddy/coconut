@@ -65,8 +65,8 @@ http://libevent.org/
 * And we've added `free callback feature` for struct evhttp_request free callback feature to know which evhttp_request pointer will be freed. It needs if you should store http request and then later send responses. (like 'Commet'). You can see our fixed codes by finding `gunoodaddy` comment in this [libevent](https://github.com/gunoodaddy/Libevent) sources.
 * By running `configure`, it will check our `free callback feature` exists in your own libevent and then mark `HAVE_LIBEVENT_GUNOODADDY_FIX` in config.h.
 	
-### boost 1.33.0 
-http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download
+### boost >= 1.33.0 
+[boost 1.48.0 download](http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/download)
 
 * You must build boost library (run b2), we need boost stage library for using boost::thread
 
