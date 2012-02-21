@@ -103,7 +103,7 @@ https://github.com/antirez/hiredis
 	
 	visual studio >= 2008 needs.
 
-	open `Win32/Coconut.sln`
+	open Win32/Coconut.sln
 	build
 
 
@@ -116,4 +116,4 @@ https://github.com/antirez/hiredis
 
 ## TODO before windows configuration
 
-	copy libevent source to `3rdParty/src/libevent`
+	copy libevent source to 3rdParty/src/libevent
