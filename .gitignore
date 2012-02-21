@@ -20,6 +20,7 @@ TAGS
 
 # source object files
 *.o
+*.lo
 
 # log file
 *.log
