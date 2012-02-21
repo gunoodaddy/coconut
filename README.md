@@ -114,6 +114,8 @@ https://github.com/antirez/hiredis
 	automake -a --copy
 	autoconf
 
+	DO NOT run aclocal
+
 ## TODO before windows configuration
 
 	copy libevent source to 3rdParty/src/libevent
