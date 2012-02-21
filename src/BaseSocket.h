@@ -68,7 +68,7 @@ public:
 		virtual void onSocket_Initialized() { }
 		virtual void onSocket_Connected() { }
 		virtual void onSocket_Error(int error, const char *strerror) { }
-		virtual void onSocket_ReadEvent(int fd) { }
+		virtual void onSocket_ReadEvent(coconut_socket_t fd) { }
 		virtual void onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin) { }
 		virtual void onSocket_Close() { }
 	};
@@ -174,7 +174,7 @@ public:
 	void fire_onSocket_Initialized();
 	void fire_onSocket_Connected();
 	void fire_onSocket_Error(int error, const char *strerror);
-	void fire_onSocket_ReadEvent(int fd);
+	void fire_onSocket_ReadEvent(coconut_socket_t fd);
 	void fire_onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin);
 	void fire_onSocket_Close();
 

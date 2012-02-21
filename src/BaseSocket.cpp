@@ -55,7 +55,7 @@ void BaseSocket::fire_onSocket_Error(int error, const char *strerror) {
 	lockHandler_.unlock();	
 }
 
-void BaseSocket::fire_onSocket_ReadEvent(int fd) {
+void BaseSocket::fire_onSocket_ReadEvent(coconut_socket_t fd) {
 	lockHandler_.lock();
 	if(handler_ && ioService_->isStopped() == false)
 		handler_->onSocket_ReadEvent(fd);

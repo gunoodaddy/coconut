@@ -632,7 +632,7 @@ public:
 	}
 
 private:	// fire event callback
-	inline void fire_onSocket_ReadEvent(int fd) {
+	inline void fire_onSocket_ReadEvent(coconut_socket_t fd) {
 		owner_->fire_onSocket_ReadEvent(fd);
 	}
 

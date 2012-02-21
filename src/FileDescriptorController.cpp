@@ -46,7 +46,7 @@ void FileDescriptorController::writeDescriptor(int fd) {
 	}
 }
 
-void FileDescriptorController::onSocket_ReadEvent(int fd) { 
+void FileDescriptorController::onSocket_ReadEvent(coconut_socket_t fd) { 
 	if(protocolFactory_) {
 		do {
 			if(!protocol_ || protocol_->isReadComplete()) {

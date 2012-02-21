@@ -55,7 +55,7 @@ private:
 		BaseController::_onPreInitialized();
 	}
 
-	void onSocket_ReadEvent(int fd);
+	void onSocket_ReadEvent(coconut_socket_t fd);
 
 	void onReceivedProtocol(boost::shared_ptr<protocol::BaseProtocol> protocol);
 

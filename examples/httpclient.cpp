@@ -31,18 +31,18 @@
 using namespace coconut;
 using namespace coconut::protocol;
 
-class TestHttpController : public coconut::HttpClient::EventHandler
+class TestHttpEventHandler : public coconut::HttpClient::EventHandler
 {
 	virtual void onHttpClient_ReceivedChunked(HttpClient *client, int receivedsize) { 
-		LOG_INFO("TestHttpController received size : %d byte\n", receivedsize);
+		LOG_INFO("TestHttpEventHandler received size : %d byte\n", receivedsize);
 	}
 
 	virtual void onHttpClient_Error(HttpClient *client, coconut::HttpClient::ErrorCode errorcode) {
-		LOG_INFO("TestHttpController onError : %d\n", errorcode);
+		LOG_INFO("TestHttpEventHandler onError : %d\n", errorcode);
 	}
 
 	virtual void onHttpClient_Response(HttpClient *client, int rescode) {
-		LOG_INFO("TestHttpController onResponse [this = %p], rescode = %d, size = %d\n", 
+		LOG_INFO("TestHttpEventHandler onResponse [this = %p], rescode = %d, size = %d\n", 
 				this, rescode, client->responseBodySize());
 
 		printf("%s\n", (char *)client->responseBody());
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 		char uri[1024] = {0, };
 		sprintf(uri, "http://127.0.0.1:%d/", atoi(argv[1]));
 
-		TestHttpController controller;
+		TestHttpEventHandler eventHandler;
 		HttpClient client(ioServiceContainer.ioServiceByRoundRobin());
 		HttpParameter param;
 		param.addParameter("id", "gunoodaddy");
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 		param.addParameter("gender", "Man");
 		param.addParameter("item[]", "car");
 		param.addParameter("item[]", "ipad3");
-		client.setEventHandler(&controller);
+		client.setEventHandler(&eventHandler);
 		client.request(coconut::HTTP_POST, uri, &param, 20);
 		//client.request(coconut::HTTP_GET, uri, &param, 20);
 

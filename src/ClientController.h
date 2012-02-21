@@ -109,7 +109,7 @@ private:
 	void onSocket_Error(int error, const char*strerror);
 	void onSocket_Close();
 	void onSocket_ReadFrom(const void *data, int size, struct sockaddr_in * sin);
-	void onSocket_ReadEvent(int fd);
+	void onSocket_ReadEvent(coconut_socket_t fd);
 	void onTimer_Timer(int id);
 
 protected:

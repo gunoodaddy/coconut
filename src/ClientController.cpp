@@ -99,7 +99,7 @@ void ClientController::onSocket_Close() {
 	eventClosedConnection()->fireObservers(SELF, 0);
 }
 
-void ClientController::onSocket_ReadEvent(int fd) { 
+void ClientController::onSocket_ReadEvent(coconut_socket_t fd) { 
 	if(protocolFactory_) {
 //#define PROTOCOL_READ_FROM_SOCKET
 #ifdef PROTOCOL_READ_FROM_SOCKET
