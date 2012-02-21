@@ -9,7 +9,7 @@ Coconut is C++ network framework with briefly, clearly, high performance.
 * Http Client (GET, POST)
 * Simple Http Server
 * Redis Request (optional)
-* JSON Stream Protocol (optional)
+* JSON Stream Protocol (optional, now unstable)
 
 ## TCP Echo Server Example
 
