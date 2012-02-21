@@ -60,9 +60,9 @@ total 26 lines.
 ### libevent 2.0.15 
 https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 
-* If you use Win32 IOCP, you must use https://github.com/gunoodaddy/Libevent.
+* If you use Win32 IOCP, you must use this [libevent](https://github.com/gunoodaddy/Libevent).
 * Original libevent >= 2.0.15 has a bug in `evutil_tv_to_msec` function. (need to add *tv* pointer null check code) 
-* And we've added `free callback feature` for struct evhttp_request free callback feature to know which evhttp_request pointer will be freed. It needs if you should store http request and then later send responses. (like 'Commet'). You can see our fixed codes by finding `gunoodaddy` comment in https://github.com/gunoodaddy/Libevent sources.
+* And we've added `free callback feature` for struct evhttp_request free callback feature to know which evhttp_request pointer will be freed. It needs if you should store http request and then later send responses. (like 'Commet'). You can see our fixed codes by finding `gunoodaddy` comment in this [libevent](https://github.com/gunoodaddy/Libevent) sources.
 * By running `configure`, it will check our `free callback feature` exists in your own libevent and then mark `HAVE_LIBEVENT_GUNOODADDY_FIX` in config.h.
 	
 ### boost 1.33.0 
@@ -72,11 +72,10 @@ http://sourceforge.net/projects/boost/files/boost/1.48.0/boost_1_48_0.tar.gz/dow
 
 ### hiredis (option : --without-redis)
 https://github.com/antirez/hiredis
+https://github.com/gunoodaddy/hiredis
 
-* On Win32, you must use `3rdParty/src/hiredis` instead upper link so that the build is successful.
-* The hiredis in upper git link is not compiled on Win32.
-* `3rdParty/src/hiredis` are based in git repository https://github.com/koenvandesande/hiredis.git.
-* We modified plus koenvandesande's sources following function `redisFormatCommandArgv`.
+* On Win32, you must use this [hiredis](https://github.com/gunoodaddy/hiredis) instead of orginal hiredis so that the build is successful.
+* We modified `redisFormatCommandArgv` function in koenvandesande's sources.
 * In win32, sprintf `%zu` format is not valid. so changed `%d` if Win32   
 * If you do not want to use redis, run configure `--without-redis`.
   
