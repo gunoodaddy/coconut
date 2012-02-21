@@ -1,0 +1,11 @@
+
+# Autotools stuff
+.deps
+Makefile
+Makefile.in
+
+# ctags stuff
+TAGS
+
+# Libtool adds these, at least sometimes
+/configure
