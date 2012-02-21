@@ -60,9 +60,9 @@ total 26 lines.
 ### libevent 2.0.15 
 https://github.com/downloads/libevent/libevent/libevent-2.0.16-stable.tar.gz
 
-* If you use Win32 IOCP, you must use `https://github.com/gunoodaddy/Libevent`.
+* If you use Win32 IOCP, you must use https://github.com/gunoodaddy/Libevent.
 * Original libevent >= 2.0.15 has a bug in `evutil_tv_to_msec` function. (need to add *tv* pointer null check code) 
-* And we've added `free callback feature` for struct evhttp_request free callback feature to know which evhttp_request pointer will be freed. It needs if you should store http request and then later send responses. (like 'Commet'). You can see our fixed codes by finding `gunoodaddy` comment in `https://github.com/gunoodaddy/Libevent` sources.
+* And we've added `free callback feature` for struct evhttp_request free callback feature to know which evhttp_request pointer will be freed. It needs if you should store http request and then later send responses. (like 'Commet'). You can see our fixed codes by finding `gunoodaddy` comment in https://github.com/gunoodaddy/Libevent sources.
 * By running `configure`, it will check our `free callback feature` exists in your own libevent and then mark `HAVE_LIBEVENT_GUNOODADDY_FIX` in config.h.
 	
 ### boost 1.33.0 
