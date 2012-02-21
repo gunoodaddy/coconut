@@ -49,9 +49,8 @@ total 26 lines.
 
 <b>Environment</b>
 
-* Server : single thread, linux, Intel(R) Xeon(R) CPU L5520  @ 2.27GHz 16 cpu core
-* Client : 16 thread, 1000 clients, 10000 count per a client with 256 byte
-linux, Intel(R) Xeon(R) CPU L5520  @ 2.27GHz 12 cpu core
+* Server : single thread, Linux, Intel(R) Xeon(R) CPU L5520  @ 2.27GHz 16 cpu core
+* Client : 16 thread, 1000 clients, 10000 count per a client with 256 byte, Linux, Intel(R) Xeon(R) CPU L5520  @ 2.27GHz 12 cpu core
 
 * All server sample codes are here : https://github.com/gunoodaddy/coconut/tree/master/test/echotest
 * client code are here : https://github.com/gunoodaddy/coconut/blob/master/examples/tcpclient.cpp
