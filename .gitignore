@@ -3,14 +3,16 @@
 .deps
 Makefile
 Makefile.in
-
-# ctags stuff
-TAGS
+ltmain.sh 
+depcomp
 
 # Libtool adds these, at least sometimes
 configure
 *.cache
 *.m4
+
+# ctags stuff
+TAGS
 
 # source object files
 *.o
