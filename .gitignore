@@ -11,3 +11,9 @@ TAGS
 configure
 *.cache
 *.m4
+
+# source object files
+*.o
+
+# log file
+*.log
