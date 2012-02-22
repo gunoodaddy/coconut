@@ -74,9 +74,7 @@ http://libevent.org/
 ### hiredis (option : --without-redis)
 https://github.com/antirez/hiredis
 
-* On Win32, you must use this [hiredis](https://github.com/gunoodaddy/hiredis) instead of orginal hiredis so that the build is successful.
-* We modified `redisFormatCommandArgv` function in koenvandesande's sources.
-* In win32, sprintf `%zu` format is not valid. so changed `%d` if Win32   
+* On Win32, you must use this [hiredis](https://github.com/koenvandesande/hiredis) instead of orginal hiredis so that the build is successful.
 * If you do not want to use redis, run configure `--without-redis`.
   
 
@@ -120,3 +118,4 @@ https://github.com/antirez/hiredis
 ## TODO before windows configuration
 
 	copy libevent source to 3rdParty/src/libevent
+	copy hiredis source to 3rdParty/src/hiredis
