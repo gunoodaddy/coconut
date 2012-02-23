@@ -133,8 +133,8 @@ void ClientController::onSocket_ReadEvent(coconut_socket_t fd) {
 			index++;
 			if(protocol_->processReadFromReadingBuffer() == true) {
 				// fire!
-				onReceivedProtocol(protocol_);
 				eventGotProtocol()->fireObservers(shared_from_this(), protocol_);
+				onReceivedProtocol(protocol_);
 
 				_LOG_TRACE("ClientController Protocol receved completed. readSize = %d, remainBufferSize = %d in %p, index = %d\n", 
 							nread, protocol_->remainingBufferSize(), this, index);
