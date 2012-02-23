@@ -20,15 +20,15 @@ total 26 lines.
     #include "Coconut.h"
     using namespace coconut;
 
-    class FooClient : public BinaryController {
+    class FooSession : public BinaryController {
         virtual void onReceivedData( const void *data, int size ) {
             socket()->write(data, size);
         }
     };
     class FooServer : public ServerController {
         virtual boost::shared_ptr<ClientController> onAccept( boost::shared_ptr<TcpSocket> socket ) {
-            boost::shared_ptr<FooClient> newClient( new FooClient );
-            return newClient;
+            boost::shared_ptr<FooSession> newSession( new FooSession );
+            return newSession;
         }
     };
     int main( int argc, char **argv ) {
