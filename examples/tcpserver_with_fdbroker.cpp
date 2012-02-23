@@ -28,7 +28,7 @@
 */
 #include "Coconut.h"
 
-class MyClientController : public coconut::BinaryController {
+class MySessionController : public coconut::BinaryController {
 	virtual void onReceivedData(const void *data, int size) {
 		socket()->write(data, size);	
 	}
@@ -53,7 +53,7 @@ public:
 	virtual void onDescriptorReceived(int fd) {
 		LOG_DEBUG("MyTcpClientAcceptor::onDescriptorReceived called : fd = %d", fd);
 
-		boost::shared_ptr<MyClientController> client = boost::shared_ptr<MyClientController>(new MyClientController);
+		boost::shared_ptr<MySessionController> client = boost::shared_ptr<MySessionController>(new MySessionController);
 		coconut::NetworkHelper::attachTcp(ioService(), fd, client);
 		client->eventClosedConnection()->registerObserver(this);
 

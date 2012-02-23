@@ -6,14 +6,14 @@
 #define USE_LINE_CONTROLLER
 
 #ifdef USE_LINE_CONTROLLER
-class MyClientController : public coconut::LineController {
+class MySessionController : public coconut::LineController {
 public:
 	virtual void onLineReceived(const char *line) {
 		writeLine(line);
 	}
 };
 #else
-class MyClientController : public coconut::BinaryController {
+class MySessionController : public coconut::BinaryController {
 	virtual void onReceivedData(const void *data, int size) {
 		socket()->write(data, size);	
 	}
@@ -22,7 +22,7 @@ class MyClientController : public coconut::BinaryController {
 
 class MyServerController : public coconut::ServerController {
 	virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
-		boost::shared_ptr<MyClientController> newController(new MyClientController); 
+		boost::shared_ptr<MySessionController> newController(new MySessionController); 
 		return newController;
 	}
 };

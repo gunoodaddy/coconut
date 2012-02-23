@@ -29,7 +29,7 @@
 
 #include "Coconut.h"
 
-class MyClientController : public coconut::BinaryController {
+class MySessionController : public coconut::BinaryController {
 public:
 	virtual void onError(int error, const char *strerror) {
 		printf("onError emitted..\n");
@@ -59,7 +59,7 @@ int main(void) {
 
 	try {
 		// unix client test
-		boost::shared_ptr<MyClientController> unixClientController(new MyClientController);
+		boost::shared_ptr<MySessionController> unixClientController(new MySessionController);
 		coconut::NetworkHelper::connectUnix(&ioServiceContainer, "udsserver.sock", unixClientController);
 
 		// event loop start!

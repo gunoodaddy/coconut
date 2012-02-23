@@ -56,9 +56,9 @@ static void showResult() {
 	LOG_INFO("All clients completed : avg = %.2f sec, server tps = %.2f\n", avgSec, tps);
 }
 
-class MyClientController : public coconut::LineController {
+class MySessionController : public coconut::LineController {
 public:
-	MyClientController(int id, int sendCount) 
+	MySessionController(int id, int sendCount) 
 		: id_(id), sendCount_(sendCount), currSentCount_(0), recvLineCount_(0) 
 	{
 	}
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
 
 		std::vector<boost::shared_ptr<coconut::ClientController> > clients;
 		for(size_t i = 0; i < MAX_CLIENT_COUNT; i++) {
-			boost::shared_ptr<MyClientController> controller(new MyClientController(i, MAX_SEND_COUNT));
+			boost::shared_ptr<MySessionController> controller(new MySessionController(i, MAX_SEND_COUNT));
 			coconut::NetworkHelper::connectTcp(&ioServiceContainer, address.c_str(), port, controller);
 
 			clients.push_back(controller);
