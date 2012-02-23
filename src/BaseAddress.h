@@ -29,10 +29,19 @@
 
 #pragma once
 
+namespace coconut {
+
 class BaseAddress {
 public:
 	virtual ~BaseAddress() { }
 
 	virtual const char *ip() const = 0;
 	virtual int port() const = 0;
+	bool operator==(const BaseAddress& address ) const {
+		if ( 0 == strcmp(ip(), address.ip()) && port() == address.port() )
+			return true;
+		return false;
+	}
 };
+
+}
