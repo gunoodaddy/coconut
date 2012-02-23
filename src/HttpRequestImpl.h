@@ -47,6 +47,7 @@ public:
 	virtual const std::string & requestBody() = 0;
 	virtual bool sendReplyData(int code, const char *reason, const char* data, size_t size) = 0;
 	virtual void dumpRequest(FILE *fp) = 0;
+	virtual const BaseAddress* peerAddress() = 0;
 };
 
 }

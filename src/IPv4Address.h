@@ -38,6 +38,8 @@
 #include <sys/un.h>
 #endif
 
+namespace coconut {
+
 class IPv4Address : public BaseAddress {
 public:
 	IPv4Address() : port_(0) { }
@@ -62,6 +64,11 @@ public:
 		port_ = ntohs(sin->sin_port);
 	}
 
+	void setSocketAddress(const char* ip, int port) {
+		ip_ = ip;
+		port_ = port;
+	}
+
 	const char *ip() const {
 		return ip_.c_str();
 	}
@@ -75,4 +82,5 @@ private:
 	int port_;
 };
 
+}
 

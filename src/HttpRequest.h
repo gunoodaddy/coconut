@@ -42,6 +42,7 @@ namespace coconut {
 
 class HttpRequestImpl;
 class HttpServer;
+class BaseAddress;
 
 class COCONUT_API HttpRequest : public boost::enable_shared_from_this<HttpRequest> {
 public:
@@ -69,6 +70,7 @@ public:
 	bool sendReplyString(int code, const char *reason, const std::string &str);
 	bool sendReplyData(int code, const char *reason, const char* data, size_t size);
 	void dumpRequest(FILE *fp);
+	const BaseAddress* peerAddress();
 
 private:
 	HttpServer *serverInst_;
