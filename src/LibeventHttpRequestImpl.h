@@ -42,6 +42,7 @@
 #include "HttpRequestImpl.h"
 #include "BaseObjectAllocator.h"
 #include "dep/MPFDParser/Parser.h"
+#include "IPv4Address.h"
 
 namespace coconut {
 
@@ -99,6 +100,13 @@ public:
 #ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
 		evhttp_request_set_free_cb(req_, request_free_cb, this);
 #endif
+		struct evhttp_connection* conn =  evhttp_request_get_connection( req_ );
+		if ( conn ) {
+			char* ip = NULL;
+			ev_uint16_t port = 0;
+			evhttp_connection_get_peer(conn, &ip, &port );
+			address_.setSocketAddress( ip, port );
+		}
 	}
 
 	bool isValidRequest() {
@@ -257,10 +265,20 @@ public:
 		return evhttp_request_get_uri(req_);
 	}
 
+
 	const char *path() {
+		if(path_.size() != 0 ) return path_.c_str();
 		if(!req_) return NULL;
 		if(!evuri_) return NULL;
-		return evhttp_uri_get_path(evuri_);
+
+		const char* aPath = evhttp_uri_get_path(evuri_);
+		path_ = aPath != NULL ? aPath : "";
+		size_t idx = path_.rfind( '/' );
+		if ( idx != path_.size() - 1 ) 
+			return path_.c_str();
+
+		path_.erase( idx );
+		return path_.c_str();
 	}
 
 	const char *findHeader(const char *key) {
@@ -342,6 +360,11 @@ public:
 		return true;
 	}
 
+	const BaseAddress* peerAddress() {
+		return &address_;
+	}
+
+
 private:
 	HttpRequest *owner_;
 	struct evhttp_request *req_;
@@ -350,6 +373,8 @@ private:
 	typedef std::map<std::string, std::vector<std::string> > MapParameter_t;
 	MapParameter_t parameters_;
 	volatile bool parseDone_;
+	std::string path_;
+	IPv4Address address_;
 };
 
 }

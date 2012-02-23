@@ -98,5 +98,9 @@ void HttpRequest::dumpRequest(FILE *fp) {
 	impl_->dumpRequest(fp);
 }
 
+const BaseAddress* HttpRequest::peerAddress() {
+	return impl_->peerAddress();
+}
+
 }
 
