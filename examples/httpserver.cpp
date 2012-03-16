@@ -28,7 +28,7 @@
 */
 #include "Coconut.h"
 
-#define USE_PENDING_RESPONSE
+//#define USE_PENDING_RESPONSE
 
 class HttpServerHandler : public coconut::HttpServer::EventHandler {
 	typedef std::list<boost::shared_ptr<coconut::HttpRequest> > ListRequest_t;	

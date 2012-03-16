@@ -63,8 +63,8 @@ void hexdump(const unsigned char *data, const int len, FILE * fp) {
 		if (i && !(i % 16)) {
 			fprintf(fp, "   ");
 			while (k--) {
-				if ((int) *p <= 0x20) {
-					fprintf(fp, " ");
+				if (!isprint((int) *p)) {
+					fprintf(fp, ".");
 					p++;
 					continue;
 				}
@@ -81,7 +81,7 @@ void hexdump(const unsigned char *data, const int len, FILE * fp) {
 		fprintf(fp, "   ");
 	fprintf(fp, "   ");
 	while (k--) {
-		if ((int) *p <  0x20) {
+		if (!isprint((int) *p)) {
 			fprintf(fp, ".");
 			p++;
 			continue;

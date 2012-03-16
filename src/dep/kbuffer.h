@@ -52,6 +52,7 @@ typedef struct kbuffer {
 kbuffer * kbuffer_new();
 void kbuffer_free(kbuffer *buf);
 int kbuffer_add(kbuffer *buf, const void* data, int size);
+void kbuffer_add_printf(kbuffer *buf, const char *format, ...);
 int kbuffer_get_size(kbuffer *buf);
 const void * kbuffer_get_contiguous_data(kbuffer *buf, int *size);
 void kbuffer_drain(kbuffer *buf, int size);

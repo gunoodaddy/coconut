@@ -89,6 +89,7 @@ public:
 	}
 
 	void fire_onHttpServer_DestroyRequest(struct evhttp_request *req) {
+		req_ = NULL;
 		owner_->server()->fire_onHttpServer_DestroyRequest(owner_->sharedMyself());
 	}
 #endif
@@ -148,7 +149,7 @@ public:
 			default: cmdtype = "unknown"; break;
 		}
 
-		if(fp) fprintf(fp, "Received a %s request for %s\nHeaders:\n",
+		if(fp) fprintf(fp, "(Ver:%d,%d) Received a %s request for %s\nHeaders:\n", req_->major, req_->minor,
 				cmdtype, evhttp_request_get_uri(req_));
 
 		headers = evhttp_request_get_input_headers(req_);

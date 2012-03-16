@@ -42,6 +42,9 @@ public:
 			return true;
 		return false;
 	}
+	bool operator!=(const BaseAddress& address ) const {
+		return ! operator==(address);
+	}
 };
 
 }

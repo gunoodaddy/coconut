@@ -38,6 +38,7 @@
 #include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
+#include <endian.h>
 #endif
 #include "BaseObjectAllocator.h"
 
@@ -66,6 +67,21 @@ public:
 	void throwAway(size_t size);
 	int insertInt8(size_t pos, boost::int8_t value);
 
+	boost::int32_t writeInt64(boost::int64_t value) {
+		boost::int64_t net;
+		if(_setLittleEndian_on) {
+			net = (boost::int64_t)value;
+		} else {
+#if BYTE_ORDER == LITTLE_ENDIAN	// TODO this macro is not avaliable on Win32 (need alternatives..)
+			net = ((boost::int64_t)htonl(value) << 32) | ((boost::int64_t)htonl(value >> 32)) ;
+#else
+			net = value;
+#endif
+		}
+		write((boost::int8_t*)&net, 8);
+		return 8;
+	}
+	
 	boost::int32_t writeInt32(boost::int32_t value) {
 		boost::int32_t net;
 		if(_setLittleEndian_on) {
@@ -77,7 +93,7 @@ public:
 		return 4;
 	}
 	
-	boost::int16_t writeInt16(boost::int16_t value) {
+	boost::int32_t writeInt16(boost::int16_t value) {
 		boost::int16_t net;
 		if(_setLittleEndian_on) {
 			net = (boost::int16_t)value;
@@ -88,7 +104,7 @@ public:
 		return 2;
 	}
 	
-	boost::int8_t writeInt8(boost::int8_t value) {
+	boost::int32_t writeInt8(boost::int8_t value) {
 		write((boost::int8_t*)&value, 1);
 		return 1;
 	}
@@ -147,6 +163,26 @@ public:
 		}
 		return 4;
 	}
+
+	boost::int64_t readInt64() {
+		union bytes {
+			boost::int8_t b[8];
+			boost::int64_t all;
+		} theBytes;
+
+		if(read((void *)theBytes.b, 8) != 8)
+			throw ProtocolException("readInt64 failed..");
+		if(_setLittleEndian_on) {
+			return (boost::int64_t)theBytes.all;
+		} else {
+#if BYTE_ORDER == LITTLE_ENDIAN	// TODO this macro is not avaliable on Win32 (need alternatives..)
+			return ((boost::int64_t)(ntohl(theBytes.all >> 32))) | ((boost::int64_t)ntohl(theBytes.all) << 32);
+#else 
+			return (boost::int64_t)theBytes.all;
+#endif
+		}
+	}
+
 
 	boost::int32_t readInt32() {
 		union bytes {

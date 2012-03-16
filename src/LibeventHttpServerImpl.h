@@ -132,8 +132,6 @@ private:
 	struct evhttp_bound_socket *handle_; // this is not valid after \a http is freed.
 	int port_;
 	Mutex lock_;
-//	typedef std::map<std::string, httpURICallback_t> mapcallback_t;
-//	mapcallback_t mapCallback_;
 };
 
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "kbuffer.h"
 
 kbuffer * kbuffer_new() {
@@ -61,6 +62,16 @@ int kbuffer_add(kbuffer *buf, const void* data, int size) {
 	buf->size += size;
 	//printf("kbuffer_add :: %d(%d) / this = %p, chunk = %p, head = %p, tail = %p\n",  size, buf->size, buf, chunk, buf->head, buf->tail);
 	return size;
+}
+
+void kbuffer_add_printf(kbuffer *buf, const char *format, ...) {
+	char log[4000];
+	va_list args;
+	va_start(args, format);
+	vsnprintf(log, sizeof(log)-1, format, args);
+	va_end(args);
+
+	kbuffer_add(buf, log, strlen(log));
 }
 
 int kbuffer_get_size(kbuffer *buf) {
