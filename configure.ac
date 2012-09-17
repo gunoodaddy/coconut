@@ -26,7 +26,7 @@ AC_CHECK_LIB(tcmalloc, tc_cfree , [], [])
 AC_CHECK_LIB(event, event_base_dispatch, [], AC_MSG_ERROR([event library not found]))
 AC_CHECK_LIB(event_pthreads, evthread_use_pthreads, [], AC_MSG_ERROR([event_pthread library not found]))
 AC_CHECK_LIB(event, evhttp_request_set_free_cb, 
-	AC_DEFINE(HAVE_LIBEVENT_GUNOODADDY_FIX,,[define if libevent library fixed by gunoodaddy is available]), AC_MSG_ERROR([gunoodaddy libevent fixed version not found]))
+	AC_DEFINE(HAVE_LIBEVENT_GUNOODADDY_FIX,,[define if libevent library fixed by gunoodaddy is available]), [])
 AC_CHECK_LIB(pthread, pthread_create, [], AC_MSG_ERROR([pthread library not found]))
 
 # Check for redis

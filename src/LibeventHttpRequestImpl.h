@@ -98,9 +98,9 @@ public:
 		owner_ = owner;
 		req_ = (struct evhttp_request *)owner_->nativeHandle();
 		evhttp_request_own(req_);
-//#if defined(HAVE_LIBEVENT_GUNOODADDY_FIX)
-		//evhttp_request_set_free_cb(req_, request_free_cb, this);
-//#endif
+#if defined(HAVE_LIBEVENT_GUNOODADDY_FIX)
+		evhttp_request_set_free_cb(req_, request_free_cb, this);
+#endif
 		struct evhttp_connection* conn =  evhttp_request_get_connection( req_ );
 		if ( conn ) {
 			char* ip = NULL;
