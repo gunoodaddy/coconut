@@ -121,6 +121,8 @@ void ClientController::onSocket_ReadEvent(coconut_socket_t fd) {
 		if(nread <= 0)
 			return;
 
+		//logger::hexdump( (unsigned char*)chunk, nread, stdout);
+
 		if(!protocol_ || protocol_->isReadComplete()) {
 			_LOG_TRACE("New Protocol make #1 in this = %p\n", this);
 			protocol_ = protocolFactory_->makeProtocol();

@@ -579,7 +579,7 @@ public:
 #if defined(_KBUFFER_)
 #define _AE_CLOSE 1
 #define _AE_ERROR 2
-			int size;
+			int size = -2;
 			int destroy = 0;
 			do {
 				if(kbuffer_get_size(write_kbuffer_) <= 0) {
@@ -599,9 +599,11 @@ public:
 				if(nwrite > 0) {
 					kbuffer_drain(write_kbuffer_, nwrite);
 				} else if(nwrite == 0) {
+					_LOG_DEBUG("write error : nwrite = 0(%d), reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
 					destroy = _AE_CLOSE;
 					break;
 				} else if(nwrite < 0) { 
+					_LOG_DEBUG("write error : nwrite = %d(%d), reason = %d, fd = %d, errno = %d", nwrite, size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
 					if(errno == EAGAIN) {
 						nwrite = 0;
 					} else {
@@ -612,7 +614,7 @@ public:
 			} while(false);
 
 			if(destroy) {
-				_LOG_FATAL("write error  size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
+				_LOG_FATAL("write error size = %d, reason = %d, fd = %d, errno = %d", size, destroy, socketFD(), EVUTIL_SOCKET_ERROR())
 				close();
 			}
 #else

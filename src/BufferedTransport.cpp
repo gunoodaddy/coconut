@@ -105,23 +105,23 @@ void BufferedTransport::throwAway(size_t size) {
 	fastforward(size);
 }
 
-size_t BufferedTransport::totalSize() {
+size_t BufferedTransport::totalSize() const {
 	return buffer_.size();
 }
 
-size_t BufferedTransport::remainingSize() {
+size_t BufferedTransport::remainingSize() const {
 	return buffer_.size() - readPos_;
 }
 
-const void * BufferedTransport::basePtr() {
+const void * BufferedTransport::basePtr() const {
 	return buffer_.c_str();
 }
 
-const void * BufferedTransport::currentPtr() {
+const void * BufferedTransport::currentPtr() const {
 	return buffer_.c_str() + readPos_;
 }
 
-size_t BufferedTransport::readPos() {
+size_t BufferedTransport::readPos() const {
 	return readPos_;
 }
 

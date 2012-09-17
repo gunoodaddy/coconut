@@ -109,8 +109,8 @@ void ServerController::onConnectionListener_Accept(coconut_socket_t newSocket) {
 
 		// for client event..
 		newController->eventClosedConnection()->registerObserver(this);
-
 		newTcpSocket->attachSocketHandle(newSocket, false);
+
 		newTcpSocket->install();	// for multithreading.. this method call last!
 	}
 }	

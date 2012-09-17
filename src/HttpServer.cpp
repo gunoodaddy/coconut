@@ -67,7 +67,7 @@ void HttpServer::fire_onHttpServer_DestroyRequest(boost::shared_ptr<HttpRequest>
 	if(handler_)
 		handler_->onHttpServer_DestroyRequest(request);
 
-#ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
+#if defined(HAVE_LIBEVENT_GUNOODADDY_FIX)
 	SetHttpRequests_t::iterator it = requests_.find(request);
 	if(it != requests_.end()) {
 		requests_.erase(it);
@@ -79,7 +79,7 @@ void HttpServer::fire_onHttpServer_DocumentRequest(boost::shared_ptr<HttpRequest
 	LOG_DEBUG("fire_onHttpServer_DocumentRequest called : this = %p", this);
 	if(handler_)
 		handler_->onHttpServer_DocumentRequest(request);
-#ifdef HAVE_LIBEVENT_GUNOODADDY_FIX
+#if defined(HAVE_LIBEVENT_GUNOODADDY_FIX)
 	requests_.insert(request);
 #endif
 }

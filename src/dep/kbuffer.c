@@ -20,12 +20,12 @@ kbuffer_chunk *_kbuffer_chuck_free(kbuffer *buf, kbuffer_chunk *chunk) {
 		next->prev = prev;
 	}
 	if(buf->tail == chunk) {
-		buf->tail = next;
+		buf->tail = prev;
 	}
 	if(buf->head == chunk) {
 		buf->head = next;
 	}
-	buf->size -= chunk->size;
+	buf->size -= (chunk->size - chunk->pt);
 	free(chunk->data);
 	free(chunk);
 	return next;
@@ -85,14 +85,26 @@ const void * kbuffer_get_contiguous_data(kbuffer *buf, int *size) {
 	} else {
 	}
 	if(size) *size = 0;
+	
 	return NULL;
+}
+
+int kbuffer_get_chunk_count(kbuffer *buf) {
+	int c = 0;
+	kbuffer_chunk *next = buf->head;
+	while(next) {
+		next = next->next;
+		c++;
+	}
+	return c;
 }
 
 void kbuffer_drain(kbuffer *buf, int size) {
 	kbuffer_chunk *next = buf->head;
 	while(next) {
-		if(next->size <= size) {
-			size -= next->size;
+		int cs = next->size - next->pt;
+		if(cs <= size) {
+			size -= cs;
 			next = _kbuffer_chuck_free(buf, next);
 			if(size == 0)
 				break;

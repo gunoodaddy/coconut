@@ -47,6 +47,8 @@ class MySessionController : public coconut::BinaryController {
 class MyServerController : public coconut::ServerController {
 	virtual boost::shared_ptr<coconut::ClientController> onAccept(boost::shared_ptr<coconut::TcpSocket> socket) {
 		boost::shared_ptr<MySessionController> newController(new MySessionController); 
+
+		socket->write( "HELLO", 5 );
 		return newController;
 	}
 };

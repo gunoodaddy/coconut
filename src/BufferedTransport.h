@@ -250,9 +250,9 @@ public:
 	}
 
 	boost::int32_t readString32(std::string &value) {
-		boost::int8_t len = 0;
+		boost::int32_t len = 0;
 		boost::int8_t pos = 0;
-		pos += readInt8(len);
+		pos += readInt32(len);
 		int nread = read(value, len);
 		if(nread != len)
 			throw ProtocolException("readString32 failed..");
@@ -261,7 +261,7 @@ public:
 
 	std::string readString32() {
 		std::string str;
-		size_t len = readInt8();
+		size_t len = readInt32();
 		int nread = read(str, len);
 		if(nread != (int)len)
 			throw ProtocolException("readString32 failed..");
@@ -288,9 +288,9 @@ public:
 	}
 
 	boost::int32_t readString8(std::string &value) {
-		boost::int32_t len = 0;
+		boost::int8_t len = 0;
 		boost::int32_t pos = 0;
-		pos += readInt32(len);
+		pos += readInt8(len);
 		int nread = read(value, len);
 		if(nread != len)
 			throw ProtocolException("readString8 failed..");
@@ -309,13 +309,13 @@ public:
 	std::string readString(size_t size);
 
 public:
-	size_t totalSize();
-	size_t remainingSize();
-	size_t readPos();
+	size_t totalSize() const;
+	size_t remainingSize() const;
+	size_t readPos() const;
 	void setReadPos(size_t pos);
 
-	const void * basePtr();
-	const void * currentPtr();
+	const void * basePtr() const;
+	const void * currentPtr() const;
 	std::string toStringFromBasePtr();
 	std::string toStringFromCurrentPtr();
 
