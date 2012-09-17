@@ -93,6 +93,7 @@ https://github.com/antirez/hiredis
     export LD_LIBRARY_PATH=<BOOST STAGE LIB DIR>:$LD_LIBRARY_PATH
 
     configure
+    (configure --with-boost-libdir={BOOST_HOME}/stage/lib)
     make
     cd test
     unittest
