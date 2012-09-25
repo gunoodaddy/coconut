@@ -49,61 +49,61 @@ namespace coconut {
 class COCONUT_API VirtualTransportHelper {
 	// Writing helper method
 public:
-	static boost::int32_t writeInt32(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int32_t value) {
-		boost::int32_t net;
+	static boost::uint32_t writeInt32(boost::shared_ptr<BaseVirtualTransport> buffer, boost::uint32_t value) {
+		boost::uint32_t net;
 		if(_setLittleEndian_on)
-			net = (boost::int32_t)value;
+			net = (boost::uint32_t)value;
 		else
-			net = (boost::int32_t)htonl(value);
-		buffer->write((boost::int8_t*)&net, 4);
+			net = (boost::uint32_t)htonl(value);
+		buffer->write((boost::uint8_t*)&net, 4);
 		return 4;
 	}
 	
-	static boost::int16_t writeInt16(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int16_t value) {
-		boost::int16_t net;
+	static boost::uint16_t writeInt16(boost::shared_ptr<BaseVirtualTransport> buffer, boost::uint16_t value) {
+		boost::uint16_t net;
 		if(_setLittleEndian_on)
-			net = (boost::int16_t)value;
+			net = (boost::uint16_t)value;
 		else
-			net = (boost::int16_t)htons(value);
-		buffer->write((boost::int8_t*)&net, 2);
+			net = (boost::uint16_t)htons(value);
+		buffer->write((boost::uint8_t*)&net, 2);
 		return 2;
 	}
 	
-	static boost::int8_t writeInt8(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int8_t value) {
-		buffer->write((boost::int8_t*)&value, 1);
+	static boost::uint8_t writeInt8(boost::shared_ptr<BaseVirtualTransport> buffer, boost::uint8_t value) {
+		buffer->write((boost::uint8_t*)&value, 1);
 		return 1;
 	}
 	
-	static boost::int32_t writeBinary(boost::shared_ptr<BaseVirtualTransport> buffer, const void *data, size_t size) {
-		boost::int32_t pos = 0;
+	static boost::uint32_t writeBinary(boost::shared_ptr<BaseVirtualTransport> buffer, const void *data, size_t size) {
+		boost::uint32_t pos = 0;
 		pos += buffer->write(data, size);
 		return pos;
 	}
 
-	static boost::int32_t writeString8(boost::shared_ptr<BaseVirtualTransport> buffer, const std::string &value) {
-		boost::int8_t pos = 0;
+	static boost::uint32_t writeString8(boost::shared_ptr<BaseVirtualTransport> buffer, const std::string &value) {
+		boost::uint8_t pos = 0;
 		pos += writeInt8(buffer, value.size());
 		pos += buffer->write(value.c_str(), value.size());
 		return pos;
 	}
 
-	static boost::int32_t writeString16(boost::shared_ptr<BaseVirtualTransport> buffer, const std::string &value) {
-		boost::int16_t pos = 0;
+	static boost::uint32_t writeString16(boost::shared_ptr<BaseVirtualTransport> buffer, const std::string &value) {
+		boost::uint16_t pos = 0;
 		pos += writeInt16(buffer, value.size());
 		pos += buffer->write(value.c_str(), value.size());
 		return pos;
 	}
 
-	static boost::int32_t writeString32(boost::shared_ptr<BaseVirtualTransport> buffer, const std::string &value) {
-		boost::int32_t pos = 0;
+	static boost::uint32_t writeString32(boost::shared_ptr<BaseVirtualTransport> buffer, const std::string &value) {
+		boost::uint32_t pos = 0;
 		pos += writeInt32(buffer, value.size());
 		pos += buffer->write(value.c_str(), value.size());
 		return pos;
 	}
 
-	static boost::int32_t writeString32List(boost::shared_ptr<BaseVirtualTransport> buffer, const stringlist_t &list) {
-		boost::int32_t pos = 0;
-		pos += writeInt32(buffer, (boost::int32_t)list.size());
+	static boost::uint32_t writeString32List(boost::shared_ptr<BaseVirtualTransport> buffer, const stringlist_t &list) {
+		boost::uint32_t pos = 0;
+		pos += writeInt32(buffer, (boost::uint32_t)list.size());
 		for(size_t i = 0; i < list.size(); i++) {
 			pos += writeString32(buffer, list[i]);
 		}
@@ -112,10 +112,10 @@ public:
 
 	// Reading helper method
 public:
-	static boost::int32_t readInt32(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int32_t &value) {
+	static boost::uint32_t readInt32(boost::shared_ptr<BaseVirtualTransport> buffer, boost::uint32_t &value) {
 		union bytes {
-			boost::int8_t b[4];
-			boost::int32_t all;
+			boost::uint8_t b[4];
+			boost::uint32_t all;
 		} theBytes;
 
 		if(buffer->read((void *)theBytes.b, 4) != 4)
@@ -124,15 +124,15 @@ public:
 			if(_setLittleEndian_on)
 				value = theBytes.all;
 			else
-				value = (boost::int32_t)ntohl(theBytes.all);
+				value = (boost::uint32_t)ntohl(theBytes.all);
 		}
 		return 4;
 	}
 
-	static boost::int16_t readInt16(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int16_t &value) {
+	static boost::uint16_t readInt16(boost::shared_ptr<BaseVirtualTransport> buffer, boost::uint16_t &value) {
 		union bytes {
-			boost::int8_t b[2];
-			boost::int16_t all;
+			boost::uint8_t b[2];
+			boost::uint16_t all;
 		} theBytes;
 
 		if(buffer->read((void *)theBytes.b, 2) != 2)
@@ -141,13 +141,13 @@ public:
 			if(_setLittleEndian_on)
 				value = theBytes.all;
 			else
-				value = (boost::int16_t)ntohs(theBytes.all);
+				value = (boost::uint16_t)ntohs(theBytes.all);
 		}
 		return 2;
 	}
 
-	static boost::int8_t readInt8(boost::shared_ptr<BaseVirtualTransport> buffer, boost::int8_t &value) {
-		boost::int8_t b[1];
+	static boost::uint8_t readInt8(boost::shared_ptr<BaseVirtualTransport> buffer, boost::uint8_t &value) {
+		boost::uint8_t b[1];
 		int res = buffer->read((void *)b, 1);
 		if(res != 1)
 			throw ProtocolException("readInt8 failed..");
@@ -156,9 +156,9 @@ public:
 		return 1;
 	}
 
-	static boost::int32_t readString8(boost::shared_ptr<BaseVirtualTransport> buffer, std::string &value) {
-		boost::int8_t len = 0;
-		boost::int8_t pos = 0;
+	static boost::uint32_t readString8(boost::shared_ptr<BaseVirtualTransport> buffer, std::string &value) {
+		boost::uint8_t len = 0;
+		boost::uint8_t pos = 0;
 		pos += readInt8(buffer, len);
 		int nread = buffer->read(value, len);
 		if(nread != len)
@@ -166,9 +166,9 @@ public:
 		return pos + len;
 	}
 
-	static boost::int32_t readString16(boost::shared_ptr<BaseVirtualTransport> buffer, std::string &value) {
-		boost::int16_t len = 0;
-		boost::int16_t pos = 0;
+	static boost::uint32_t readString16(boost::shared_ptr<BaseVirtualTransport> buffer, std::string &value) {
+		boost::uint16_t len = 0;
+		boost::uint16_t pos = 0;
 		pos += readInt16(buffer, len);
 		int nread = buffer->read(value, len);
 		if(nread != len)
@@ -176,12 +176,12 @@ public:
 		return pos + len;
 	}
 
-	static boost::int32_t readString32(boost::shared_ptr<BaseVirtualTransport> buffer, std::string &value) {
-		boost::int32_t len = 0;
-		boost::int32_t pos = 0;
+	static boost::uint32_t readString32(boost::shared_ptr<BaseVirtualTransport> buffer, std::string &value) {
+		boost::uint32_t len = 0;
+		boost::uint32_t pos = 0;
 		pos += readInt32(buffer, len);
 		int nread = buffer->read(value, len);
-		if(nread != len)
+		if(nread != (int)len)
 			throw ProtocolException("readString32 failed..");
 		return pos + len;
 	}

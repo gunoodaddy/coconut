@@ -44,34 +44,34 @@ namespace coconut { namespace protocol {
 
 class COCONUT_API FrameHeader {
 public:
-	FrameHeader(boost::int32_t command, boost::int32_t transactionId) : length_(0), checksum_(0), cmd_(command), trid_(transactionId) { }
+	FrameHeader(boost::uint32_t command, boost::uint32_t transactionId) : length_(0), checksum_(0), cmd_(command), trid_(transactionId) { }
 	FrameHeader() : length_(0), checksum_(0), cmd_(0), trid_(0) { }
 
-	void setCommand(boost::int32_t command) {
+	void setCommand(boost::uint32_t command) {
 		cmd_ = command;	
 	}
-	boost::int32_t command() const {
+	boost::uint32_t command() const {
 		return cmd_;
 	}
 
-	void setChecksum(boost::int32_t checksum) {
+	void setChecksum(boost::uint32_t checksum) {
 		checksum_ = checksum;	
 	}
-	boost::int32_t checksum() const {
+	boost::uint32_t checksum() const {
 		return checksum_;
 	}
 
-	void setLength(boost::int32_t length) {
+	void setLength(boost::uint32_t length) {
 		length_ = length;	
 	}
-	boost::int32_t length() const {
+	boost::uint32_t length() const {
 		return length_;
 	}
 
-	void setTransactionId(boost::int32_t trid) {
+	void setTransactionId(boost::uint32_t trid) {
 		trid_ = trid;	
 	}
-	boost::int32_t transactionId() const {
+	boost::uint32_t transactionId() const {
 		return trid_;
 	}
 
@@ -90,10 +90,10 @@ public:
 	}
 
 private:
-	boost::int32_t length_;	// auto calculated
-	boost::int32_t checksum_;	// auto calculated
-	boost::int32_t cmd_;		// user definition
-	boost::int32_t trid_;		// user definition
+	boost::uint32_t length_;	// auto calculated
+	boost::uint32_t checksum_;	// auto calculated
+	boost::uint32_t cmd_;		// user definition
+	boost::uint32_t trid_;		// user definition
 };
 
 

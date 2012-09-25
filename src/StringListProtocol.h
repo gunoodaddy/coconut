@@ -77,7 +77,7 @@ private:
 	stringlist_t list_;
 	State state_;
 	int payload_pos_;
-	boost::int32_t listSize_;
+	boost::uint32_t listSize_;
 };
 
 } }

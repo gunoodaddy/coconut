@@ -321,7 +321,7 @@ namespace TestJSONProtocol {
 
 
 namespace TestFrameProtocol {
-	static const int COMMAND = 813;
+	static const boost::uint32_t COMMAND = 813;
 
 	class TestClientController : public FrameController {
 
@@ -410,7 +410,7 @@ namespace TestFrameProtocol {
 
 
 namespace TestFrameAndLineProtocol {
-	static const int COMMAND = 813;
+	static const boost::uint16_t COMMAND = 813;
 
 	class TestClientController : public FrameController {
 
@@ -500,7 +500,7 @@ namespace TestFrameAndLineProtocol {
 
 #ifdef HAVE_LIBJSON
 namespace TestFrameAndJSONProtocol {
-	static const int COMMAND = 813;
+	static const boost::uint16_t COMMAND = 813;
 	static const char *JSON_STR = "{\"RootA\":\"Value in parent\",\"ChildNode\":{\"ChildA\":\"String Value\",\"ChildB\":\"42\"}}";
 
 	class TestClientController : public FrameController {
@@ -591,7 +591,7 @@ namespace TestFrameAndJSONProtocol {
 
 
 namespace TestFrameAndStringListProtocol {
-	static const int COMMAND = 813;
+	static const boost::uint16_t COMMAND = 813;
 
 	class TestClientController : public FrameController {
 
@@ -696,7 +696,7 @@ namespace TestFrameAndStringListProtocol {
 
 
 namespace TestFrameAndStringListAndLineProtocol {
-	static const int COMMAND = 813;
+	static const boost::uint16_t COMMAND = 813;
 
 	class TestClientController : public FrameController {
 

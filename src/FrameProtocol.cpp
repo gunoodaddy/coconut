@@ -39,21 +39,21 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 			case Init:
 			case Command: 
 				{
-					boost::int32_t cmd;
+					boost::uint32_t cmd;
 					payload_pos_ += VirtualTransportHelper::readInt32(transport, cmd);
 					header_.setCommand(cmd);
 					state_ = TransationID;
 				}
 			case TransationID: 
 				{
-					boost::int32_t trid;
+					boost::uint32_t trid;
 					payload_pos_ += VirtualTransportHelper::readInt32(transport, trid);
 					header_.setTransactionId(trid);
 					state_ = Checksum;
 				}
 			case Checksum:
 				{
-					boost::int32_t checksum;
+					boost::uint32_t checksum;
 					payload_pos_ += VirtualTransportHelper::readInt32(transport, checksum);
 					// TODO check checksum..
 					if(0 /* need check logic codes */) 
@@ -63,7 +63,7 @@ bool FrameProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> transpor
 				}
 			case Length:
 				{
-					boost::int32_t length;
+					boost::uint32_t length;
 					payload_pos_ += VirtualTransportHelper::readInt32(transport, length);
 					header_.setLength(length);
 					state_ = Payload;

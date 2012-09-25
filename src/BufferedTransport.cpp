@@ -48,8 +48,8 @@ int BufferedTransport::erase(size_t pos, size_t size) {
 	return size;
 }
 
-int BufferedTransport::insertInt8(size_t pos, boost::int8_t value) {
-	boost::int8_t *ptr = (boost::int8_t*)&value;
+int BufferedTransport::insertInt8(size_t pos, boost::uint8_t value) {
+	boost::uint8_t *ptr = (boost::uint8_t*)&value;
 	buffer_.insert(pos, (const char*)ptr, 1);
 	return 1;
 }

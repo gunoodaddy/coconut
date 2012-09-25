@@ -47,8 +47,8 @@ bool BaseProtocol::processWriteFromReadBuffer(boost::shared_ptr<BaseVirtualTrans
 	_LOG_TRACE("BaseProtocol::processWrite %d %s : %d\n", turnOnWrite_, className(), readBuffer_->remainingSize());
 
 	if(turnOnWrite_ && readBuffer_->remainingSize() > 0) {
-		boost::int32_t pos = transport->write(readBuffer_->currentPtr(), readBuffer_->remainingSize());
-		if(pos != (int)readBuffer_->remainingSize()) {
+		boost::uint32_t pos = transport->write(readBuffer_->currentPtr(), readBuffer_->remainingSize());
+		if(pos != readBuffer_->remainingSize()) {
 			throw ProtocolException("processWrite not write all buffer to transport");
 		} else {
 			readBuffer_->fastforward(pos);
@@ -71,8 +71,8 @@ bool BaseProtocol::processWrite(boost::shared_ptr<BaseVirtualTransport> transpor
 	_LOG_TRACE("BaseProtocol::processWrite %d %s : %d\n", turnOnWrite_, className(), writebuffer_->remainingSize());
 
 	if(turnOnWrite_ && writebuffer_->remainingSize() > 0) {
-		boost::int32_t pos = transport->write(writebuffer_->currentPtr(), writebuffer_->remainingSize());
-		if(pos != (int)writebuffer_->remainingSize()) {
+		boost::uint32_t pos = transport->write(writebuffer_->currentPtr(), writebuffer_->remainingSize());
+		if(pos != writebuffer_->remainingSize()) {
 			throw ProtocolException("processWrite not write all buffer to transport");
 		} else {
 			writebuffer_->fastforward(pos);

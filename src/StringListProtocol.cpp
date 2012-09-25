@@ -46,11 +46,11 @@ bool StringListProtocol::processRead(boost::shared_ptr<BaseVirtualTransport> tra
 				state_ = Contents;
 			case Contents:
 				do {
-					if(listSize_ > (int)list_.size()) {
+					if(listSize_ > list_.size()) {
 						std::string string;
 						payload_pos_ += VirtualTransportHelper::readString32(transport, string);
 						list_.push_back(string);
-						if(listSize_ == (int)list_.size()) {
+						if(listSize_ == list_.size()) {
 							state_ = End;
 							break;
 						}
