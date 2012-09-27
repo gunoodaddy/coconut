@@ -12,6 +12,10 @@ Coconut is C++ network framework with briefly, clearly, high performance.
 * Redis Request (optional)
 * JSON Stream Protocol (optional, now unstable)
 
+## TODO
+* fix -without-json option in configure.ac
+* fix boost include path
+
 ## TCP Echo Server Example
 
 total 26 lines.
