@@ -119,9 +119,9 @@ https://github.com/antirez/hiredis
 
 	DO NOT run aclocal
 	libtool 2.4.2, automake 1.11, autoconf 2.68 need
-	<a href=http://ftp.gnu.org/gnu/autoconf/autoconf-2.68.tar.gz/>
-	http://ftp.jaist.ac.jp/pub/GNU/libtool/libtool-2.4.2.tar.gz
-	http://ftp.gnu.org/gnu/automake/automake-1.11.tar.gz
+http://ftp.gnu.org/gnu/autoconf/autoconf-2.68.tar.gz
+http://ftp.jaist.ac.jp/pub/GNU/libtool/libtool-2.4.2.tar.gz
+http://ftp.gnu.org/gnu/automake/automake-1.11.tar.gz
 
 ## TODO before windows configuration
 
